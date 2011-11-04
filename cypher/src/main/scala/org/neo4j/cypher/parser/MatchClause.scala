@@ -28,7 +28,7 @@ import org.neo4j.cypher.SyntaxException
 trait MatchClause extends JavaTokenParsers with Tokens {
   val namer = new NodeNamer
 
-  def matching: Parser[(Match, NamedPaths)] = ignoreCase("match") ~> rep1sep(path, ",") ^^ {
+  def matching: Parser[(Match, NamedPaths)] = ignoreCase("pattern") ~> rep1sep(path, ",") ^^ {
     case matching => {
       val unamedPaths: List[Pattern] = matching.filter(_.isInstanceOf[List[Pattern]]).map(_.asInstanceOf[List[Pattern]]).flatten
       val namedPaths: List[NamedPath] = matching.filter(_.isInstanceOf[NamedPath]).map(_.asInstanceOf[NamedPath])

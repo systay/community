@@ -33,9 +33,9 @@ with SkipLimitClause
 with OrderByClause
 with StringExtras {
 
-  def query: Parser[Query] = start ~ opt(matching) ~ opt(where) ~ returns ~ opt(order) ~ opt(skip) ~ opt(limit) ^^ {
+  def query: Parser[Query] = returns ~ start ~ opt(matching) ~ opt(where) ~ opt(order) ~ opt(skip) ~ opt(limit) ^^ {
 
-    case start ~ matching ~ where ~ returns ~ order ~ skip ~ limit => {
+    case returns ~ start ~ matching ~ where ~ order ~ skip ~ limit => {
       val slice = (skip,limit) match {
         case (None,None) => None
         case (s,l) => Some(Slice(s,l))

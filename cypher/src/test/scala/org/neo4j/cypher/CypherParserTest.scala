@@ -33,12 +33,12 @@ class CypherParserTest extends JUnitSuite with Assertions {
     val q = Query.
       start(NodeById("s", 1)).
       returns(ValueReturnItem(EntityValue("s")))
-    testQuery("start s = NODE(1) return s", q)
+    testQuery("select s from s = NODE(1)", q)
   }
 
   @Test def sourceIsAnIndex() {
     testQuery(
-      """start a = node:index(key = "value") return a""",
+      """select a from a = node:index(key = "value")""",
       Query.
         start(NodeByIndex("a", "index", Literal("key"), Literal("value"))).
         returns(ValueReturnItem(EntityValue("a"))))
@@ -46,7 +46,7 @@ class CypherParserTest extends JUnitSuite with Assertions {
 
   @Test def sourceIsAnNonParsedIndexQuery() {
     testQuery(
-      """start a = node:index("key:value") return a""",
+      """select a from a = node:index("key:value")""",
       Query.
         start(NodeByIndexQuery("a", "index", Literal("key:value"))).
         returns(ValueReturnItem(EntityValue("a"))))
@@ -72,7 +72,7 @@ class CypherParserTest extends JUnitSuite with Assertions {
 
   @Test def shouldParseEasiestPossibleRelationshipQuery() {
     testQuery(
-      "start s = relationship(1) return s",
+      "select s from s = relationship(1)",
       Query.
         start(RelationshipById("s", 1)).
         returns(ValueReturnItem(EntityValue("s"))))
@@ -80,7 +80,7 @@ class CypherParserTest extends JUnitSuite with Assertions {
 
   @Test def shouldParseEasiestPossibleRelationshipQueryShort() {
     testQuery(
-      "start s = rel(1) return s",
+      "select s from s = rel(1) ",
       Query.
         start(RelationshipById("s", 1)).
         returns(ValueReturnItem(EntityValue("s"))))
@@ -88,7 +88,7 @@ class CypherParserTest extends JUnitSuite with Assertions {
 
   @Test def sourceIsARelationshipIndex() {
     testQuery(
-      """start a = rel:index(key = "value") return a""",
+      """select a from a = rel:index(key = "value")""",
       Query.
         start(RelationshipByIndex("a", "index", Literal("key"), Literal("value"))).
         returns(ValueReturnItem(EntityValue("a"))))
