@@ -19,12 +19,12 @@
  */
 package org.neo4j.server.webadmin.rest;
 
-import javax.servlet.http.HttpSession;
-
 import org.neo4j.server.database.Database;
-import org.neo4j.server.webadmin.console.CypherSession;
 import org.neo4j.server.webadmin.console.GremlinSession;
+import org.neo4j.server.webadmin.console.PqlSession;
 import org.neo4j.server.webadmin.console.ScriptSession;
+
+import javax.servlet.http.HttpSession;
 
 public class SessionFactoryImpl implements SessionFactory
 {
@@ -40,7 +40,7 @@ public class SessionFactoryImpl implements SessionFactory
     {
         if ( engineName.equals( "cypher" ) )
         {
-            return new CypherSession( database.graph );
+            return new PqlSession( database.graph );
         }
         else
         {

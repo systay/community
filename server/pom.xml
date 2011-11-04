@@ -97,7 +97,7 @@ the relevant Commercial Agreement.
 
     <dependency>
       <groupId>org.neo4j</groupId>
-      <artifactId>neo4j-cypher</artifactId>
+      <artifactId>neo4j-pql</artifactId>
       <version>1.5-SNAPSHOT</version>
     </dependency>
 

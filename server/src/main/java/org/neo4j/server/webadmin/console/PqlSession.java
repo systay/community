@@ -38,20 +38,20 @@
  */
 package org.neo4j.server.webadmin.console;
 
-import org.neo4j.cypher.SyntaxException;
-import org.neo4j.cypher.commands.Query;
-import org.neo4j.cypher.javacompat.CypherParser;
-import org.neo4j.cypher.javacompat.ExecutionEngine;
-import org.neo4j.cypher.javacompat.ExecutionResult;
+import org.neo4j.pql.SyntaxException;
+import org.neo4j.pql.commands.Query;
+import org.neo4j.pql.javacompat.PqlParser;
+import org.neo4j.pql.javacompat.ExecutionEngine;
+import org.neo4j.pql.javacompat.ExecutionResult;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.server.logging.Logger;
 
-public class CypherSession implements ScriptSession
+public class PqlSession implements ScriptSession
 {
     private final ExecutionEngine engine;
-    private static Logger log = Logger.getLogger( CypherSession.class );
+    private static Logger log = Logger.getLogger( PqlSession.class );
 
-    public CypherSession( GraphDatabaseService graph )
+    public PqlSession(GraphDatabaseService graph)
     {
         engine = new ExecutionEngine( graph );
     }
@@ -67,7 +67,7 @@ public class CypherSession implements ScriptSession
 
         try
         {
-            Query query = CypherParser.parseConsole( script );
+            Query query = PqlParser.parseConsole( script );
             ExecutionResult result = engine.execute( query );
 
             return result.toString();
