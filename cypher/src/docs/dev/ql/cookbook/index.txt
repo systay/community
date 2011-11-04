@@ -1,12 +1,12 @@
-[[cypher-cookbook]]
+[[pql-cookbook]]
 Cypher Cookbook
 ===============
 
-The following cookbook aims to provide a few snippets, examples and use-cases and their query-solutions in Cypher.
+The following cookbook aims to provide a few snippets, examples and use-cases and their query-solutions in PQL.
 
 :leveloffset: 2
 
-== Hyperedges and Cypher ==
+== Hyperedges and PQL ==
 
 Imagine a user being part of different groups. A group can have different roles, and a 
 user can be part of different groups. He also can have 
@@ -16,7 +16,7 @@ _HyperEdge_. However, it can be easily modeled in a property graph as a
 node that captures this n-ary relationship, as depicted below in the
 +U1G2R1+ node.
 
-include::cypher-hyperedge-graph.txt[]
+include::pql-hyperedge-graph.txt[]
 
 :leveloffset: 3
 
@@ -30,7 +30,7 @@ include::find-all-groups-and-roles-for-a-user.txt[]
 
 Imagine an example graph like
 
-include::cypher-collabfiltering-graph.txt[]
+include::pql-collabfiltering-graph.txt[]
 
 :leveloffset: 3
 
@@ -42,7 +42,7 @@ include::simple-friend-finder.txt[]
 
 :leveloffset: 3
 
-include::cypher-cofavoritedplaces-graph.txt[]
+include::pql-cofavoritedplaces-graph.txt[]
 
 include::co-favorited-places---users-who-like-x-also-like-y.txt[]
 
@@ -54,7 +54,7 @@ include::co-tagged-places---places-related-through-tags.txt[]
 
 :leveloffset: 3
 
-include::cypher-peoplesimilarityfavorites-graph.txt[]
+include::pql-peoplesimilarityfavorites-graph.txt[]
 
 include::find-people-based-on-similar-favorites.txt[]
 
@@ -64,7 +64,7 @@ include::find-people-based-on-similar-favorites.txt[]
 
 :leveloffset: 3
 
-include::cypher-multirelationalsocialnetwork-graph.txt[]
+include::pql-multirelationalsocialnetwork-graph.txt[]
 
 include::who-follows-or-loves-me-back.txt[]
 
@@ -72,5 +72,5 @@ include::who-follows-or-loves-me-back.txt[]
 
 //== People Similarity based on Favorites ==
 
-//include::cypher-collabfiltering-graph.txt[]
+//include::pql-collabfiltering-graph.txt[]
 

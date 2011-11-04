@@ -1,4 +1,4 @@
-[[cypher-query-lang]]
+[[PQL-query-lang]]
 Cypher Query Language
 =====================
 
@@ -43,13 +43,13 @@ In Java, using the query language looks something like this:
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-PQL
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=JavaQuery
 classifier=test-sources
 ----
 
-[[cypher-parameters]]
+[[pql-parameters]]
 == Parameters ==
 
 Cypher supports querying with parameters. This allows developers to not to have to do string building
@@ -65,69 +65,69 @@ Here follows a few examples of how you can use parameters from Java.
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=exampleWithParameterForNodeId
 classifier=test-sources
 ----
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=exampleWithParameterForNode
 classifier=test-sources
 ----
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=exampleWithParameterForMultipleNodeIds
 classifier=test-sources
 ----
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=exampleWithStringLiteralAsParameter
 classifier=test-sources
 ----
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=exampleWithParametersForIndexKeyAndValue
 classifier=test-sources
 ----
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=exampleWithParametersForQuery
 classifier=test-sources
 ----
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=exampleWithParameterForSkipLimit
 classifier=test-sources
 ----
 
 [snippet,java]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=exampleWithParameterRegularExpression
 classifier=test-sources
 ----
 
-[[cypher-identifiers]]
+[[pql-identifiers]]
 == Identifiers ==
 
 When you reference parts of the pattern, you do so by naming them.
@@ -136,10 +136,10 @@ Identifiers can be lower or upper case, and may contain underscore.
 If other characters are needed, you can use the +`+ sign.
 The same rules apply to property names.
 
-[snippet,cypher]
+[snippet,pql]
 ----
-component=neo4j-cypher
-source=org/neo4j/cypher/javacompat/JavaExecutionEngineTests.java
+component=neo4j-pql
+source=org/neo4j/pql/javacompat/JavaExecutionEngineTests.java
 tag=Identifier
 classifier=test-sources
 ----

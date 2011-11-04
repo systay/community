@@ -8,7 +8,7 @@
     </parent>
 
     <properties>
-        <bundle.namespace>org.neo4j.cypher</bundle.namespace>
+        <bundle.namespace>org.neo4j.pql</bundle.namespace>
         <scala.version>2.9.0-1</scala.version>
         <license-text.header>GPL-3-header.txt</license-text.header>
     </properties>
