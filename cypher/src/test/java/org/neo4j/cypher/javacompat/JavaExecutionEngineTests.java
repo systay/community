@@ -76,7 +76,7 @@ public class JavaExecutionEngineTests {
     public void exampleQuery() throws Exception {
 // START SNIPPET: JavaQuery
         ExecutionEngine engine = new ExecutionEngine( db );
-        ExecutionResult result = engine.execute( "start n=node(0) where 1=1 return n" );
+        ExecutionResult result = engine.execute( "select n from n=node(0) where 1=1" );
 
         assertThat( result.columns(), hasItem( "n" ) );
         Iterator<Node> n_column = result.columnAs( "n" );
@@ -92,7 +92,7 @@ public class JavaExecutionEngineTests {
 
         ExecutionEngine engine = new ExecutionEngine( db );
 
-        ExecutionResult result = engine.execute( "start n=node(0) match n-->friend return collect(friend)" );
+        ExecutionResult result = engine.execute( "select collect(friend) from n=node(0) pattern n-->friend" );
 
         Iterable<Node> friends = ( Iterable<Node> ) result.columnAs( "collect(friend)" ).next();
         assertThat( friends, hasItems( andreasNode, johanNode ) );
@@ -105,9 +105,9 @@ public class JavaExecutionEngineTests {
     public void testColumnAreInTheRightOrder() throws Exception {
         createTenNodes();
         List<String> columns = asList( "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten" );
-        String q = "start one=node(1), two=node(2), three=node(3), four=node(4), five=node(5), six=node(6), " +
-                "seven=node(7), eight=node(8), nine=node(9), ten=node(10) " +
-                "return one, two, three, four, five, six, seven, eight, nine, ten";
+        String q = "select one, two, three, four, five, six, seven, eight, nine, ten " +
+                "from one=node(1), two=node(2), three=node(3), four=node(4), five=node(5), six=node(6), " +
+                "seven=node(7), eight=node(8), nine=node(9), ten=node(10) ";
         ExecutionResult result = engine.execute( q );
         assertThat( result.toString(), matchesPattern( "one.*two.*three.*four.*five.*six.*seven.*eight.*nine.*ten" ) );
 
@@ -126,7 +126,7 @@ public class JavaExecutionEngineTests {
     public void exampleConsole() throws Exception {
         Query query = CypherParser.parseConsole(
 //START SNIPPET: Identifier
-                "start n=node(0) return n.NOT_EXISTING"
+                "select n.NOT_EXISTING from n=node(0)"
 //END SNIPPET: Identifier
         );
 
@@ -143,7 +143,7 @@ public class JavaExecutionEngineTests {
         // START SNIPPET: exampleWithParameterForNodeId
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "id", 0 );
-        ExecutionResult result = engine.execute( "start n=node({id}) return n.name", params );
+        ExecutionResult result = engine.execute( "select n.name from n=node({id})", params );
         // END SNIPPET: exampleWithParameterForNodeId
 
         assertThat( result.columns(), hasItem( "n.name" ) );
@@ -156,7 +156,7 @@ public class JavaExecutionEngineTests {
         // START SNIPPET: exampleWithParameterForMultipleNodeIds
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "id", Arrays.asList( 0, 1, 2 ) );
-        ExecutionResult result = engine.execute( "start n=node({id}) return n.name", params );
+        ExecutionResult result = engine.execute( "select n.name from n=node({id})", params );
         // END SNIPPET: exampleWithParameterForMultipleNodeIds
 
         assertEquals( asList( "Michaela", "Andreas", "Johan" ), this.<String>toList( result, "n.name" ) );
@@ -173,7 +173,7 @@ public class JavaExecutionEngineTests {
         // START SNIPPET: exampleWithStringLiteralAsParameter
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "name", "Johan" );
-        ExecutionResult result = engine.execute( "start n=node(0,1,2) where n.name = {name} return n", params );
+        ExecutionResult result = engine.execute( "select n from n=node(0,1,2) where n.name = {name}", params );
         // END SNIPPET: exampleWithStringLiteralAsParameter
 
         assertEquals( asList( johanNode ), this.<Node>toList( result, "n" ) );
@@ -185,7 +185,7 @@ public class JavaExecutionEngineTests {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "key", "name" );
         params.put( "value", "Michaela" );
-        ExecutionResult result = engine.execute( "start n=node:people({key} = {value}) return n", params );
+        ExecutionResult result = engine.execute( "select n from n=node:people({key} = {value})", params );
         // END SNIPPET: exampleWithParametersForIndexKeyAndValue
 
         assertEquals( asList( michaelaNode ), this.<Node>toList( result, "n" ) );
@@ -196,7 +196,7 @@ public class JavaExecutionEngineTests {
         // START SNIPPET: exampleWithParametersForQuery
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "query", "name:Andreas" );
-        ExecutionResult result = engine.execute( "start n=node:people({query}) return n", params );
+        ExecutionResult result = engine.execute( "select n from n=node:people({query})", params );
         // END SNIPPET: exampleWithParametersForQuery
 
         assertEquals( asList( andreasNode ), this.<Node>toList( result, "n" ) );
@@ -207,7 +207,7 @@ public class JavaExecutionEngineTests {
         // START SNIPPET: exampleWithParameterForNode
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "node", andreasNode );
-        ExecutionResult result = engine.execute( "start n=node({node}) return n.name", params );
+        ExecutionResult result = engine.execute( "select n.name from n=node({node})", params );
         // END SNIPPET: exampleWithParameterForNode
 
         assertThat( result.columns(), hasItem( "n.name" ) );
@@ -221,7 +221,7 @@ public class JavaExecutionEngineTests {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "s", 1 );
         params.put( "l", 1 );
-        ExecutionResult result = engine.execute( "start n=node(0,1,2) return n.name skip {s} limit {l}", params );
+        ExecutionResult result = engine.execute( "select n.name from n=node(0,1,2) skip {s} limit {l} ", params );
         // END SNIPPET: exampleWithParameterForSkipLimit
 
         assertThat( result.columns(), hasItem( "n.name" ) );
@@ -234,7 +234,7 @@ public class JavaExecutionEngineTests {
         // START SNIPPET: exampleWithParameterRegularExpression
         Map<String, Object> params = new HashMap<String, Object>();
         params.put( "regex", ".*h.*" );
-        ExecutionResult result = engine.execute( "start n=node(0,1,2) where n.name =~ {regex} return n.name", params );
+        ExecutionResult result = engine.execute( "select n.name from n=node(0,1,2) where n.name =~ {regex}", params );
         // END SNIPPET: exampleWithParameterRegularExpression
 
         assertThat( result.columns(), hasItem( "n.name" ) );

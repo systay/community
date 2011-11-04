@@ -38,104 +38,96 @@ class SyntaxExceptionTest extends JUnitSuite {
 
   @Test def shouldRaiseErrorWhenSortingOnNode() {
     expectError(
-      "start s = node(1) return s order by s",
+      "select s from s = node(1) order by s",
       "Cannot ORDER BY on nodes or relationships")
   }
 
   @Test def shouldRaiseErrorWhenMissingIndexValue() {
     expectError(
-      "start s = node:index(key=) return s",
+      "select s from s = node:index(key=)",
       "String literal expected")
   }
 
   @Test def shouldRaiseErrorWhenMissingIndexKey() {
     expectError(
-      "start s = node:index(=\"value\") return s",
+      "select s from s = node:index(=\"value\")",
       "String literal expected")
   }
 
   @Test def shouldRaiseErrorWhenMissingReturn() {
     expectError(
-      "start s = node(0)",
-      "Missing RETURN clause")
+      "from s = node(0)",
+      "Missing SELECT clause")
   }
 
   @Test def shouldRaiseErrorWhenFinishingAListWithAComma() {
     expectError(
-      "start s = node(1,2,) return s order by s",
+      "select s from s = node(1,2,) order by s ",
       "Last element of list must be a value")
   }
 
   @Test def shouldComplainAboutNonQuotedStrings() {
     expectError(
-      "start s = node(1) where s.name = Name and s.age = 10 return s",
+      "select s from s = node(1) where s.name = Name and s.age = 10",
       "Probably missing quotes around a string")
   }
 
   @Test def shouldWarnAboutMissingStart() {
     expectError(
       "where s.name = Name and s.age = 10 return s",
-      "Missing START clause")
+      "Missing SELECT clause")
   }
 
   @Test def shouldComplainAboutWholeNumbers() {
     expectError(
-      "start s=node(0) return s limit -1",
+      "select s from s=node(0) limit -1",
       "Whole number expected")
   }
 
   @Test def matchWithoutIdentifierHasToHaveParenthesis() {
     expectError(
-      "start a = node(0) match --> a return a",
+      "select a from a = node(0) pattern --> a",
       "Matching nodes without identifiers have to have parenthesis: ()")
   }
 
-
-  @Test def matchWithoutIdentifierHasToHaveParenthesis2() {
-    expectError(
-      "start a = node(0) match (a) --> return a",
-      "return is a reserved keyword and may not be used here.")
-  }
-
-
   @Test def shouldComplainAboutAStringBeingExpected() {
     expectError(
-      "start s=node:index(key = value) return s limit -1",
+      "select s from s=node:index(key = value)",
       "String literal expected")
   }
 
   @Test def shortestPathCanNotHaveMinimumDepth() {
     expectError(
-      "start a=node(0), b=node(1) match p=shortestPath(a-[*2..3]->b) return p",
+      "select p from a=node(0), b=node(1) pattern p=shortestPath(a-[*2..3]->b)",
       "Shortest path does not support a minimal length")
   }
 
   @Test def shortestPathCanNotHaveMultipleLinksInIt() {
     expectError(
-      "start a=node(0), b=node(1) match p=shortestPath(a-->()-->b) return p",
+      "select p from a=node(0), b=node(1) pattern p=shortestPath(a-->()-->b)",
       "Shortest path does not support having multiple path segments")
   }
 
   @Test def oldNodeSyntaxGivesHelpfulError() {
     expectError(
-      "start a=(0) return a",
-      "The syntax for bound nodes has changed in v1.5 of Neo4j. Now, it is START a=node(<nodeId>), or START a=node:idxName(key='value').")
+      "select a from a=(0)",
+      "The syntax for bound nodes has changed in v1.5 of Neo4j. Now, it is FROM a=node(<nodeId>), or FROM a=node:idxName(key='value').")
   }
 
   @Test def unknownFunction() {
     expectError(
-      "start a=node(0) return foo(a)",
+      "select foo(a) from a=node(0)",
       "No function 'foo' exists.")
   }
 
   @Ignore @Test def nodeParenthesisMustBeClosed() {
     expectError(
-      "start s=node(1) match s-->(x return x",
+      "select x from s=node(1) pattern s-->(x",
       "Unfinished parenthesis around 'x'")
   }
 
   @Test def handlesMultilineQueries() {
-    val query = """start
+    val query = """select s from
     a=node(0),
     b=node(0),
     c=node(0),
@@ -143,10 +135,10 @@ class SyntaxExceptionTest extends JUnitSuite {
     e=node(0),
     f=node(0),
     g=node(0),
-    s=node:index(key = value) return s"""
+    s=node:index(key = value)"""
 
     val expected = """String literal expected
-"    s=node:index(key = value) return s"
+"    s=node:index(key = value)"
                         ^"""
 
     try {

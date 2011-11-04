@@ -74,7 +74,7 @@ with StringExtras {
   @throws(classOf[SyntaxException])
   def parse(queryText: String): Query = {
     val MissingQuoteError = """`\.' expected but `.' found""".r
-    val MissingStartError = """string matching regex `\(\?i\)\\Qstart\\E' expected.*""".r
+    val MissingStartError = """string matching regex `\(\?i\)\\Qselect\\E' expected.*""".r
     val WholeNumberExpected = """string matching regex `\\d\+' expected.*""".r
     val StringExpected = """string matching regex `'\(\[\^'\\p\{Cntrl\}\\\\\]\|\\\\\[\\\\\/bfnrt\]\|\\\\u\[a-fA-F0-9\]\{4\}\)\*'' .*""".r
 
@@ -82,12 +82,12 @@ with StringExtras {
       case Success(r, q) => r
       case NoSuccess(message, input) => message match {
         case MissingQuoteError() => fail(input, "Probably missing quotes around a string")
-        case MissingStartError() => fail(input, "Missing START clause")
+        case MissingStartError() => fail(input, "Missing SELECT clause")
         case WholeNumberExpected() => fail(input, "Whole number expected")
         case StringExpected() => fail(input, "String literal expected")
-        case "string matching regex `(?i)\\Qrel\\E' expected but `(' found" => fail(input, "The syntax for bound nodes has changed in v1.5 of Neo4j. Now, it is START a=node(<nodeId>), or START a=node:idxName(key='value').")
+        case "string matching regex `(?i)\\Qrel\\E' expected but `(' found" => fail(input, "The syntax for bound nodes has changed in v1.5 of Neo4j. Now, it is FROM a=node(<nodeId>), or FROM a=node:idxName(key='value').")
         case "string matching regex `-?\\d+' expected but `)' found" => fail(input, "Last element of list must be a value")
-        case "string matching regex `(?i)\\Qreturn\\E' expected but end of source found" => throw new SyntaxException("Missing RETURN clause")
+        case "string matching regex `(?i)\\Qreturn\\E' expected but end of source found" => throw new SyntaxException("Missing SELECT clause")
         case _ => throw new SyntaxException(message)
       }
     }

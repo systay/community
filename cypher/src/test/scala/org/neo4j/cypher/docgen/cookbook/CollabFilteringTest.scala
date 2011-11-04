@@ -26,7 +26,7 @@ import org.neo4j.cypher.docgen.DocumentingTestBase
 
 class CollabFilteringTest extends DocumentingTestBase {
   def graphDescription = List("Joe knows Bill", "Joe knows Sara", "Sara knows Bill", "Sara knows Ian", "Bill knows Derrick",
-            "Bill knows Ian", "Sara knows Jill")
+    "Bill knows Ian", "Sara knows Jill")
 
   def section = "cookbook"
 
@@ -34,16 +34,16 @@ class CollabFilteringTest extends DocumentingTestBase {
     testQuery(
       title = "Simple Friend Finder",
       text = """To find out the friends of Joes friends that are not already his friends, Cypher looks like:""",
-      queryText = "start joe=node:node_auto_index(name = \"Joe\") " +
-      		"match joe-[:knows]->friend-[:knows]->friend_of_friend, " +
-      		"joe-[r?:knows]->friend_of_friend " +
-      		"where r IS NULL " +
-      		"return friend_of_friend.name, COUNT(*) " +
-      		"order by COUNT(*) DESC, friend_of_friend.name",
+      queryText = "select friend_of_friend.name, COUNT(*) " +
+        "from joe=node:node_auto_index(name = \"Joe\") " +
+        "pattern joe-[:knows]->friend-[:knows]->friend_of_friend, " +
+        "joe-[r?:knows]->friend_of_friend " +
+        "where r IS NULL " +
+        "order by COUNT(*) DESC, friend_of_friend.name",
       returns = "The list of Friends-of-friends  order by the number of connections to them, secondly by their name.",
       (p) => assertEquals(List(Map("friend_of_friend.name" -> "Ian", "count(*)" -> 2),
-          Map("friend_of_friend.name" -> "Derrick", "count(*)" -> 1),
-          Map("friend_of_friend.name" -> "Jill", "count(*)" -> 1)), p.toList))
-  } 
+        Map("friend_of_friend.name" -> "Derrick", "count(*)" -> 1),
+        Map("friend_of_friend.name" -> "Jill", "count(*)" -> 1)), p.toList))
+  }
 }
 

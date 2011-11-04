@@ -50,8 +50,8 @@ class MultirelationalSocialNetworkTest extends DocumentingTestBase {
      * network between persons and things they like.
      * A multi-relational graph is a graph with more than
      * one kind of relationship between nodes.""",
-      queryText = "START me=node:node_auto_index(name = 'Joe') " +
-                "MATCH me-[r1]->other-[r2]->me WHERE type(r1)=type(r2) AND type(r1) =~ /FOLLOWS|LOVES/ RETURN other.name, type(r1)",
+      queryText = "SELECT other.name, type(r1) FROM me=node:node_auto_index(name = 'Joe') " +
+                "PATTERN me-[r1]->other-[r2]->me WHERE type(r1)=type(r2) AND type(r1) =~ /FOLLOWS|LOVES/",
       returns = "People that +FOLLOWS+ or +LOVES+ +Joe+ back.",
       (p) => assertEquals(List(Map("other.name" -> "Sara", "TYPE(r1)" -> "FOLLOWS"),
           Map("other.name" -> "Maria", "TYPE(r1)" -> "FOLLOWS"),

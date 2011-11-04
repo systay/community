@@ -26,42 +26,42 @@ import parser.CypherParser
 
 class SematicErrorTest extends ExecutionEngineHelper {
   @Test def returnNodeThatsNotThere() {
-    expectedError("start x=node(0) return bar",
+    expectedError("select bar from x=node(0)",
       """Unknown identifier "bar".""")
   }
 
   @Test def throwOnDisconnectedPattern() {
-    expectedError("start x=node(0) match a-[rel]->b return x",
+    expectedError("select x from x=node(0) pattern a-[rel]->b",
       "All parts of the pattern must either directly or indirectly be connected to at least one bound entity. These identifiers were found to be disconnected: a, b, rel")
   }
 
   @Test def defineNodeAndTreatItAsARelationship() {
-    expectedError("start r=node(0) match a-[r]->b return r",
+    expectedError("select r from r=node(0) pattern a-[r]->b",
       "Some identifiers are used as both relationships and nodes: r")
   }
 
   @Test def redefineSymbolInMatch() {
-    expectedError("start a=node(0) match a-[r]->b-->r return r",
+    expectedError("select r from a=node(0) pattern a-[r]->b-->r",
       "Some identifiers are used as both relationships and nodes: r")
   }
 
   @Test def cantUseTYPEOnNodes() {
-    expectedError("start r=node(0) return type(r)",
+    expectedError("select type(r) from r=node(0)",
       "Expected r to be a RelationshipIdentifier but it was NodeIdentifier")
   }
 
   @Test def cantUseLENGTHOnNodes() {
-    expectedError("start n=node(0) return length(n)",
+    expectedError("select length(n) from n=node(0)",
       "Expected n to be an iterable, but it is not.")
   }
 
   @Test def cantReUseRelationshipIdentifier() {
-    expectedError("start a=node(0) match a-[r]->b-[r]->a return r",
+    expectedError("select r from a=node(0) pattern a-[r]->b-[r]->a",
       "Can't re-use pattern relationship 'r' with different start/end nodes.")
   }
 
   @Test def shortestPathNeedsBothEndNodes() {
-    expectedError("start n=node(0) match p=shortestPath(n-->b) return p",
+    expectedError("select p from n=node(0) pattern p=shortestPath(n-->b)",
       "Shortest path needs both ends of the path to be provided. Couldn't find b")
   }
 

@@ -19,25 +19,21 @@
  */
 package org.neo4j.cypher.javacompat;
 
-import static org.neo4j.visualization.asciidoc.AsciidocHelper.createCypherSnippet;
-import static org.neo4j.visualization.asciidoc.AsciidocHelper.createQueryResultSnippet;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Map;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.test.GraphDescription;
+import org.neo4j.test.*;
 import org.neo4j.test.GraphDescription.Graph;
-import org.neo4j.test.GraphHolder;
-import org.neo4j.test.ImpermanentGraphDatabase;
-import org.neo4j.test.JavaTestDocsGenerator;
-import org.neo4j.test.TestData;
 import org.neo4j.visualization.asciidoc.AsciidocHelper;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Map;
+
+import static org.neo4j.visualization.asciidoc.AsciidocHelper.createCypherSnippet;
+import static org.neo4j.visualization.asciidoc.AsciidocHelper.createQueryResultSnippet;
 
 public class IntroExamplesTest implements GraphHolder
 {
@@ -63,8 +59,8 @@ public class IntroExamplesTest implements GraphHolder
 
         fw.append( "For example, here is a query which finds a user called John in an index and then traverses the graph looking for friends of Johns friends (though not his direct friends) before returning both John and any friends-of-friends that are found." );
         fw.append( "\n" );
-        String query = "START john=node:node_auto_index(name = 'John') "
-                       + "MATCH john-[:friend]->()-[:friend]->fof RETURN john, fof ";
+        String query = "SELECT john, fof FROM john=node:node_auto_index(name = 'John') "
+                       + "PATTERN john-[:friend]->()-[:friend]->fof ";
         fw.append( createCypherSnippet( query ) );
         fw.append( "\nResulting in \n" );
         fw.append( createQueryResultSnippet( engine.execute(
@@ -75,7 +71,8 @@ public class IntroExamplesTest implements GraphHolder
                    + "(by node ID) and traverse the graph looking for those other "
                    + "users that have an outgoing +friend+ relationship, returning "
                    + "only those followed users who have a +name+ property starting with +S+." );
-        query = "START user=node("
+        query = "SELECT user, follower.name " +
+                "FROM user=node("
                 + data.get().get( "Joe" ).getId()
                 + ","
                 + data.get().get( "John" ).getId()
@@ -85,7 +82,7 @@ public class IntroExamplesTest implements GraphHolder
                 + data.get().get( "Maria" ).getId()
                 + ","
                 + data.get().get( "Steve" ).getId()
-                + ") MATCH user-[:friend]->follower WHERE follower.name =~ /S.*/ RETURN user, follower.name ";
+                + ") PATTERN user-[:friend]->follower WHERE follower.name =~ /S.*/";
         fw.append( "\n" );
         fw.append( createCypherSnippet( query ) );
         fw.append( "\nResulting in\n" );

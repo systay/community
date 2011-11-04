@@ -26,12 +26,12 @@ import org.neo4j.cypher.docgen.DocumentingTestBase
 
 class HyperedgeTest extends DocumentingTestBase {
   def graphDescription = List("User1 in Group1", "User1 in Group2",
-            "Group2 canHave Role2", "Group2 canHave Role1",
-            "Group1 canHave Role1", "Group1 canHave Role2", "Group1 isA Group",
-            "Group2 isA Group", "Role1 isA Role", "Role2 isA Role",
-            "User1 hasRoleInGroup U1G2R1", "U1G2R1 hasRole Role1",
-            "U1G2R1 hasGroup Group2", "User1 hasRoleInGroup U1G1R2",
-            "U1G1R2 hasRole Role2", "U1G1R2 hasGroup Group1")
+    "Group2 canHave Role2", "Group2 canHave Role1",
+    "Group1 canHave Role1", "Group1 canHave Role2", "Group1 isA Group",
+    "Group2 isA Group", "Role1 isA Role", "Role2 isA Role",
+    "User1 hasRoleInGroup U1G2R1", "U1G2R1 hasRole Role1",
+    "U1G2R1 hasGroup Group2", "User1 hasRoleInGroup U1G1R2",
+    "U1G1R2 hasRole Role2", "U1G1R2 hasGroup Group1")
 
   def section = "cookbook"
 
@@ -41,26 +41,26 @@ class HyperedgeTest extends DocumentingTestBase {
       text = """To find out in what roles a user is for a particular groups (here
         'Group2'), the following Cypher Query can traverse this HyperEdge node and
         provide answers.""",
-      queryText = "start n=node:node_auto_index(name = \"User1\") " +
-      		"match n-[:hasRoleInGroup]->hyperEdge-[:hasGroup]->group, " +
-      		"hyperEdge-[:hasRole]->role " +
-      		"where group.name = \"Group2\" " +
-      		"return role.name",
+      queryText = """select role.name
+          from n=node:node_auto_index(name = "User1")
+      		pattern n-[:hasRoleInGroup]->hyperEdge-[:hasGroup]->group,
+      		hyperEdge-[:hasRole]->role
+      		where group.name = "Group2"""",
       returns = "The role of +User1+:",
       (p) => assertEquals(Map("role.name" -> "Role1"), p.toList.head))
   }
-  
+
   @Test def findAllGroupsForAUser() {
     testQuery(
       title = "Find all groups and roles for a user",
       text = """Here, find all groups and the roles a user has, sorted by the roles names.""",
-      queryText = "start n=node:node_auto_index(name = \"User1\") " +
-            "match n-[:hasRoleInGroup]->hyperEdge-[:hasGroup]->group, " +
-            "hyperEdge-[:hasRole]->role " +
-            "return role.name, group.name " +
-            "order by role.name asc",
+      queryText = """
+      select role.name, group.name
+      from n=node:node_auto_index(name = "User1")
+      pattern n-[:hasRoleInGroup]->hyperEdge-[:hasGroup]->group, hyperEdge-[:hasRole]->role
+      order by role.name asc""",
       returns = "The groups and roles of +User1+",
-      (p) => assertEquals(Map("role.name" -> "Role1", "group.name"->"Group2"), p.toList.head),
-      (p) => assertEquals(Map("role.name" -> "Role2", "group.name"->"Group1"), p.toList(1)))
+      (p) => assertEquals(Map("role.name" -> "Role1", "group.name" -> "Group2"), p.toList.head),
+      (p) => assertEquals(Map("role.name" -> "Role2", "group.name" -> "Group1"), p.toList(1)))
   }
 }

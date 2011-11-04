@@ -30,8 +30,9 @@ class ExecutionResultTest extends ExecutionEngineHelper with Assertions {
 
     columns.foreach(createNode);
 
-    val q="start one=node(1), two=node(2), three=node(3), four=node(4), five=node(5), six=node(6), seven=node(7), eight=node(8), nine=node(9), ten=node(10) " +
-      "return one, two, three, four, five, six, seven, eight, nine, ten"
+    val q="select one, two, three, four, five, six, seven, eight, nine, ten " +
+      "from one=node(1), two=node(2), three=node(3), four=node(4), five=node(5), six=node(6), seven=node(7), eight=node(8), nine=node(9), ten=node(10)"
+
 
     val result = parseAndExecute(q)
 

@@ -364,13 +364,12 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     createNode(Map("prop" -> "A"))
     createNode()
 
-    val result = parseAndExecute("start a=node(1,2) where a.prop? = 'A' return a")
+    val result = parseAndExecute("""select a from a=node(1,2) where a.prop? = 'A'""")
 
     assert(2 === result.toSeq.length)
   }
 
   @Test def shouldHandleComparisonBetweenNodeProperties() {
-    //start n = node(1,4) match (n) --> (x) where n.animal = x.animal return n,x
     val n1 = createNode(Map("animal" -> "monkey"))
     val n2 = createNode(Map("animal" -> "cow"))
     val n3 = createNode(Map("animal" -> "monkey"))
@@ -430,7 +429,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
   }
 
   @Test def shouldBeAbleToCountNodes() {
-    val a = createNode() //start a = (0) match (a) --> (b) return a, count(*)
+    val a = createNode()
     val b = createNode()
     relate(refNode, a, "A")
     relate(refNode, b, "A")
@@ -451,7 +450,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     val b = createNode("b")
     relate(a, b, "rel", "r")
 
-    val result = parseAndExecute("start r=rel(0) match a-[r]-b return a,b")
+    val result = parseAndExecute("""select a,b from r=rel(0) pattern a-[r]-b""")
 
     assertEquals(List(Map("a" -> a, "b" -> b), Map("a" -> b, "b" -> a)), result.toList)
   }
@@ -463,7 +462,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     relate(a, b, "rel", "r")
     relate(b, c, "rel", "r2")
 
-    val result = parseAndExecute("start r=rel(0) match a-[r]-b-[?]-c return a,b,c")
+    val result = parseAndExecute("""select a,b,c from r=rel(0) pattern a-[r]-b-[?]-c""")
 
     assertEquals(List(Map("a" -> a, "b" -> b, "c" -> c), Map("a" -> b, "b" -> a, "c" -> null)), result.toList)
   }
@@ -678,7 +677,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     val query = Query.
       start(NodeById("a", 1)).
       namedPaths(NamedPath("p", RelatedTo("a", "b", "rel", None, Direction.OUTGOING, false))).
-      returns(ValueReturnItem(EntityValue("p"))) //  new CypherParser().parse("start a=(1) match p=(a-->b) return p")
+      returns(ValueReturnItem(EntityValue("p")))
 
     val result = execute(query)
 
@@ -696,7 +695,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
       namedPaths(NamedPath("p",
       RelatedTo("a", "b", "rel1", None, Direction.OUTGOING, false),
       RelatedTo("b", "c", "rel2", None, Direction.OUTGOING, false))).
-      returns(ValueReturnItem(EntityValue("p"))) //  new CypherParser().parse("start a=(1) match p=(a-->b) return p")
+      returns(ValueReturnItem(EntityValue("p")))
 
     val result = execute(query)
 
@@ -708,7 +707,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     relate("A" -> "KNOWS" -> "B")
     relate("A" -> "HATES" -> "C")
 
-    val result = parseAndExecute("start n=node(1) match (n)-[r]->(x) where type(r)='KNOWS' or type(r) = 'HATES' return x")
+    val result = parseAndExecute("""select x from n=node(1) pattern (n)-[r]->(x) where type(r)='KNOWS' or type(r) = 'HATES'""")
 
     assertEquals(nodes.slice(1, 3), result.columnAs[Node]("x").toList)
   }
@@ -717,7 +716,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     createNodes("A", "B")
     relate("A" -> "KNOWS" -> "B")
 
-    val result = parseAndExecute("start n=node(1) match p = n-->x where length(p) = 10 return x")
+    val result = parseAndExecute("""select x from n=node(1) pattern p = n-->x where length(p) = 10""")
 
     assertTrue("Result set should be empty, but it wasn't", result.isEmpty)
   }
@@ -727,7 +726,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     createNodes("A", "B")
     relate("A" -> "KNOWS" -> "B")
 
-    val result = parseAndExecute("start n=node(1) match x<--n, p = n-->x return p")
+    val result = parseAndExecute("""select p from n=node(1) pattern x<--n, p = n-->x""")
 
     assertEquals(1, result.toSeq.length)
   }
@@ -736,7 +735,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     createNodes("A", "B")
     relate("A" -> "KNOWS" -> "B")
 
-    val result = parseAndExecute("start n=node(1) match p = n-->x where length(p)=1 return x")
+    val result = parseAndExecute("""select x from n=node(1) pattern p = n-->x where length(p)=1""")
 
     assertTrue("Result set should not be empty, but it was", !result.isEmpty)
   }
@@ -745,7 +744,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     createNodes("A", "B")
     relate("A" -> "KNOWS" -> "B")
 
-    val result = parseAndExecute("start n=node(1) match p = n-->x return length(p)")
+    val result = parseAndExecute("""select length(p) from n=node(1) pattern p = n-->x""")
 
     assertEquals(List(1), result.columnAs[Int]("LENGTH(p)").toList)
   }
@@ -792,7 +791,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     val r1 = relate("A" -> "KNOWS" -> "B")
     val r2 = relate("B" -> "KNOWS" -> "C")
 
-    val result = parseAndExecute("start n=node(1) match p=n-[:KNOWS*1..2]->x return p")
+    val result = parseAndExecute("""select p from n=node(1) pattern p=n-[:KNOWS*1..2]->x""")
 
     assertEquals(List(
       PathImpl(node("A"), r1, node("B")),
@@ -805,7 +804,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     relate("A" -> "KNOWS" -> "B")
     relate("B" -> "KNOWS" -> "C")
 
-    val result = parseAndExecute("start a=node(1) match a-[*0..1]->b return a,b")
+    val result = parseAndExecute("""select a,b from a=node(1) pattern a-[*0..1]->b""")
 
     assertEquals(
       Set(
@@ -819,7 +818,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     val r1 = relate("A" -> "KNOWS" -> "B")
     val r2 = relate("B" -> "FRIEND" -> "C")
 
-    val result = parseAndExecute("start a=node(1) match p=a-[:KNOWS*0..1]->b-[:FRIEND*0..1]->c return p,a,b,c")
+    val result = parseAndExecute("""select p,a,b,c from a=node(1) pattern p=a-[:KNOWS*0..1]->b-[:FRIEND*0..1]->c""")
 
     assertEquals(
       Set(
@@ -836,7 +835,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     relate("B" -> "FRIEND" -> "C")
 
 
-    val result = parseAndExecute("start a=node(1) match a-[:CONTAINS*0..1]->b-[:FRIEND*0..1]->c return a,b,c")
+    val result = parseAndExecute("""select a,b,c from a=node(1) pattern a-[:CONTAINS*0..1]->b-[:FRIEND*0..1]->c""")
 
     assertEquals(
       Set(
@@ -851,7 +850,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     val r1 = relate("A" -> "KNOWS" -> "B")
     val r2 = relate("B" -> "KNOWS" -> "C")
 
-    val result = parseAndExecute("start n=node(1) match p=n-[:KNOWS*..2]->x return p")
+    val result = parseAndExecute("""select p from n=node(1) pattern p=n-[:KNOWS*..2]->x""")
 
     assertEquals(List(
       PathImpl(node("A"), r1, node("B")),
@@ -864,7 +863,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     val r1 = relate("A" -> "KNOWS" -> "B")
     val r2 = relate("B" -> "KNOWS" -> "C")
 
-    val result = parseAndExecute("start n=node(1) match p=n-[:KNOWS*..]->x return p")
+    val result = parseAndExecute("""select p from n=node(1) pattern p=n-[:KNOWS*..]->x""")
 
     assertEquals(List(
       PathImpl(node("A"), r1, node("B")),
@@ -877,7 +876,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     createNodes("A", "B", "C")
     relate("A" -> "KNOWS" -> "B")
 
-    val result = parseAndExecute("start a=node(1), c = node(3) match a-->b return a,b,c").toList
+    val result = parseAndExecute("""select a,b,c from a=node(1), c = node(3) pattern a-->b""").toList
 
     assert(List(Map("a" -> node("A"), "b" -> node("B"), "c" -> node("C"))) === result)
   }
@@ -949,7 +948,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
   @Test def shouldBeAbleToTakeParamsFromParsedStuff() {
     createNodes("A")
 
-    val query = new CypherParser().parse("start pA = node({a}) return pA")
+    val query = new CypherParser().parse("""select pA from pA = node({a})""")
     val result = execute(query, "a" -> Seq[Long](1))
 
     assertEquals(List(Map("pA" -> node("A"))), result.toList)
@@ -972,7 +971,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     val b = createNode(Map("name" -> "you"))
     relate(a, b, "KNOW")
 
-    val result = parseAndExecute("start x  = node({startId}) match x-[r]-friend where friend.name = {name} return TYPE(r)", "startId" -> 1, "name" -> "you")
+    val result = parseAndExecute("""select TYPE(r) from x  = node({startId}) pattern x-[r]-friend where friend.name = {name}""", "startId" -> 1, "name" -> "you")
 
     assert(List(Map("TYPE(r)" -> "KNOW")) === result.toList)
   }
@@ -990,9 +989,10 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     relate(b, x2, "REL", "BX2")
 
     val result = parseAndExecute("""
-start a  = node({A}), b = node({B})
-match a-[rA]->x<-[rB]->b
-return x""", "A" -> 1, "B" -> 2)
+select x
+from a  = node({A}), b = node({B})
+pattern a-[rA]->x<-[rB]->b
+""", "A" -> 1, "B" -> 2)
 
     assert(List(x1, x2) === result.columnAs[Node]("x").toList)
   }
@@ -1015,9 +1015,10 @@ return x""", "A" -> 1, "B" -> 2)
     relate(c, x2, "REL", "CX2")
 
     val result = parseAndExecute("""
-start a  = node({A}), b = node({B}), c = node({C})
-match a-[rA]->x, b-[rB]->x, c-[rC]->x
-return x""", "A" -> 1, "B" -> 2, "C" -> 3)
+select x
+from a  = node({A}), b = node({B}), c = node({C})
+pattern a-[rA]->x, b-[rB]->x, c-[rC]->x
+""", "A" -> 1, "B" -> 2, "C" -> 3)
 
     assert(List(x1, x2) === result.columnAs[Node]("x").toList)
   }
@@ -1054,9 +1055,10 @@ return x""", "A" -> 1, "B" -> 2, "C" -> 3)
     relate(c, j)
 
     val result = parseAndExecute("""
-start a  = node({A}), b = node({B}), c = node({C})
-match a-->x, b-->x, c-->x
-return x""", "A" -> 1, "B" -> 2, "C" -> 3)
+select x
+from a  = node({A}), b = node({B}), c = node({C})
+pattern a-->x, b-->x, c-->x
+""", "A" -> 1, "B" -> 2, "C" -> 3)
 
     assert(List(d, e) === result.columnAs[Node]("x").toList)
   }
@@ -1080,10 +1082,10 @@ return x""", "A" -> 1, "B" -> 2, "C" -> 3)
     relate(c, e, "knows", "rCE")
 
     val result = parseAndExecute("""
-start a  = node(1)
-match a-[r1:knows]->friend-[r2:knows]->foaf, a-[foafR?:knows]->foaf
+select foaf, count(*)
+from a  = node(1)
+pattern a-[r1:knows]->friend-[r2:knows]->foaf, a-[foafR?:knows]->foaf
 where foafR is null
-return foaf, count(*)
 order by count(*)""")
 
     assert(List(Map("foaf" -> d, "count(*)" -> 1), Map("foaf" -> e, "count(*)" -> 2)) === result.toList)
@@ -1098,9 +1100,10 @@ order by count(*)""")
     relate(b, c, "knows", "rBC")
 
     val result = parseAndExecute("""
-start a  = node(1)
-match a-[r1?:knows]->friend-[r2:knows]->foaf
-return foaf""")
+select foaf
+from a = node(1)
+pattern a-[r1?:knows]->friend-[r2:knows]->foaf
+""")
 
     assert(List(Map("foaf" -> c)) === result.toList)
   }
@@ -1114,7 +1117,7 @@ return foaf""")
   }
 
   @Test def shouldThrowNiceErrorMessageWhenPropertyIsMissing() {
-    val query = new CypherParser().parse("start n=node(0) return n.A_PROPERTY_THAT_IS_MISSING")
+    val query = new CypherParser().parse("""select n.A_PROPERTY_THAT_IS_MISSING from n=node(0)""")
     try {
       execute(query).toList
     } catch {
