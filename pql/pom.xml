@@ -15,15 +15,15 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.neo4j</groupId>
-    <artifactId>neo4j-cypher</artifactId>
+    <artifactId>neo4j-pql</artifactId>
     <packaging>jar</packaging>
     <version>1.5-SNAPSHOT</version>
-    <name>Neo4j - Cypher</name>
-    <description>Neo4j query language</description>
+    <name>Neo4j - PQL</name>
+    <description>Neo4j Pattern Query Language</description>
     <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
     <scm>
-        <url>https://github.com/neo4j/community/tree/master/cypher</url>
+        <url>https://github.com/neo4j/community/tree/master/pql</url>
     </scm>
 
     <licenses>

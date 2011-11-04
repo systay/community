@@ -1,4 +1,4 @@
-Cypher is an execution engine that allows querying Neo4j in a nice way.
+PQL [pickle] - Pattern Query Language - is a language that allows querying Neo4j in a nice way.
 
 
 Working with the source code in Eclipse IDE
@@ -29,7 +29,7 @@ https://www.assembla.com/wiki/show/scala-ide/With_M2Eclipse
 There may be other M2E integrations needed, but M2E should be able to find
 and install these for you.
 
-To get the Cypher project working in Eclipse (with the above plugins installed):
+To get the PQL project working in Eclipse (with the above plugins installed):
 * Delete the project if it was already imported into the workbench.
 * Delete files/directories like .project, .classpath, .settings/
 * Use File -> Import... -> Existing Maven Projects to import the project.
