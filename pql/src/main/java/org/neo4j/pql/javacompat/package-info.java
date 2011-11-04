@@ -18,6 +18,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 /**
- * Execute Cypher queries from Java code.
+ * Execute PQL queries from Java code.
  */
 package org.neo4j.pql.javacompat;

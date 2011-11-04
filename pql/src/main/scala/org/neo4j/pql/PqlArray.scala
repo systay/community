@@ -19,6 +19,6 @@
  */
 package org.neo4j.pql
 
-trait CypherArray {
+trait PqlArray {
    def length(): Int
 }

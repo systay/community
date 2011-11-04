@@ -21,17 +21,18 @@ package org.neo4j.pql.javacompat;
 
 import org.neo4j.pql.SyntaxException;
 import org.neo4j.pql.commands.Query;
+import org.neo4j.pql.parser.ConsolePqlParser;
 
 /**
  * This is the entry point to parse strings to {@link Query}-objects
  */
-public class CypherParser
+public class PqlParser
 {
-    private org.neo4j.pql.parser.CypherParser inner;
+    private org.neo4j.pql.parser.PqlParser inner;
 
-    public CypherParser()
+    public PqlParser()
     {
-        inner = new org.neo4j.pql.parser.CypherParser();
+        inner = new org.neo4j.pql.parser.PqlParser();
     }
 
     public Query parse( String query ) throws SyntaxException
@@ -40,10 +41,10 @@ public class CypherParser
     }
 
     public static Query parseStrict(String query) throws SyntaxException {
-        return new org.neo4j.pql.parser.CypherParser().parse( query );
+        return new org.neo4j.pql.parser.PqlParser().parse( query );
     }
 
     public static Query parseConsole(String query) throws SyntaxException {
-        return new org.neo4j.pql.parser.ConsoleCypherParser().parse( query );
+        return new ConsolePqlParser().parse( query );
     }
 }

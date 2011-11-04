@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Holds Cypher query result sets.
+ * Holds PQL result sets.
  */
 public class ExecutionResult implements Iterable<Map<String,Object>>
 {

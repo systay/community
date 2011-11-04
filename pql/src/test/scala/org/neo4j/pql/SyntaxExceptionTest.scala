@@ -21,13 +21,13 @@ package org.neo4j.pql
  */
 
 import org.scalatest.junit.JUnitSuite
-import parser.CypherParser
+import parser.PqlParser
 import org.junit.Assert._
 import org.junit.{Ignore, Test}
 
 class SyntaxExceptionTest extends JUnitSuite {
   def expectError(query: String, expectedError: String) {
-    val parser = new CypherParser()
+    val parser = new PqlParser()
     try {
       parser.parse(query)
       fail("Should have produced the error: " + expectedError)
@@ -142,7 +142,7 @@ class SyntaxExceptionTest extends JUnitSuite {
                         ^"""
 
     try {
-      new CypherParser().parse(query)
+      new PqlParser().parse(query)
     } catch {
       case x: SyntaxException => assertEquals(expected, x.getMessage)
     }

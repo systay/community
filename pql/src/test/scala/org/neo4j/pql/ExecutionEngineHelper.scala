@@ -21,7 +21,7 @@ package org.neo4j.pql
 
 import commands.Query
 import org.junit.Before
-import parser.CypherParser
+import parser.PqlParser
 
 
 trait ExecutionEngineHelper extends GraphDatabaseTestBase {
@@ -40,7 +40,7 @@ trait ExecutionEngineHelper extends GraphDatabaseTestBase {
 
 
   def parseAndExecute(q: String, params: (String, Any)*): ExecutionResult = {
-    val query = new CypherParser().parse(q)
+    val query = new PqlParser().parse(q)
     execute(query, params: _*)
   }
 

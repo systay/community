@@ -205,7 +205,7 @@ class MatchTest extends DocumentingTestBase {
   @Test def complexMatching() {
     testQuery(
       title = "Complex matching",
-      text = "Using Cypher, you can also express more complex patterns to match on, like a diamond shape pattern.",
+      text = "Using PQL, you can also express more complex patterns to match on, like a diamond shape pattern.",
       queryText = """select a,b,c,d from a=node(%A%) pattern (a)-[:KNOWS]->(b)-[:KNOWS]->(c), (a)-[:BLOCKS]-(d)-[:KNOWS]-(c)""",
       returns = """The four nodes in the path.""",
       p => assertEquals(List(Map("a" -> node("A"), "b" -> node("B"), "c" -> node("E"), "d" -> node("C"))), p.toList)
@@ -226,7 +226,7 @@ class MatchTest extends DocumentingTestBase {
     testQuery(
       title = "Matching on a bound relationship",
       text = """When your pattern contains a bound relationship, and that relationship pattern doesn specify direction,
-Cypher will try to match the relationship where the connected nodes switch sides.""",
+PQL will try to match the relationship where the connected nodes switch sides.""",
       queryText = """select a,b from r=rel(0) pattern a-[r]-b""",
       returns = "This returns the two connected nodes, once as the start node, and once as the end node",
       p => assertEquals(2, p.toSeq.length)

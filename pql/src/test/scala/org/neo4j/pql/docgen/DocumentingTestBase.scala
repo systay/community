@@ -26,7 +26,7 @@ import org.neo4j.test.GraphDescription
 import scala.collection.JavaConverters._
 import java.io.{PrintWriter, File, FileWriter}
 import org.neo4j.graphdb._
-import org.neo4j.pql.parser.CypherParser
+import org.neo4j.pql.parser.PqlParser
 import org.scalatest.junit.JUnitSuite
 import java.io.ByteArrayOutputStream
 import org.neo4j.visualization.graphviz.{AsciiDocStyle, GraphvizWriter}
@@ -40,7 +40,7 @@ import org.neo4j.pql.CuteGraphDatabaseService.gds2cuteGds
 abstract class DocumentingTestBase extends JUnitSuite {
 
   var db: ImpermanentGraphDatabase = null
-  val parser: CypherParser = new CypherParser
+  val parser: PqlParser = new PqlParser
   var engine: ExecutionEngine = null
   var nodes: Map[String, Node] = null
   var nodeIndex: Index[Node] = null
@@ -116,7 +116,7 @@ _Graph_
     val writer = new PrintWriter(new FileWriter(new File(dir, nicefy(title) + ".txt")))
     dumpToFile(writer, title, query, returns, text, result)
 
-    val graphFileName = "cypher-" + this.getClass.getSimpleName.replaceAll("Test", "").toLowerCase + "-graph"
+    val graphFileName = "pql-" + this.getClass.getSimpleName.replaceAll("Test", "").toLowerCase + "-graph"
     val graphViz = new PrintWriter(new FileWriter(new File(dir, graphFileName + ".txt")))
     dumpGraphViz(graphViz, graphFileName)
   }

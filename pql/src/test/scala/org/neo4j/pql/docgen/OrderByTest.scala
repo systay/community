@@ -55,7 +55,7 @@ class OrderByTest extends DocumentingTestBase {
     testQuery(
       title = "Order nodes by multiple properties",
       text = "You can order by multiple properties by stating each identifier in the +ORDER BY+" +
-        " statement. Cypher will sort the result by the first identifier listed, and for equals values, " +
+        " statement. PQL will sort the result by the first identifier listed, and for equals values, " +
         "go to the next property in the order by, and so on.",
       queryText = """select n from n=node(%C%,%A%,%B%) order by n.age, n.name""",
       returns = """The nodes, sorted first by their age, and then by their name.""",

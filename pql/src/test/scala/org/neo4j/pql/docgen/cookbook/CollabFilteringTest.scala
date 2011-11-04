@@ -33,7 +33,7 @@ class CollabFilteringTest extends DocumentingTestBase {
   @Test def basicCollborativeFiltering() {
     testQuery(
       title = "Simple Friend Finder",
-      text = """To find out the friends of Joes friends that are not already his friends, Cypher looks like:""",
+      text = """A query to find out the friends of Joes friends that are not already his friends would look like:""",
       queryText = "select friend_of_friend.name, COUNT(*) " +
         "from joe=node:node_auto_index(name = \"Joe\") " +
         "pattern joe-[:knows]->friend-[:knows]->friend_of_friend, " +

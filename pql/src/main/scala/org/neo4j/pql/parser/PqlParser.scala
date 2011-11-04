@@ -24,7 +24,7 @@ import org.neo4j.pql._
 import org.neo4j.pql.commands._
 import scala.util.parsing.combinator._
 
-class CypherParser extends JavaTokenParsers
+class PqlParser extends JavaTokenParsers
 with StartClause
 with MatchClause
 with WhereClause

@@ -28,7 +28,7 @@ import org.neo4j.kernel.Traversal
 case class PathImpl(pathEntities: PropertyContainer*)
   extends org.neo4j.graphdb.Path
   with Traversable[PropertyContainer]
-  with CypherArray {
+  with PqlArray {
 
 
   assert(isProperPath)

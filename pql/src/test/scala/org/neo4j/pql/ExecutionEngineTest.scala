@@ -22,7 +22,7 @@ package org.neo4j.pql
 import commands._
 import org.junit.Assert._
 import java.lang.String
-import parser.CypherParser
+import parser.PqlParser
 import scala.collection.JavaConverters._
 import org.junit.matchers.JUnitMatchers._
 import org.neo4j.graphdb.{Path, Relationship, Direction, Node}
@@ -948,7 +948,7 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
   @Test def shouldBeAbleToTakeParamsFromParsedStuff() {
     createNodes("A")
 
-    val query = new CypherParser().parse("""select pA from pA = node({a})""")
+    val query = new PqlParser().parse("""select pA from pA = node({a})""")
     val result = execute(query, "a" -> Seq[Long](1))
 
     assertEquals(List(Map("pA" -> node("A"))), result.toList)
@@ -1117,7 +1117,7 @@ pattern a-[r1?:knows]->friend-[r2:knows]->foaf
   }
 
   @Test def shouldThrowNiceErrorMessageWhenPropertyIsMissing() {
-    val query = new CypherParser().parse("""select n.A_PROPERTY_THAT_IS_MISSING from n=node(0)""")
+    val query = new PqlParser().parse("""select n.A_PROPERTY_THAT_IS_MISSING from n=node(0)""")
     try {
       execute(query).toList
     } catch {

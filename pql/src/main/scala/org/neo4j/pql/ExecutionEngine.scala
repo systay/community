@@ -20,21 +20,19 @@
 package org.neo4j.pql
 
 import commands._
-import parser.CypherParser
+import parser.PqlParser
 import pipes._
 import scala.collection.JavaConverters._
 import org.neo4j.graphdb._
 import collection.Seq
-import java.lang.{Error, Iterable}
+import java.lang.Iterable
 import java.util.{Map => JavaMap}
 
 
 class ExecutionEngine(graph: GraphDatabaseService) {
-  checkScalaVersion()
-
   require(graph != null, "Can't work with a null graph database")
 
-  val parser = new CypherParser()
+  val parser = new PqlParser()
 
   @throws(classOf[SyntaxException])
   def execute(query: String): ExecutionResult = execute(parser.parse(query))
@@ -218,13 +216,6 @@ class ExecutionEngine(graph: GraphDatabaseService) {
 
         new CurrentContext(p, context.clauses.filterNot(matchingClauses contains))
       }
-    }
-  }
-
-  def checkScalaVersion() {
-    if (util.Properties.versionString.matches("^version 2.9.0")) {
-      throw new Error("Cypher can only run with Scala 2.9.0. It looks like the Scala version is: " +
-        util.Properties.versionString)
     }
   }
 

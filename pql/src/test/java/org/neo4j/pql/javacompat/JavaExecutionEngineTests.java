@@ -124,7 +124,7 @@ public class JavaExecutionEngineTests {
 
     @Test
     public void exampleConsole() throws Exception {
-        Query query = CypherParser.parseConsole(
+        Query query = PqlParser.parseConsole(
 //START SNIPPET: Identifier
                 "select n.NOT_EXISTING from n=node(0)"
 //END SNIPPET: Identifier

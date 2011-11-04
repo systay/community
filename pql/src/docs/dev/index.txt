@@ -1,39 +1,39 @@
-[[PQL-query-lang]]
-Cypher Query Language
-=====================
+[[pattern-query-lang]]
+Pattern Query Language
+======================
 
-A new query language, code-named ``Cypher'', has been added to Neo4j.
-It allows for expressive and efficient querying of the graph store without having to write traversers in code.
-Cypher is still growing and maturing, and that means that there probably will be breaking syntax changes.
+PQL (pronounced like pickle) is SQL for graphs. It allows you to mostly use the familiar SQL language you
+most likely already know well, but makes complicated patterns much easier to express.
+It allows for efficient querying of the graph store without having to write traversers in code.
+PQL is still growing and maturing, and that means that there probably will be breaking syntax changes.
 It also means that it has not undergone the same rigorous performance testing as the other components.
 
-Cypher is designed to be a humane query language, suitable for both 
+PQL is designed to be a humane query language, suitable for both
 developers and (importantly, we think) operations professionals who 
 want to make ad-hoc queries on the database. Its constructs are based 
 on English prose and neat iconography, which helps to make it (somewhat) 
 self-explanatory.
 
-Cypher is inspired by a number of different approaches and builds upon
-established practices for expressive querying. Most of the keywords like
-+WHERE+ and +ORDER BY+ are inspired by http://en.wikipedia.org/wiki/SQL[SQL].
+PQL is inspired by a number of different approaches and builds upon
+established practices for expressive querying. A lot of the keywords, and the structure comes from SQL.
 Pattern matching borrows expression approaches from http://en.wikipedia.org/wiki/SPARQL[SPARQL].
-Regular expression matching is implemented using the http://www.scala-lang.org/[Scala programming language].
 
-Cypher is a declarative language. It focuses on the clarity of expressing _what_
+
+PQL is a declarative language. It focuses on the clarity of expressing _what_
 to retrieve from a graph, not _how_ to do it, in contrast to imperative languages like Java,
 and scripting languages like http://gremlin.tinkerpop.com[Gremlin] (supported via the <<gremlin-plugin>>) 
 and http://neo4j.rubyforge.org/[the JRuby Neo4j bindings]. This makes the concern of how to optimize
-queries in implementation detail not exposed to the user.
+queries an implementation detail not exposed to the user.
 
 The query language is comprised of several distinct parts.
 
-* +START+: Starting points in the graph, obtained by element IDs or via index lookups
+* +SELECT+: What to return
 
-* +MATCH+: The graph pattern to match, bound to the starting points in +START+
+* +FROM+: Starting points in the graph, obtained by element IDs or via index lookups
+
+* +PATTERN+: The graph pattern to match, bound to the starting points in +FROM+
 
 * +WHERE+: Filtering criteria
-
-* +RETURN+: What to return
 
 Let's see three of them in action:
 
@@ -52,8 +52,8 @@ classifier=test-sources
 [[pql-parameters]]
 == Parameters ==
 
-Cypher supports querying with parameters. This allows developers to not to have to do string building
-to create a query, and it also makes caching of execution plans much easier for Cypher.
+PQL supports querying with parameters. This allows developers to not to have to do string building
+to create a query, and it also makes caching of execution plans much easier for PQL.
 
 Parameters can be used for literals in the +WHERE+ clause, for the index key and index value in the +START+
 clause, index queries, and finally for node/relationship ids.

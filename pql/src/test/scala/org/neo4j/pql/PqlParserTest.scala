@@ -23,12 +23,12 @@ import org.neo4j.pql.commands._
 import org.junit.Assert._
 import org.neo4j.graphdb.Direction
 import org.scalatest.junit.JUnitSuite
-import parser.{ConsoleCypherParser, CypherParser}
+import parser.{ConsolePqlParser, PqlParser}
 import org.junit.Test
 import org.junit.Ignore
 import org.scalatest.Assertions
 
-class CypherParserTest extends JUnitSuite with Assertions {
+class PqlParserTest extends JUnitSuite with Assertions {
   @Test def shouldParseEasiestPossibleQuery() {
     val q = Query.
       start(NodeById("s", 1)).
@@ -922,7 +922,7 @@ class CypherParserTest extends JUnitSuite with Assertions {
 
   @Test def consoleModeParserShouldOutputNullableProperties() {
     val query = """select a.name from a = node(1)"""
-    val parser = new ConsoleCypherParser()
+    val parser = new ConsolePqlParser()
     val executionTree = parser.parse(query)
 
     assertEquals(
@@ -933,7 +933,7 @@ class CypherParserTest extends JUnitSuite with Assertions {
   }
 
   def testQuery(query: String, expectedQuery: Query) {
-    val parser = new CypherParser()
+    val parser = new PqlParser()
 
     try {
       val ast = parser.parse(query)

@@ -23,7 +23,7 @@ import java.lang.String
 import org.neo4j.pql.SymbolTable
 
 /**
- * Pipe is a central part of Cypher. Most pipes are decorators - they
+ * Pipe is a central part of PQL. Most pipes are decorators - they
  * wrap another pipe. StartPipes are the only exception to this.
  * Pipes are combined to form an execution plan, and when iterated over,
  * the execute the query.

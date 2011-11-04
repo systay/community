@@ -22,7 +22,7 @@ package org.neo4j.pql
 import commands._
 import org.junit.Assert._
 import org.junit.Test
-import parser.CypherParser
+import parser.PqlParser
 
 class SematicErrorTest extends ExecutionEngineHelper {
   @Test def returnNodeThatsNotThere() {
@@ -65,7 +65,7 @@ class SematicErrorTest extends ExecutionEngineHelper {
       "Shortest path needs both ends of the path to be provided. Couldn't find b")
   }
 
-  def parse(txt:String):Query = new CypherParser().parse(txt)
+  def parse(txt:String):Query = new PqlParser().parse(txt)
 
   def expectedError(query: String, message: String) { expectedError(parse(query), message) }
 

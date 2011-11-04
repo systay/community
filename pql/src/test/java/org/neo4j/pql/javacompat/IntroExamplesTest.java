@@ -44,7 +44,7 @@ public class IntroExamplesTest implements GraphHolder
             this, true ) );
     private ImpermanentGraphDatabase graphdb;
     private ExecutionEngine engine;
-    private CypherParser parser;
+    private PqlParser parser;
 
     @Test
     @Graph( value = { "John friend Sara", "John friend Joe",
@@ -55,7 +55,7 @@ public class IntroExamplesTest implements GraphHolder
         data.get();
         fw.append( "\nImagine an example graph like\n\n" );
         fw.append( AsciidocHelper.createGraphViz( "Example Graph", graphdb(),
-                "cypher-intro" ) );
+                "pql-intro" ) );
 
         fw.append( "For example, here is a query which finds a user called John in an index and then traverses the graph looking for friends of Johns friends (though not his direct friends) before returning both John and any friends-of-friends that are found." );
         fw.append( "\n" );
@@ -97,7 +97,7 @@ public class IntroExamplesTest implements GraphHolder
         graphdb = new ImpermanentGraphDatabase();
         graphdb.cleanContent( false );
 
-        parser = new CypherParser();
+        parser = new PqlParser();
         engine = new ExecutionEngine( graphdb );
     }
 

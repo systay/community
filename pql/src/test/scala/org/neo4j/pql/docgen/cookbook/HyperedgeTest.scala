@@ -39,7 +39,7 @@ class HyperedgeTest extends DocumentingTestBase {
     testQuery(
       title = "Find Groups",
       text = """To find out in what roles a user is for a particular groups (here
-        'Group2'), the following Cypher Query can traverse this HyperEdge node and
+        'Group2'), the following PQL Query can traverse this HyperEdge node and
         provide answers.""",
       queryText = """select role.name
           from n=node:node_auto_index(name = "User1")

@@ -28,6 +28,6 @@ trait ConsoleMode extends ReturnItems {
   }
 }
 
-class ConsoleCypherParser extends CypherParser with ConsoleMode {
+class ConsolePqlParser extends PqlParser with ConsoleMode {
 
 }
