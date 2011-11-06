@@ -33,19 +33,27 @@ with SkipLimitClause
 with OrderByClause
 with StringExtras {
 
-  def query: Parser[Query] = returns ~ start ~ opt(matching) ~ opt(where) ~ opt(order) ~ opt(skip) ~ opt(limit) ^^ {
+  def selectFirst = select ~ from ~ opt(pattern) ~ opt(where) ~ opt(order) ~ opt(skip) ~ opt(limit) ^^ {
+    case select ~ from ~ pattern ~ where ~ order ~ skip ~ limit => (select, from, pattern, where, order, skip, limit)
+  }
 
-    case returns ~ start ~ matching ~ where ~ order ~ skip ~ limit => {
-      val slice = (skip,limit) match {
-        case (None,None) => None
-        case (s,l) => Some(Slice(s,l))
+  def selectLast = from ~ opt(pattern) ~ opt(where) ~ select ~ opt(order) ~ opt(skip) ~ opt(limit) ^^ {
+    case from ~ pattern ~ where ~ select ~ order ~ skip ~ limit => (select, from, pattern, where, order, skip, limit)
+  }
+
+  def query: Parser[Query] = (selectLast | selectFirst) ^^ {
+
+    case (returns, start, matching, where, order, skip, limit) => {
+      val slice = (skip, limit) match {
+        case (None, None) => None
+        case (s, l) => Some(Slice(s, l))
       }
 
-      val (pattern:Option[Match], namedPaths:Option[NamedPaths]) = matching match {
-        case Some((p,NamedPaths())) => (Some(p),None)
-        case Some((Match(),nP)) => (None,Some(nP))
-        case Some((p,nP)) => (Some(p),Some(nP))
-        case None => (None,None)
+      val (pattern: Option[Match], namedPaths: Option[NamedPaths]) = matching match {
+        case Some((p, NamedPaths())) => (Some(p), None)
+        case Some((Match(), nP)) => (None, Some(nP))
+        case Some((p, nP)) => (Some(p), Some(nP))
+        case None => (None, None)
       }
 
       Query(returns._1, start, pattern, where, returns._2, order, slice, namedPaths)

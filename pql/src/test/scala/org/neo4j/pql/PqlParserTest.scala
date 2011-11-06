@@ -36,6 +36,13 @@ class PqlParserTest extends JUnitSuite with Assertions {
     testQuery("select s from s = NODE(1)", q)
   }
 
+  @Test def shouldBeAbleToHaveSelectInTheEnd() {
+    val q = Query.
+      start(NodeById("s", 1)).
+      returns(ValueReturnItem(EntityValue("s")))
+    testQuery("from s = NODE(1) select s ", q)
+  }
+
   @Test def sourceIsAnIndex() {
     testQuery(
       """select a from a = node:index(key = "value")""",
@@ -395,7 +402,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 1)).
         matches(RelatedTo("a", "b", "  UNNAMED1", None, Direction.OUTGOING, false)).
-        aggregation(ValueAggregationItem(Max(( PropertyValue("a", "age") )))).
+        aggregation(ValueAggregationItem(Max((PropertyValue("a", "age"))))).
         columns("a", "b", "max(a.age)").
         returns(ValueReturnItem(EntityValue("a")), ValueReturnItem(EntityValue("b"))))
   }
@@ -558,8 +565,8 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("n", 1)).
         namedPaths(NamedPath("p", RelatedTo("n", "x", "  UNNAMED1", None, Direction.OUTGOING, false))).
-        where(Equals(ArrayLengthValue(PathRelationshipsValue(EntityValue("p"))), Literal(1)))
-        returns ( ValueReturnItem(EntityValue("p")) ))
+        where(Equals(ArrayLengthValue(PathRelationshipsValue(EntityValue("p"))), Literal(1))).
+        returns(ValueReturnItem(EntityValue("p"))))
   }
 
   @Test def countNonNullValues() {
@@ -578,7 +585,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 1)).
         where(Equals(IdValue(EntityValue("a")), Literal(0)))
-        returns ( ValueReturnItem(IdValue(EntityValue("a"))) ))
+        returns (ValueReturnItem(IdValue(EntityValue("a")))))
   }
 
   @Test def shouldBeAbleToHandleStringLiteralsWithApostrophe() {
@@ -612,10 +619,10 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 0)).
         namedPaths(NamedPath("p",
-                             RelatedTo("a", "b", "  UNNAMED1", None, Direction.OUTGOING, false),
-                             RelatedTo("b", "c", "  UNNAMED2", None, Direction.OUTGOING, false)
+        RelatedTo("a", "b", "  UNNAMED1", None, Direction.OUTGOING, false),
+        RelatedTo("b", "c", "  UNNAMED2", None, Direction.OUTGOING, false)
       ))
-        returns ( ValueReturnItem(EntityValue("a")) ))
+        returns (ValueReturnItem(EntityValue("a"))))
   }
 
   @Test def pathsShouldBePossibleWithoutParenthesis() {
@@ -624,62 +631,62 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 0)).
         namedPaths(NamedPath("p", RelatedTo("a", "b", "  UNNAMED1", None, Direction.OUTGOING, false)))
-        returns ( ValueReturnItem(EntityValue("a")) ))
+        returns (ValueReturnItem(EntityValue("a"))))
   }
 
   @Test def variableLengthPath() {
     testQuery("""select x from a=node(0) pattern a -[:knows*1..3]-> x""",
-              Query.
-                start(NodeById("a", 0)).
-                matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(1), Some(3), "knows", Direction.OUTGOING)).
-                returns(ValueReturnItem(EntityValue("x")))
+      Query.
+        start(NodeById("a", 0)).
+        matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(1), Some(3), "knows", Direction.OUTGOING)).
+        returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
   @Test def fixedVarLengthPath() {
     testQuery("""select x from a=node(0) pattern a -[*3]-> x""",
-              Query.
-                start(NodeById("a", 0)).
-                matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(3), Some(3), None, Direction.OUTGOING, None,
-                                           false)).
-                returns(ValueReturnItem(EntityValue("x")))
+      Query.
+        start(NodeById("a", 0)).
+        matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(3), Some(3), None, Direction.OUTGOING, None,
+        false)).
+        returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
   @Test def variableLengthPathWithoutMinDepth() {
     testQuery("""select x from a=node(0) pattern a -[:knows*..3]-> x""",
-              Query.
-                start(NodeById("a", 0)).
-                matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", None, Some(3), "knows", Direction.OUTGOING)).
-                returns(ValueReturnItem(EntityValue("x")))
+      Query.
+        start(NodeById("a", 0)).
+        matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", None, Some(3), "knows", Direction.OUTGOING)).
+        returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
   @Test def variableLengthPathWithRelationshipIdentifier() {
     testQuery("""select x from a=node(0) pattern a -[r:knows*2..]-> x""",
-              Query.
-                start(NodeById("a", 0)).
-                matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(2), None, Some("knows"), Direction.OUTGOING,
-                                           Some("r"), false)).
-                returns(ValueReturnItem(EntityValue("x")))
+      Query.
+        start(NodeById("a", 0)).
+        matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(2), None, Some("knows"), Direction.OUTGOING,
+        Some("r"), false)).
+        returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
   @Test def variableLengthPathWithoutMaxDepth() {
     testQuery("""select x from a=node(0) pattern a -[:knows*2..]-> x""",
-              Query.
-                start(NodeById("a", 0)).
-                matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(2), None, "knows", Direction.OUTGOING)).
-                returns(ValueReturnItem(EntityValue("x")))
+      Query.
+        start(NodeById("a", 0)).
+        matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(2), None, "knows", Direction.OUTGOING)).
+        returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
   @Test def unboundVariableLengthPath() {
     testQuery("""select x from a=node(0) pattern a -[:knows*]-> x""",
-              Query.
-                start(NodeById("a", 0)).
-                matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", None, None, "knows", Direction.OUTGOING)).
-                returns(ValueReturnItem(EntityValue("x")))
+      Query.
+        start(NodeById("a", 0)).
+        matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", None, None, "knows", Direction.OUTGOING)).
+        returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
@@ -726,10 +733,10 @@ class PqlParserTest extends JUnitSuite with Assertions {
         start(NodeById("a", 1)).
         namedPaths(
         NamedPath("p",
-                  RelatedTo("a", "b", "  UNNAMED1", None, Direction.OUTGOING, false),
-                  RelatedTo("b", "c", "  UNNAMED2", None, Direction.OUTGOING, false))).
+          RelatedTo("a", "b", "  UNNAMED1", None, Direction.OUTGOING, false),
+          RelatedTo("b", "c", "  UNNAMED2", None, Direction.OUTGOING, false))).
         where(AllInSeq(PathNodesValue(EntityValue("p")), "n", Equals(PropertyValue("n", "name"), Literal("Andres"))))
-        returns ( ValueReturnItem(EntityValue("b")) ))
+        returns (ValueReturnItem(EntityValue("b"))))
   }
 
   @Test def testAny() {
@@ -738,7 +745,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 1)).
         where(AnyInSeq(PathNodesValue(EntityValue("p")), "x", Equals(PropertyValue("x", "name"), Literal("Andres"))))
-        returns ( ValueReturnItem(EntityValue("b")) ))
+        returns (ValueReturnItem(EntityValue("b"))))
   }
 
   @Test def testNone() {
@@ -747,7 +754,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 1)).
         where(NoneInSeq(PathNodesValue(EntityValue("p")), "x", Equals(PropertyValue("x", "name"), Literal("Andres"))))
-        returns ( ValueReturnItem(EntityValue("b")) ))
+        returns (ValueReturnItem(EntityValue("b"))))
   }
 
   @Test def testSingle() {
@@ -756,8 +763,8 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 1)).
         where(SingleInSeq(PathNodesValue(EntityValue("p")), "x", Equals(PropertyValue("x", "name"),
-                                                                        Literal("Andres"))))
-        returns ( ValueReturnItem(EntityValue("b")) ))
+        Literal("Andres"))))
+        returns (ValueReturnItem(EntityValue("b"))))
   }
 
   @Test def testParamAsStartNode() {
@@ -782,7 +789,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("pA", 1)).
         where(Equals(PropertyValue("pA", "name"), ParameterValue("name")))
-        returns ( ValueReturnItem(EntityValue("pA")) ))
+        returns (ValueReturnItem(EntityValue("pA"))))
   }
 
   @Test def testParamForIndexKey() {
@@ -815,7 +822,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("pA", 0)).
         skip("skipper")
-        returns ( ValueReturnItem(EntityValue("pA")) ))
+        returns (ValueReturnItem(EntityValue("pA"))))
   }
 
   @Test def testParamForLimit() {
@@ -824,7 +831,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("pA", 0)).
         limit("stop")
-        returns ( ValueReturnItem(EntityValue("pA")) ))
+        returns (ValueReturnItem(EntityValue("pA"))))
   }
 
   @Test def testParamForLimitAndSkip() {
@@ -833,8 +840,8 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("pA", 0)).
         skip("skipper")
-        limit ( "stop" )
-        returns ( ValueReturnItem(EntityValue("pA")) ))
+        limit ("stop")
+        returns (ValueReturnItem(EntityValue("pA"))))
   }
 
   @Test def testParamForRegex() {
@@ -842,8 +849,8 @@ class PqlParserTest extends JUnitSuite with Assertions {
       """select pA from pA = node(0) where pA.name =~ {regex} """,
       Query.
         start(NodeById("pA", 0)).
-        where(RegularExpression(PropertyValue("pA","name"), ParameterValue("regex")))
-        returns ( ValueReturnItem(EntityValue("pA")) ))
+        where(RegularExpression(PropertyValue("pA", "name"), ParameterValue("regex")))
+        returns (ValueReturnItem(EntityValue("pA"))))
   }
 
   @Test def testShortestPath() {
@@ -853,6 +860,34 @@ class PqlParserTest extends JUnitSuite with Assertions {
         start(NodeById("a", 0), NodeById("b", 1)).
         namedPaths(NamedPath("p", ShortestPath("  UNNAMED2", "a", "b", None, Direction.OUTGOING, Some(1), false))).
         returns(ValueReturnItem(EntityValue("p"))))
+  }
+
+  @Test def allPartsWithSelectFirst() {
+    testQuery(
+      "select p from a = node(0) pattern p = a-[r]->b where length(p) = 74 order by b.title skip 5 limit 5",
+      Query.
+        start(NodeById("a", 0)).
+        namedPaths(NamedPath("p", RelatedTo("a", "b", "r", None, Direction.OUTGOING, false))).
+        where(Equals(ArrayLengthValue(EntityValue("p")), Literal(74))).
+        orderBy(SortItem(ValueReturnItem(PropertyValue("b", "title")), true)).
+        skip(5).
+        limit(5).
+        returns(ValueReturnItem(EntityValue("p")))
+    )
+  }
+
+    @Test def allPartsWithSelectLast() {
+    testQuery(
+      "from a = node(0) pattern p = a-[r]->b where length(p) = 74 select p order by b.title skip 5 limit 5",
+      Query.
+        start(NodeById("a", 0)).
+        namedPaths(NamedPath("p", RelatedTo("a", "b", "r", None, Direction.OUTGOING, false))).
+        where(Equals(ArrayLengthValue(EntityValue("p")), Literal(74))).
+        orderBy(SortItem(ValueReturnItem(PropertyValue("b", "title")), true)).
+        skip(5).
+        limit(5).
+        returns(ValueReturnItem(EntityValue("p")))
+    )
   }
 
   @Test def testShortestPathWithMaxDepth() {
@@ -870,7 +905,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 0), NodeById("b", 1)).
         namedPaths(NamedPath("p", ShortestPath("  UNNAMED2", "a", "b", Some("KNOWS"), Direction.OUTGOING, Some(6),
-                                               false))).
+        false))).
         returns(ValueReturnItem(EntityValue("p"))))
   }
 
@@ -898,7 +933,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 0)).
         where(IsNull(EntityValue("a")))
-        returns ( ValueReturnItem(EntityValue("a")) ))
+        returns (ValueReturnItem(EntityValue("a"))))
   }
 
   @Test def testForNotNull() {
@@ -907,7 +942,7 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         start(NodeById("a", 0)).
         where(Not(IsNull(EntityValue("a"))))
-        returns ( ValueReturnItem(EntityValue("a")) ))
+        returns (ValueReturnItem(EntityValue("a"))))
   }
 
   @Test def testCountDistinct() {
