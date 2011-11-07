@@ -159,7 +159,7 @@ class ExecutionEngine(graph: GraphDatabaseService) {
     }
   }
 
-  private def extractReturnItems(returns: Return, aggregation: Option[Aggregation], sort: Option[Sort]): Seq[ReturnItem] = {
+  private def extractReturnItems(returns: Select, aggregation: Option[Aggregation], sort: Option[Sort]): Seq[ReturnItem] = {
     val aggregation1 = aggregation.getOrElse(new Aggregation())
     val sort1 = sort.getOrElse(new Sort())
 

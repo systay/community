@@ -18,21 +18,17 @@
  */
 package org.neo4j.examples;
 
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
-import org.neo4j.cypher.javacompat.CypherParser;
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.test.GraphDescription;
-import org.neo4j.test.GraphHolder;
-import org.neo4j.test.ImpermanentGraphDatabase;
-import org.neo4j.test.JavaTestDocsGenerator;
-import org.neo4j.test.TestData;
+import org.neo4j.pql.javacompat.ExecutionEngine;
+import org.neo4j.pql.javacompat.PqlParser;
+import org.neo4j.test.*;
+
+import java.util.Map;
 
 public class AbstractJavaDocTestbase implements GraphHolder {
 
@@ -42,7 +38,7 @@ public @Rule
 TestData<Map<String, Node>> data = TestData.producedThrough( GraphDescription.createGraphFor(
         this, true ) );
 protected static ImpermanentGraphDatabase db;
-protected CypherParser parser;
+protected PqlParser parser;
 protected ExecutionEngine engine;
 
 
@@ -56,7 +52,7 @@ public static void init()
 public void setUp() {
     db.cleanContent();
     gen.get().setGraph( db );
-    parser = new CypherParser();
+    parser = new PqlParser();
     engine = new ExecutionEngine(db);
 }
 @After

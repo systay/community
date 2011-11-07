@@ -61,6 +61,6 @@ class QueryBuilder(startItems: Seq[ StartItem ]) {
   }
 
   def returns(returnItems: ReturnItem*): Query =
-    Query(Return(columns(returnItems), returnItems: _*), Start(startItems: _*), matching, where, aggregation,
+    Query(Select(columns(returnItems), returnItems: _*), From(startItems: _*), matching, where, aggregation,
           orderBy, slice, namedPaths)
 }

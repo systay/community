@@ -39,11 +39,11 @@
 
 package org.neo4j.server.webadmin.console;
 
-import static org.hamcrest.text.StringContains.containsString;
-import static org.junit.Assert.assertThat;
-
 import org.junit.Test;
 import org.neo4j.test.ImpermanentGraphDatabase;
+
+import static org.hamcrest.text.StringContains.containsString;
+import static org.junit.Assert.assertThat;
 
 public class CypherSessionTest
 {
@@ -51,7 +51,7 @@ public class CypherSessionTest
     public void shouldReturnASingleNode() throws Exception
     {
         PqlSession session = new PqlSession( new ImpermanentGraphDatabase() );
-        String result = session.evaluate( "start a=node(0) return a" );
+        String result = session.evaluate( "select a from a=node(0)" );
         assertThat( result, containsString( "Node[0]" ) );
     }
 }

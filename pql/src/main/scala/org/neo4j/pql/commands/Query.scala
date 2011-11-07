@@ -20,17 +20,18 @@
 package org.neo4j.pql.commands
 
 
+
 object Query {
-  def start(startItems: StartItem*) = new QueryBuilder(startItems)
+  def from(startItems: StartItem*) = new QueryBuilder(startItems)
 }
 
-case class Query(returns: Return, start: Start, matching: Option[ Match ], where: Option[ Clause ],
+case class Query(select: Select, from: From, matching: Option[ Match ], where: Option[ Clause ],
                  aggregation: Option[ Aggregation ],
                  sort: Option[ Sort ], slice: Option[ Slice ], namedPaths: Option[ NamedPaths ])
 
-case class Return(columns: List[ String ], returnItems: ReturnItem*)
+case class Select(columns: List[ String ], returnItems: ReturnItem*)
 
-case class Start(startItems: StartItem*)
+case class From(startItems: StartItem*)
 
 case class Match(patterns: Pattern*)
 

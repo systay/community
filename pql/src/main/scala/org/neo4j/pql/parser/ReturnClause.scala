@@ -24,7 +24,7 @@ import scala.util.parsing.combinator._
 trait ReturnClause extends JavaTokenParsers with Tokens with ReturnItems {
 
 
-  def select: Parser[(Return, Option[Aggregation])] = ignoreCase("select") ~> opt("distinct") ~ rep1sep((aggregate | returnItem), ",") ^^
+  def select: Parser[(Select, Option[Aggregation])] = ignoreCase("select") ~> opt("distinct") ~ rep1sep((aggregate | returnItem), ",") ^^
     { case distinct ~ items => {
       val list = items.filter(_.isInstanceOf[AggregationItem]).map(_.asInstanceOf[AggregationItem])
 
@@ -34,7 +34,7 @@ trait ReturnClause extends JavaTokenParsers with Tokens with ReturnItems {
       }
 
       (
-        Return(items.map(_.columnName).toList, items.filter(!_.isInstanceOf[AggregationItem]): _*),
+        Select(items.map(_.columnName).toList, items.filter(!_.isInstanceOf[AggregationItem]): _*),
         list match {
           case List() => none
           case _ => Some(Aggregation(list : _*))

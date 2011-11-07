@@ -19,12 +19,6 @@
  */
 package org.neo4j.shell;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.neo4j.helpers.collection.MapUtil.stringMap;
-import static org.neo4j.kernel.Config.ENABLE_REMOTE_SHELL;
-
 import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.helpers.collection.MapUtil;
@@ -34,6 +28,10 @@ import org.neo4j.shell.impl.SameJvmClient;
 import org.neo4j.shell.impl.ShellBootstrap;
 import org.neo4j.shell.impl.ShellServerExtension;
 import org.neo4j.shell.kernel.GraphDatabaseShellServer;
+
+import static org.junit.Assert.*;
+import static org.neo4j.helpers.collection.MapUtil.stringMap;
+import static org.neo4j.kernel.Config.ENABLE_REMOTE_SHELL;
 
 public class ShellTest
 {
@@ -119,7 +117,7 @@ public class ShellTest
         Documenter doc = new Documenter("sample session", client);
         doc.add("pwd", "", "where are we?");
         doc.add("set name \"Jon\"", "", "On the current node, set the key \"name\" to value \"Jon\"");
-        doc.add("start n=(0) return n", "Jon", "send a cypher query");
+        doc.add("select n from n=node(0)", "Jon", "send a cypher query");
         doc.add("mkrel -c -d i -t LIKES --np \"{'app':'foobar'}\"", "", "make an incoming relationship of type LIKES, create the end node with the node properties specified.");
         doc.add("ls", "1", "where are we?");
         doc.add("cd 1", "", "change to the newly created node");
@@ -182,9 +180,8 @@ public class ShellTest
         doc.add( "cd", "", "go to the first node in the history stack" );
 
         doc.add( "","","Now, let's ask some questions" );
-        doc.add( "start morpheus = (node_auto_index, name, 'Morpheus') " +
-                "match morpheus-[:KNOWS]-zionist " +
-                "return zionist.name",
+        doc.add( "select zionist.name? from morpheus = node:node_auto_index(name = 'Morpheus') " +
+                "pattern morpheus-[:KNOWS]-zionist ",
                 "",
                 "Morpheus' friends, looking up Morpheus by name in the Neo4j autoindex" );
         doc.run();

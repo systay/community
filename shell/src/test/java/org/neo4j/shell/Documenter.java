@@ -19,18 +19,13 @@
  */
 package org.neo4j.shell;
 
-import static org.junit.Assert.assertTrue;
+import org.neo4j.shell.impl.RemoteOutput;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Serializable;
+import java.io.*;
 import java.rmi.RemoteException;
 import java.util.Stack;
 
-import org.neo4j.shell.impl.RemoteOutput;
+import static org.junit.Assert.assertTrue;
 
 public class Documenter
 {
@@ -114,8 +109,7 @@ public class Documenter
         stack.push( new Job( query, assertion, comment ) );
     }
 
-    public void run()
-    {
+    public void run() throws ShellException, RemoteException {
         File dir = new File( "target/docs/dev/shell" );
         if ( !dir.exists() )
         {
@@ -139,8 +133,8 @@ public class Documenter
 
         for ( Job job : stack )
         {
-            try
-            {
+//            try
+//            {
                 DocOutput output = new DocOutput();
                 String prompt = client.getServer().interpretVariable( "PS1", client.session().get("PS1"), client.session() ).toString();
                 client.getServer().interpretLine( job.query, client.session(),
@@ -148,17 +142,17 @@ public class Documenter
                 String result = output.baos.toString();
                 assertTrue( result + "did not contain " + job.assertion, result.contains( job.assertion ) );
                 doc( job, out, result, prompt );
-            }
-            catch ( RemoteException e )
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            catch ( ShellException e )
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+//            }
+//            catch ( RemoteException e )
+//            {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
+//            catch ( ShellException e )
+//            {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
         }
         out.println( "-----" );
         out.flush();

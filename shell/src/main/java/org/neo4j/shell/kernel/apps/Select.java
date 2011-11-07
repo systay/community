@@ -19,28 +19,21 @@
  */
 package org.neo4j.shell.kernel.apps;
 
+import org.neo4j.helpers.Service;
+import org.neo4j.pql.SyntaxException;
+import org.neo4j.pql.commands.Query;
+import org.neo4j.pql.javacompat.ExecutionEngine;
+import org.neo4j.pql.javacompat.ExecutionResult;
+import org.neo4j.pql.javacompat.PqlParser;
+import org.neo4j.shell.*;
+
 import java.rmi.RemoteException;
 
-import org.neo4j.cypher.SyntaxException;
-import org.neo4j.cypher.commands.Query;
-import org.neo4j.cypher.javacompat.CypherParser;
-import org.neo4j.cypher.javacompat.ExecutionEngine;
-import org.neo4j.cypher.javacompat.ExecutionResult;
-import org.neo4j.helpers.Service;
-import org.neo4j.shell.App;
-import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Output;
-import org.neo4j.shell.Session;
-import org.neo4j.shell.ShellException;
 
-/**
- * Mimics the POSIX application with the same name, i.e. renames a property. It
- * could also (regarding POSIX) move nodes, but it doesn't).
- */
 @Service.Implementation( App.class )
-public class Start extends GraphDatabaseApp
+public class Select extends GraphDatabaseApp
 {
-    public Start()
+    public Select()
     {
         super();
     }
@@ -48,20 +41,20 @@ public class Start extends GraphDatabaseApp
     @Override
     public String getDescription()
     {
-        return "Executes a Cypher query. " +
-        	"Usage: start <rest of query>";
+        return "Executes a PQL query. " +
+        	"Usage: select <rest of query>";
     }
 
     @Override
     protected String exec( AppCommandParser parser, Session session, Output out )
         throws ShellException, RemoteException
     {
-        String query = "start";
+        String query = "select";
         for ( String argument : parser.arguments() )
         {
             query += " " + argument;
         }
-        CypherParser qparser = new CypherParser();
+        PqlParser qparser = new PqlParser();
         ExecutionEngine engine = new ExecutionEngine( getServer().getDb() );
         try
         {

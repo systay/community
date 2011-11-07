@@ -174,7 +174,7 @@ public class RolesTest extends AbstractJavaDocTestbase
         // END SNIPPET: get-admins
         
         gen.get().addSnippet( "o-get-admins", createOutputSnippet( traverserToString( traverser ) ) );
-        String query = "start admins=node("+ admins.getId() +") match admins<-[:PART_OF*0..]-subrole<-[:MEMBER_OF]-user return user, subrole";
+        String query = "select user, subrole from admins=node("+ admins.getId() +") pattern admins<-[:PART_OF*0..]-subrole<-[:MEMBER_OF]-user";
         gen.get().addSnippet( "query-get-admins", createCypherSnippet( query ) );
         String result = engine.execute( parser.parse( query ) ).toString();
         assertTrue( result.contains("Engin") );
@@ -190,7 +190,7 @@ public class RolesTest extends AbstractJavaDocTestbase
                 Direction.OUTGOING, RoleRels.PART_OF, Direction.OUTGOING );
         // END SNIPPET: get-user-memberships
         gen.get().addSnippet( "o-get-user-memberships", createOutputSnippet( traverserToString( traverser ) ) );
-        query = "start jale=node("+ jale.getId() +") match jale-[:MEMBER_OF]->()-[:PART_OF*0..]->role return jale, role";
+        query = "select jale, role from jale=node("+ jale.getId() +") pattern jale-[:MEMBER_OF]->()-[:PART_OF*0..]->role";
         gen.get().addSnippet( "query-get-user-memberships", createCypherSnippet( query ) );
         result = engine.execute( parser.parse( query ) ).toString();
         assertTrue( result.contains("Users") );
@@ -208,7 +208,7 @@ public class RolesTest extends AbstractJavaDocTestbase
                 Direction.INCOMING, RoleRels.PART_OF, Direction.INCOMING );
         // END SNIPPET: get-groups
         gen.get().addSnippet( "o-get-groups", createOutputSnippet( traverserToString( traverser ) ) );
-        query = "start refNode=node("+ referenceNode.getId() +") match refNode<-[:ROOT]->()<-[:PART_OF*0..]-group return group";
+        query = "select group from refNode=node("+ referenceNode.getId() +") pattern refNode<-[:ROOT]->()<-[:PART_OF*0..]-group";
         gen.get().addSnippet( "query-get-groups", createCypherSnippet( query ) );
         result = engine.execute( parser.parse( query ) ).toString();
         assertTrue( result.contains("Users") );
@@ -239,8 +239,8 @@ public class RolesTest extends AbstractJavaDocTestbase
                 Direction.INCOMING, RoleRels.MEMBER_OF, Direction.INCOMING );
         // END SNIPPET: get-members
         gen.get().addSnippet( "o-get-members", createOutputSnippet( traverserToString( traverser ) ) );
-        query = "start refNode=node("+ referenceNode.getId() +") " +
-        		"match p=refNode<-[:ROOT]->parent<-[:PART_OF*0..]-group, group<-[:MEMBER_OF]-user return group.name, user.name, LENGTH(p) " +
+        query = "select group.name, user.name, LENGTH(p) from refNode=node("+ referenceNode.getId() +") " +
+        		"pattern p=refNode<-[:ROOT]->parent<-[:PART_OF*0..]-group, group<-[:MEMBER_OF]-user  " +
         		"order by LENGTH(p)";
         gen.get().addSnippet( "query-get-members", createCypherSnippet( query ) );
         result = engine.execute( parser.parse( query ) ).toString();

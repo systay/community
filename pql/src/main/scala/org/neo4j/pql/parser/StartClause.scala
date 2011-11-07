@@ -24,7 +24,7 @@ import org.neo4j.pql.commands._
 import scala.util.parsing.combinator._
 
 trait StartClause extends JavaTokenParsers with Tokens {
-  def from: Parser[Start] = ignoreCase("from") ~> rep1sep(startBit, ",") ^^ (x => Start(x: _*))
+  def from: Parser[From] = ignoreCase("from") ~> rep1sep(startBit, ",") ^^ (x => From(x: _*))
 
   def startBit = identity ~ "=" ~ lookup ^^ {
     case id ~ "=" ~ l => l(id)
