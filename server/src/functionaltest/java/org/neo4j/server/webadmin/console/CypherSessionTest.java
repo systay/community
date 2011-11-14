@@ -40,6 +40,7 @@
 package org.neo4j.server.webadmin.console;
 
 import org.junit.Test;
+import org.neo4j.helpers.Pair;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
 import static org.hamcrest.text.StringContains.containsString;
@@ -50,8 +51,14 @@ public class CypherSessionTest
     @Test
     public void shouldReturnASingleNode() throws Exception
     {
+<<<<<<< HEAD
         PqlSession session = new PqlSession( new ImpermanentGraphDatabase() );
         String result = session.evaluate( "select a from a=node(0)" );
         assertThat( result, containsString( "Node[0]" ) );
+=======
+        CypherSession session = new CypherSession( new ImpermanentGraphDatabase() );
+        Pair<String, String> result = session.evaluate( "start a=node(0) return a" );
+        assertThat( result.first(), containsString( "Node[0]" ) );
+>>>>>>> master
     }
 }

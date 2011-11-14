@@ -17,20 +17,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.kernel.impl.transaction.xaframework;
+package org.neo4j.index.impl.lucene;
 
-import java.nio.channels.ReadableByteChannel;
+import java.io.IOException;
 
-import org.neo4j.helpers.Service;
+import org.apache.lucene.index.IndexWriter;
+import org.neo4j.kernel.impl.cache.LruCache;
 
-public abstract class LogDeserializerProvider extends Service
+/**
+ * An Lru Cache for Lucene Index Writers.
+ *
+ * @see LuceneDataSource
+ */
+public class IndexWriterLruCache extends LruCache<IndexIdentifier, IndexWriter>
 {
-    public LogDeserializerProvider( String name )
+    /**
+     * Creates a LRU cache. If <CODE>maxSize < 1</CODE> an
+     * IllegalArgumentException is thrown.
+     *
+     * @param maxSize maximum size of this cache
+     */
+    public IndexWriterLruCache( int maxSize )
     {
-        super( name );
+        super( "IndexWriterCache", maxSize, null );
     }
 
-    public abstract LogDeserializer getLogDeserializer(
-            ReadableByteChannel byteChannel, LogBuffer writeBuffer,
-            LogApplier applier, XaCommandFactory cf, XaDataSource ds );
+    @Override
+    public void elementCleaned(IndexWriter writer)
+    {
+        try {
+            writer.close( true );
+        } catch (IOException e) {
+            throw new RuntimeException( e );
+        }
+    }
 }

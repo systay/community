@@ -17,16 +17,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.kernel.impl.transaction.xaframework;
+package org.apache.lucene.index;
 
-import java.io.IOException;
-
-public interface LogDeserializer
+/**
+ * IndexWriter.isClosed is package local.
+ */
+public class IndexWriterAccessor
 {
-    boolean readAndWriteAndApplyEntry( int newXidIdentifier )
-            throws IOException;
-
-    LogEntry.Start getStartEntry();
-
-    LogEntry.Commit getCommitEntry();
+    public static boolean isClosed(IndexWriter writer)
+    {
+        return writer.isClosed();
+    }
 }

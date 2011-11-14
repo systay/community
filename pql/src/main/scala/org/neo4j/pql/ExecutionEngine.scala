@@ -54,6 +54,7 @@ class ExecutionEngine(graph: GraphDatabaseService) {
   @throws(classOf[SyntaxException])
   def execute(query: Query, map: JavaMap[String, Any]): ExecutionResult = execute(query, map.asScala.toMap)
 
+
   @throws(classOf[SyntaxException])
   def execute(query: Query, params: Map[String, Any]): ExecutionResult = query match {
     case Query(returns, start, matching, where, aggregation, sort, slice, namedPaths) => {
@@ -83,7 +84,7 @@ class ExecutionEngine(graph: GraphDatabaseService) {
         context.pipe = new FilterPipe(context.pipe, context.clauses.reduceLeft(_ ++ _))
       }
 
-      val allReturnItems = extractReturnItems(returns, aggregation, sort)
+      val allReturnItems = extractReturnItems(returns, aggregation)
 
       context.pipe = new TransformPipe(context.pipe, allReturnItems)
 
@@ -94,12 +95,7 @@ class ExecutionEngine(graph: GraphDatabaseService) {
         }
       }
 
-      sort match {
-        case None =>
-        case Some(s) => {
-          context.pipe = new SortPipe(context.pipe, s.sortItems.toList)
-        }
-      }
+      createSortPipe(sort, allReturnItems, context)
 
       slice match {
         case None =>
@@ -159,14 +155,16 @@ class ExecutionEngine(graph: GraphDatabaseService) {
     }
   }
 
+<<<<<<< HEAD
   private def extractReturnItems(returns: Select, aggregation: Option[Aggregation], sort: Option[Sort]): Seq[ReturnItem] = {
+=======
+  private def extractReturnItems(returns: Return, aggregation: Option[Aggregation]): Seq[ReturnItem] = {
+>>>>>>> master
     val aggregation1 = aggregation.getOrElse(new Aggregation())
-    val sort1 = sort.getOrElse(new Sort())
 
     val aggregationItems = aggregation1.aggregationItems.map(_.concreteReturnItem)
-    val sortItems = sort1.sortItems.map(_.returnItem.concreteReturnItem)
 
-    returns.returnItems ++ aggregationItems ++ sortItems
+    returns.returnItems ++ aggregationItems
   }
 
   private def createStartPipe(lastPipe: Pipe, item: StartItem): Pipe = item match {
@@ -219,6 +217,30 @@ class ExecutionEngine(graph: GraphDatabaseService) {
     }
   }
 
+<<<<<<< HEAD
+=======
+  private def createSortPipe(sort: Option[Sort], allReturnItems: Seq[ReturnItem], context: CurrentContext) {
+    sort match {
+      case None =>
+      case Some(s) => {
+
+        val sortItems = s.sortItems.map(_.returnItem.concreteReturnItem).filterNot(allReturnItems.contains)
+        if (sortItems.nonEmpty) {
+          context.pipe = new TransformPipe(context.pipe, sortItems)
+        }
+        context.pipe = new SortPipe(context.pipe, s.sortItems.toList)
+      }
+    }
+  }
+
+  def checkScalaVersion() {
+    if (util.Properties.versionString.matches("^version 2.9.0")) {
+      throw new Error("Cypher can only run with Scala 2.9.0. It looks like the Scala version is: " +
+        util.Properties.versionString)
+    }
+  }
+
+>>>>>>> master
   private def makeNodes[T](data: Any, name: String, getElement: Long => T): Seq[T] = {
     def castElement(x: Any): T = x match {
       case i: Int => getElement(i)

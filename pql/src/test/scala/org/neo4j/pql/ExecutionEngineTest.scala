@@ -1116,6 +1116,51 @@ pattern a-[r1?:knows]->friend-[r2:knows]->foaf
     execute(query).toList
   }
 
+  @Test def shouldSupportSortAndDistinct() {
+    val a = createNode("A")
+    val b = createNode("B")
+    val c = createNode("C")
+
+    val result = parseAndExecute("""
+start a  = node(1,2,3,1)
+return distinct a
+order by a.name
+""")
+
+    assert(List(a,b,c) === result.columnAs[Node]("a") .toList)
+  }
+
+  @Test def shouldHandleAggregationOnFunctions() {
+    val a = createNode("A")
+    val b = createNode("B")
+    val c = createNode("C")
+    relate(a,b,"X")
+    relate(a,c,"X")
+
+    val result = parseAndExecute("""
+start a  = node(1)
+match p = a -[*]-> b
+return b, avg(length(p))
+""")
+
+    assert(List(b,c) === result.columnAs[Node]("b") .toList)
+  }
+
+
+  @Test(expected = classOf[SyntaxException]) def shouldNotSupportSortingOnThingsAfterDistinctHasRemovedIt() {
+    val a = createNode("name"->"A", "age"->13)
+    val b = createNode("name"->"B", "age"->12)
+    val c = createNode("name"->"C", "age"->11)
+
+    val result = parseAndExecute("""
+start a  = node(1,2,3,1)
+return distinct a.name
+order by a.age
+""")
+
+    assert(List(a,b,c) === result.columnAs[Node]("a") .toList)
+  }
+
   @Test def shouldThrowNiceErrorMessageWhenPropertyIsMissing() {
     val query = new PqlParser().parse("""select n.A_PROPERTY_THAT_IS_MISSING from n=node(0)""")
     try {

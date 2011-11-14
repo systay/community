@@ -41,31 +41,61 @@ public class Select extends GraphDatabaseApp
     @Override
     public String getDescription()
     {
+<<<<<<< HEAD
         return "Executes a PQL query. " +
         	"Usage: select <rest of query>";
+=======
+        return "Executes a Cypher query. Usage: start <rest of query>";
+>>>>>>> master
     }
 
     @Override
     protected String exec( AppCommandParser parser, Session session, Output out )
         throws ShellException, RemoteException
     {
+<<<<<<< HEAD
         String query = "select";
         for ( String argument : parser.arguments() )
+=======
+        String query = parser.getLine();
+        if ( endsWithNewLine( query ) || looksToBeComplete( query ) )
+>>>>>>> master
         {
-            query += " " + argument;
+            CypherParser qparser = new CypherParser();
+            ExecutionEngine engine = new ExecutionEngine( getServer().getDb() );
+            try
+            {
+                Query cquery = qparser.parse( query );
+                ExecutionResult result = engine.execute( cquery );
+                out.println( result.toString() );
+            }
+            catch ( SyntaxException e )
+            {
+                throw ShellException.wrapCause( e );
+            }
+            return null;
         }
+<<<<<<< HEAD
         PqlParser qparser = new PqlParser();
         ExecutionEngine engine = new ExecutionEngine( getServer().getDb() );
         try
+=======
+        else
+>>>>>>> master
         {
-            Query cquery = qparser.parse( query );
-            ExecutionResult result = engine.execute( cquery );
-            out.println( result.toString() );
+            return "c";
         }
-        catch ( SyntaxException e )
-        {
-            throw ShellException.wrapCause( e );
-        }
-        return null;
+    }
+
+    private boolean looksToBeComplete( String query )
+    {
+        // TODO do for real
+        return query.toLowerCase().contains( "return" );
+//        return false;
+    }
+
+    private boolean endsWithNewLine( String query )
+    {
+        return query.length() > 0 && query.endsWith( "\n" );
     }
 }

@@ -228,6 +228,18 @@ class PqlParserTest extends JUnitSuite with Assertions {
   }
 
 
+  @Test def shouldHandleNegativeLiteralsAsExpected() {
+    testQuery(
+      "start a = NODE(1) where -35 = a.age AND a.age > -1.2 return a",
+      Query.
+        start(NodeById("a", 1)).
+        where(And(
+        Equals(Literal(-35), PropertyValue("a", "age")),
+        GreaterThan(PropertyValue("a", "age"), Literal(-1.2)))
+      ).
+        returns(ValueReturnItem(EntityValue("a"))))
+  }
+
   @Test def shouldCreateNotEqualsQuery() {
     testQuery(
       """select a from a = NODE(1) where 35 != a.age""",
@@ -565,8 +577,13 @@ class PqlParserTest extends JUnitSuite with Assertions {
       Query.
         from(NodeById("n", 1)).
         namedPaths(NamedPath("p", RelatedTo("n", "x", "  UNNAMED1", None, Direction.OUTGOING, false))).
+<<<<<<< HEAD
         where(Equals(ArrayLengthValue(PathRelationshipsValue(EntityValue("p"))), Literal(1))).
         returns(ValueReturnItem(EntityValue("p"))))
+=======
+        where(Equals(ArrayLengthValue(PathRelationshipsValue(EntityValue("p"))), Literal(1)))
+        returns (ValueReturnItem(EntityValue("p"))))
+>>>>>>> master
   }
 
   @Test def countNonNullValues() {
@@ -635,18 +652,30 @@ class PqlParserTest extends JUnitSuite with Assertions {
   }
 
   @Test def variableLengthPath() {
+<<<<<<< HEAD
     testQuery("""select x from a=node(0) pattern a -[:knows*1..3]-> x""",
       Query.
         from(NodeById("a", 0)).
+=======
+    testQuery("start a=node(0) match a -[:knows*1..3]-> x return x",
+      Query.
+        start(NodeById("a", 0)).
+>>>>>>> master
         matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(1), Some(3), "knows", Direction.OUTGOING)).
         returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
   @Test def fixedVarLengthPath() {
+<<<<<<< HEAD
     testQuery("""select x from a=node(0) pattern a -[*3]-> x""",
       Query.
         from(NodeById("a", 0)).
+=======
+    testQuery("start a=node(0) match a -[*3]-> x return x",
+      Query.
+        start(NodeById("a", 0)).
+>>>>>>> master
         matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(3), Some(3), None, Direction.OUTGOING, None,
         false)).
         returns(ValueReturnItem(EntityValue("x")))
@@ -654,18 +683,30 @@ class PqlParserTest extends JUnitSuite with Assertions {
   }
 
   @Test def variableLengthPathWithoutMinDepth() {
+<<<<<<< HEAD
     testQuery("""select x from a=node(0) pattern a -[:knows*..3]-> x""",
       Query.
         from(NodeById("a", 0)).
+=======
+    testQuery("start a=node(0) match a -[:knows*..3]-> x return x",
+      Query.
+        start(NodeById("a", 0)).
+>>>>>>> master
         matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", None, Some(3), "knows", Direction.OUTGOING)).
         returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
   @Test def variableLengthPathWithRelationshipIdentifier() {
+<<<<<<< HEAD
     testQuery("""select x from a=node(0) pattern a -[r:knows*2..]-> x""",
       Query.
         from(NodeById("a", 0)).
+=======
+    testQuery("start a=node(0) match a -[r:knows*2..]-> x return x",
+      Query.
+        start(NodeById("a", 0)).
+>>>>>>> master
         matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(2), None, Some("knows"), Direction.OUTGOING,
         Some("r"), false)).
         returns(ValueReturnItem(EntityValue("x")))
@@ -673,18 +714,30 @@ class PqlParserTest extends JUnitSuite with Assertions {
   }
 
   @Test def variableLengthPathWithoutMaxDepth() {
+<<<<<<< HEAD
     testQuery("""select x from a=node(0) pattern a -[:knows*2..]-> x""",
       Query.
         from(NodeById("a", 0)).
+=======
+    testQuery("start a=node(0) match a -[:knows*2..]-> x return x",
+      Query.
+        start(NodeById("a", 0)).
+>>>>>>> master
         matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", Some(2), None, "knows", Direction.OUTGOING)).
         returns(ValueReturnItem(EntityValue("x")))
     )
   }
 
   @Test def unboundVariableLengthPath() {
+<<<<<<< HEAD
     testQuery("""select x from a=node(0) pattern a -[:knows*]-> x""",
       Query.
         from(NodeById("a", 0)).
+=======
+    testQuery("start a=node(0) match a -[:knows*]-> x return x",
+      Query.
+        start(NodeById("a", 0)).
+>>>>>>> master
         matches(VarLengthRelatedTo("  UNNAMED1", "a", "x", None, None, "knows", Direction.OUTGOING)).
         returns(ValueReturnItem(EntityValue("x")))
     )
@@ -848,7 +901,11 @@ class PqlParserTest extends JUnitSuite with Assertions {
     testQuery(
       """select pA from pA = node(0) where pA.name =~ {regex} """,
       Query.
+<<<<<<< HEAD
         from(NodeById("pA", 0)).
+=======
+        start(NodeById("pA", 0)).
+>>>>>>> master
         where(RegularExpression(PropertyValue("pA", "name"), ParameterValue("regex")))
         returns (ValueReturnItem(EntityValue("pA"))))
   }
