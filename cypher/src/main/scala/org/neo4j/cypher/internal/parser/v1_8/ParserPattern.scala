@@ -86,14 +86,12 @@ trait ParserPattern extends Base {
   private def nodeFromExpression = Parser {
     case in => expression(in) match {
       case Success(exp, rest) => Success(ParsedEntity(exp, Map[String, Expression](), True()), rest)
-      case x:Error => x
-      case Failure(msg,rest) =>
-        println(msg)
-        Failure("INNERexpected an expression that is a node", rest)
+      case x: Error => x
+      case Failure(msg, rest) => failure("expected an expression that is a node", rest)
     }
   }
 
-    expression ^^ {
+  expression ^^ {
     case expression => ParsedEntity(expression, Map[String, Expression](), True())
   }
 
@@ -124,10 +122,9 @@ trait ParserPattern extends Base {
     }
   }
 
-  private def singleRelationship: Parser[AbstractPattern] =
-    onlyOne("expected single path segment", relationship)
+  private def patternForShortestPath: Parser[AbstractPattern] = onlyOne("expected single path segment", relationship)
 
-  private def shortestPath: Parser[List[AbstractPattern]] = (ignoreCase("shortestPath") | ignoreCase("allShortestPaths")) ~ parens(singleRelationship) ^^ {
+  private def shortestPath: Parser[List[AbstractPattern]] = (ignoreCase("shortestPath") | ignoreCase("allShortestPaths")) ~ parens(patternForShortestPath) ^^ {
     case algo ~ relInfo =>
       val single = algo match {
         case "shortestpath" => true
@@ -169,9 +166,9 @@ trait ParserPattern extends Base {
 
   private def linkErrorMessages: Parser[Tail] =
     opt("<") ~> "-" ~> "[" ~> opt(identity) ~> opt("?") ~> opt(":" ~> rep1sep(identity, "|")) ~> variable_length ~> props ~> "]" ~> failure("expected -") |
-    opt("<") ~> "-" ~> "[" ~> opt(identity) ~> opt("?") ~> opt(":" ~> rep1sep(identity, "|")) ~> variable_length ~> props ~> failure("unclosed bracket") |
-    opt("<") ~> "-" ~> "[" ~> failure("expected relationship information") |
-    opt("<") ~> "-" ~> failure("expected [ or -")
+      opt("<") ~> "-" ~> "[" ~> opt(identity) ~> opt("?") ~> opt(":" ~> rep1sep(identity, "|")) ~> variable_length ~> props ~> failure("unclosed bracket") |
+      opt("<") ~> "-" ~> "[" ~> failure("expected relationship information") |
+      opt("<") ~> "-" ~> failure("expected [ or -")
 
   private def variable_length = opt("*" ~ opt(wholeNumber) ~ opt("..") ~ opt(wholeNumber)) ^^ {
     case None => None
@@ -232,4 +229,5 @@ trait ParserPattern extends Base {
 
     def success = false
   }
+
 }
