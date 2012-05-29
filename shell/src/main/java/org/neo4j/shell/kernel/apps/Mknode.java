@@ -24,10 +24,10 @@ import org.neo4j.helpers.Service;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.shell.App;
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.OptionDefinition;
 import org.neo4j.shell.OptionValueType;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 
 @Service.Implementation( App.class )
@@ -40,8 +40,6 @@ public class Mknode extends GraphDatabaseApp
                 "Go to the created node, like doing 'cd'" ) );
         addOptionDefinition( "v", new OptionDefinition( OptionValueType.NONE,
                 "Verbose mode: display created node" ) );
-//        addOptionDefinition( "r", new OptionDefinition( OptionValueType.NONE,
-//                "Sets this new node as the referende node for this database (if there is no reference node already set)" ) );
     }
     
     @Override
@@ -52,33 +50,17 @@ public class Mknode extends GraphDatabaseApp
     }
     
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session, Output out ) throws Exception
+    protected Result exec( AppCommandParser parser, Session session, Output out ) throws Exception
     {
         GraphDatabaseAPI db = getServer().getDb();
-        Node node = null;
-//        if ( parser.options().containsKey( "r" ) )
-//        {
-//            try
-//            {
-//                db.getReferenceNode();
-//                throw new ShellException( "Reference node already exists" );
-//            }
-//            catch ( NotFoundException e )
-//            {
-//                node = ((AbstractGraphDatabase)getServer().getDb()).getConfig().getGraphDbModule().createNewReferenceNode();
-//            }
-//        }
-//        else
-//        {
-            node = db.createNode();
-//        }
-        
+        Node node = db.createNode();
+
         setProperties( node, parser.option( "np", null ) );
         if ( parser.options().containsKey( "cd" ) ) cdTo( session, node );
         if ( parser.options().containsKey( "v" ) )
         {
             out.println( "Node " + getDisplayName( getServer(), session, node, false ) + " created" );
         }
-        return Continuation.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE;
     }
 }

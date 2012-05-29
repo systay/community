@@ -36,10 +36,10 @@ import javax.management.openmbean.CompositeData;
 import org.neo4j.jmx.Kernel;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.OptionDefinition;
 import org.neo4j.shell.OptionValueType;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 import org.neo4j.shell.ShellException;
 import org.neo4j.shell.util.json.JSONArray;
@@ -92,7 +92,7 @@ public class Dbinfo extends ReadOnlyGraphDatabaseApp
     {
         GraphDatabaseAPI graphDb = getServer().getDb();
         Kernel kernel = null;
-        if ( graphDb instanceof GraphDatabaseAPI )
+        if ( graphDb != null )
         {
             try
             {
@@ -110,7 +110,7 @@ public class Dbinfo extends ReadOnlyGraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session, Output out ) throws Exception
+    protected Result exec( AppCommandParser parser, Session session, Output out ) throws Exception
     {
         Kernel kernel = getKernel();
         boolean list = parser.options().containsKey( "l" ), get = parser.options().containsKey( "g" );
@@ -120,7 +120,7 @@ public class Dbinfo extends ReadOnlyGraphDatabaseApp
             getUsage( usage );
             usage.append( ".\n" );
             out.print( usage.toString() );
-            return Continuation.INPUT_COMPLETE;
+            return Result.INPUT_COMPLETE;
         }
         MBeanServer mbeans = getPlatformMBeanServer();
         String bean = null;
@@ -139,7 +139,7 @@ public class Dbinfo extends ReadOnlyGraphDatabaseApp
             StringBuilder result = new StringBuilder();
             availableBeans( mbeans, kernel, result );
             out.print( result.toString() );
-            return Continuation.INPUT_COMPLETE;
+            return Result.INPUT_COMPLETE;
         }
         ObjectName mbean;
         {
@@ -195,7 +195,7 @@ public class Dbinfo extends ReadOnlyGraphDatabaseApp
             }
             out.println( json.toString( 2 ) );
         }
-        return Continuation.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE;
     }
 
     private void printAttribute( JSONObject json, Object value ) throws RemoteException, ShellException
@@ -207,7 +207,7 @@ public class Dbinfo extends ReadOnlyGraphDatabaseApp
             {
                 Object[] arrayValue = (Object[]) attribute.getValue();
                 JSONArray array = new JSONArray();
-                for ( Object item : (Object[]) arrayValue )
+                for ( Object item : arrayValue )
                 {
                     if ( item instanceof CompositeData ) array.put( compositeDataAsMap( (CompositeData)item ) );
                     else array.put( item.toString() );
@@ -228,9 +228,8 @@ public class Dbinfo extends ReadOnlyGraphDatabaseApp
     private Map<?,?> compositeDataAsMap( CompositeData item )
     {
         Map<String, Object> result = new HashMap<String, Object>();
-        CompositeData compositeData = (CompositeData) item;
-        for ( String key : compositeData.getCompositeType().keySet() )
-            result.put( key, compositeData.get( key ) );
+        for ( String key : item.getCompositeType().keySet() )
+            result.put( key, item.get( key ) );
         return result;
     }
 

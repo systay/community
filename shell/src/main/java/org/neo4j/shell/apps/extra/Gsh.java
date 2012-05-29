@@ -20,8 +20,8 @@
 package org.neo4j.shell.apps.extra;
 
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 import org.neo4j.shell.impl.AbstractApp;
 
@@ -41,12 +41,12 @@ import org.neo4j.shell.impl.AbstractApp;
  */
 public class Gsh extends AbstractApp
 {
-	public Continuation execute( AppCommandParser parser, Session session,
+	public Result execute( AppCommandParser parser, Session session,
 		Output out ) throws Exception
 	{
 		String line = parser.getLineWithoutApp();
 		new GshExecutor().execute( line, session, out );
-		return Continuation.INPUT_COMPLETE;
+		return Result.INPUT_COMPLETE;
 	}
 	
 	@Override

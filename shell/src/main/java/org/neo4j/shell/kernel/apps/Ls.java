@@ -42,10 +42,10 @@ import org.neo4j.kernel.Traversal;
 import org.neo4j.kernel.impl.util.SingleNodePath;
 import org.neo4j.shell.App;
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.OptionDefinition;
 import org.neo4j.shell.OptionValueType;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 import org.neo4j.shell.ShellException;
 
@@ -96,8 +96,7 @@ public class Ls extends ReadOnlyGraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session,
-        Output out ) throws ShellException, RemoteException
+    protected Result exec( AppCommandParser parser, Session session, Output out ) throws ShellException, RemoteException
     {
         boolean brief = parser.options().containsKey( "b" );
         boolean verbose = parser.options().containsKey( "v" );
@@ -118,16 +117,7 @@ public class Ls extends ReadOnlyGraphDatabaseApp
             displayRelationships = true;
         }
 
-        NodeOrRelationship thing = null;
-        if ( parser.arguments().isEmpty() )
-        {
-            thing = this.getCurrent( session );
-        }
-        else
-        {
-            thing = NodeOrRelationship.wrap( this.getNodeById( Long
-                .parseLong( parser.arguments().get( 0 ) ) ) );
-        }
+        NodeOrRelationship thing = getCurrentThing( parser, session );
 
         if ( displayProperties )
         {
@@ -143,14 +133,28 @@ public class Ls extends ReadOnlyGraphDatabaseApp
             }
             else
             {
-                displayNodes( parser, thing, session, out );
+                displayNodes( thing, session, out );
             }
         }
-        return Continuation.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE;
     }
 
-    private void displayNodes( AppCommandParser parser, NodeOrRelationship thing,
-            Session session, Output out ) throws RemoteException, ShellException
+    private NodeOrRelationship getCurrentThing( AppCommandParser parser, Session session ) throws ShellException
+    {
+        NodeOrRelationship thing;
+        if ( parser.arguments().isEmpty() )
+        {
+            thing = this.getCurrent( session );
+        }
+        else
+        {
+            thing = NodeOrRelationship.wrap( this.getNodeById( Long.parseLong( parser.arguments().get( 0 ) ) ) );
+        }
+        return thing;
+    }
+
+    private void displayNodes( NodeOrRelationship thing,
+                               Session session, Output out ) throws RemoteException, ShellException
     {
         Relationship rel = thing.asRelationship();
         out.println( getDisplayName( getServer(), session, rel.getStartNode(), false ) +
@@ -194,14 +198,14 @@ public class Ls extends ReadOnlyGraphDatabaseApp
             if ( !brief )
             {
                 StringBuilder builder = new StringBuilder();
-                builder.append( "*" + key );
+                builder.append( "*" ).append( key );
                 if ( !quiet )
                 {
                     builder.append( multiply( " ", longestKey - key.length() + 1 ) );
-                    builder.append( "=" + format( value, true ) );
+                    builder.append( "=" ).append( format( value, true ) );
                     if ( verbose )
                     {
-                        builder.append( " (" + getNiceType( value ) + ")" );
+                        builder.append( " (" ).append( getNiceType( value ) ).append( ")" );
                     }
                 }
                 out.println( builder.toString() );

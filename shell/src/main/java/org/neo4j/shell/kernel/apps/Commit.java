@@ -29,8 +29,8 @@ import javax.transaction.Transaction;
 import org.neo4j.helpers.Service;
 import org.neo4j.shell.App;
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 import org.neo4j.shell.ShellException;
 
@@ -49,7 +49,6 @@ public class Commit extends ReadOnlyGraphDatabaseApp
     {
         try
         {
-
             return getServer().getDb().getTxManager().getTransaction();
         } catch ( SystemException e )
         {
@@ -58,13 +57,12 @@ public class Commit extends ReadOnlyGraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session, Output out )
-            throws ShellException, RemoteException
+    protected Result exec( AppCommandParser parser, Session session, Output out ) throws ShellException, RemoteException
     {
         if ( parser.getLineWithoutApp().trim().length() > 0 )
         {
             out.println( "Error: COMMIT should  be run without trailing arguments" );
-            return Continuation.INPUT_COMPLETE;
+            return Result.INPUT_COMPLETE;
         }
 
         Integer txCount = (Integer) session.get( TX_COUNT );
@@ -94,7 +92,7 @@ public class Commit extends ReadOnlyGraphDatabaseApp
                 tx.commit();
                 session.remove( TX_COUNT );
                 out.println( "Transaction committed" );
-                return Continuation.INPUT_COMPLETE;
+                return Result.INPUT_COMPLETE;
             } catch ( Exception e )
             {
                 throw fail( session, e.getMessage() );
@@ -103,7 +101,7 @@ public class Commit extends ReadOnlyGraphDatabaseApp
         {
             session.set( TX_COUNT, --txCount );
             out.println( String.format( "Nested transaction committed (Tx count: %d)", txCount ) );
-            return Continuation.INPUT_COMPLETE;
+            return Result.INPUT_COMPLETE;
         }
     }
 

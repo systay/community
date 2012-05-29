@@ -19,32 +19,22 @@
  */
 package org.neo4j.shell.impl;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.rmi.RemoteException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.neo4j.shell.App;
-import org.neo4j.shell.AppShellServer;
-import org.neo4j.shell.OptionDefinition;
-import org.neo4j.shell.Output;
-import org.neo4j.shell.Session;
-import org.neo4j.shell.ShellException;
+import org.neo4j.shell.*;
 import org.neo4j.shell.util.json.JSONArray;
 import org.neo4j.shell.util.json.JSONException;
 import org.neo4j.shell.util.json.JSONObject;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.util.*;
 
 /**
  * Common abstract implementation of an {@link App}.
  */
 public abstract class AbstractApp implements App
 {
-	private Map<String, OptionDefinition> optionDefinitions =
-		new HashMap<String, OptionDefinition>();
+    private Map<String, OptionDefinition> optionDefinitions = new HashMap<String, OptionDefinition>();
 	private AppShellServer server;
 	
 	public String getName()
@@ -57,8 +47,7 @@ public abstract class AbstractApp implements App
 		return this.optionDefinitions.get( option );
 	}
 
-	protected void addOptionDefinition( String option,
-	        OptionDefinition definition )
+	protected void addOptionDefinition( String option, OptionDefinition definition )
 	{
 		this.optionDefinitions.put( option, definition );
 	}
@@ -119,7 +108,7 @@ public abstract class AbstractApp implements App
 	        return new HashMap<String, Object>();
 	    }
 	    
-	    Map<String, Object> map = null;
+	    Map<String, Object> map;
 	    String signsOfJSON = ":";
 	    int numberOfSigns = 0;
 	    for ( int i = 0; i < signsOfJSON.length(); i++ )
@@ -161,8 +150,7 @@ public abstract class AbstractApp implements App
 	    return map;
 	}
 
-    protected static Map<String, Object> parseJSONMap( String jsonString )
-        throws JSONException
+    protected static Map<String, Object> parseJSONMap( String jsonString ) throws JSONException
 	{
         JSONObject object = new JSONObject( jsonString );
         Map<String, Object> result = new HashMap<String, Object>();

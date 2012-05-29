@@ -19,16 +19,11 @@
  */
 package org.neo4j.shell.kernel.apps;
 
+import org.neo4j.helpers.Service;
+import org.neo4j.shell.*;
+
 import java.rmi.RemoteException;
 import java.util.List;
-
-import org.neo4j.helpers.Service;
-import org.neo4j.shell.App;
-import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
-import org.neo4j.shell.Output;
-import org.neo4j.shell.Session;
-import org.neo4j.shell.ShellException;
 
 /**
  * Mimics the POSIX application with the same name, i.e. prints the current
@@ -44,10 +39,21 @@ public class Pwd extends ReadOnlyGraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session,
-        Output out ) throws ShellException, RemoteException
+    protected Result exec(AppCommandParser parser, Session session,
+                          Output out) throws ShellException, RemoteException
     {
-        String current = null;
+        out.println( "Current is " + getDisplayName(session));
+
+        String path = stringifyPath( Cd.readCurrentWorkingDir( session ), session ) + getDisplayName(session);
+        if ( path.length() > 0 )
+        {
+            out.println( path );
+        }
+        return Result.INPUT_COMPLETE;
+    }
+
+    private String getDisplayName(Session session) {
+        String current;
         try
         {
             current = getDisplayName( getServer(), session, getCurrent( session ), false );
@@ -56,14 +62,7 @@ public class Pwd extends ReadOnlyGraphDatabaseApp
         {
             current = getDisplayNameForNonExistent();
         }
-        out.println( "Current is " + current );
-
-        String path = stringifyPath( Cd.readCurrentWorkingDir( session ), session ) + current;
-        if ( path.length() > 0 )
-        {
-            out.println( path );
-        }
-        return Continuation.INPUT_COMPLETE;
+        return current;
     }
 
     private String stringifyPath( List<TypedId> pathIds, Session session )

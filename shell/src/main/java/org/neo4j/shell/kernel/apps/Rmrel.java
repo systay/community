@@ -34,10 +34,10 @@ import org.neo4j.graphdb.Traverser.Order;
 import org.neo4j.helpers.Service;
 import org.neo4j.shell.App;
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.OptionDefinition;
 import org.neo4j.shell.OptionValueType;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 import org.neo4j.shell.ShellException;
 import org.neo4j.tooling.GlobalGraphOperations;
@@ -70,7 +70,7 @@ public class Rmrel extends GraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session,
+    protected Result exec( AppCommandParser parser, Session session,
         Output out ) throws ShellException, RemoteException
     {
         assertCurrentIsNode( session );
@@ -100,7 +100,7 @@ public class Rmrel extends GraphDatabaseApp
                     " due to it not having any relationships left" );
             otherNode.delete();
         }
-        return Continuation.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE;
     }
 
     private void ensureConnectedness( Node otherNode ) throws ShellException

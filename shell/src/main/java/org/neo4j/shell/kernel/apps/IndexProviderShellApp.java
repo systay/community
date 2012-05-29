@@ -35,10 +35,10 @@ import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.helpers.Service;
 import org.neo4j.shell.App;
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.OptionDefinition;
 import org.neo4j.shell.OptionValueType;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 import org.neo4j.shell.ShellException;
 import org.neo4j.shell.util.json.JSONException;
@@ -100,7 +100,7 @@ public class IndexProviderShellApp extends GraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session, Output out )
+    protected Result exec( AppCommandParser parser, Session session, Output out )
             throws ShellException, RemoteException
     {
         boolean doCd = parser.options().containsKey( "cd" );
@@ -122,43 +122,9 @@ public class IndexProviderShellApp extends GraphDatabaseApp
 
         if ( get )
         {
-            String commandToRun = parser.options().get( "c" );
-            Collection<String> commandsToRun = new ArrayList<String>();
-            boolean specialCommand = false;
-            if ( doCd || doLs )
+            if ( get( parser, session, out, doCd, doLs, query ) )
             {
-                specialCommand = true;
-                if ( doCd )
-                {
-                    commandsToRun.add( "cd -a $i" );
-                }
-                else if ( doLs )
-                {
-                    commandsToRun.add( "ls $i" );
-                }
-            }
-            else if ( commandToRun != null )
-            {
-                commandsToRun.addAll( Arrays.asList( commandToRun.split( Pattern.quote( "&&" ) ) ) );
-            }
-            
-            if ( getIndex( getIndexName( parser ), getEntityType( parser ), out ) == null )
-            {
-                return Continuation.INPUT_COMPLETE;
-            }
-            
-            IndexHits<PropertyContainer> result = query ? query( parser, out ) : get( parser, out );
-            try
-            {
-                for ( PropertyContainer hit : result )
-                {
-                    printAndInterpretTemplateLines( commandsToRun, false, !specialCommand, NodeOrRelationship.wrap( hit ),
-                            getServer(), session, out );
-                }
-            }
-            finally
-            {
-                result.close();
+                return Result.INPUT_COMPLETE;
             }
         }
         else if ( index )
@@ -195,7 +161,50 @@ public class IndexProviderShellApp extends GraphDatabaseApp
             listIndexes( out );
         }
         
-        return Continuation.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE;
+    }
+
+    private boolean get( AppCommandParser parser, Session session, Output out, boolean doCd, boolean doLs, boolean query ) throws RemoteException, ShellException
+    {
+        String commandToRun = parser.options().get( "c" );
+        Collection<String> commandsToRun = new ArrayList<String>();
+        boolean specialCommand = false;
+        if ( doCd || doLs )
+        {
+            specialCommand = true;
+            if ( doCd )
+            {
+                commandsToRun.add( "cd -a $i" );
+            }
+            else if ( doLs )
+            {
+                commandsToRun.add( "ls $i" );
+            }
+        }
+        else if ( commandToRun != null )
+        {
+            commandsToRun.addAll( Arrays.asList( commandToRun.split( Pattern.quote( "&&" ) ) ) );
+        }
+
+        if ( getIndex( getIndexName( parser ), getEntityType( parser ), out ) == null )
+        {
+            return true;
+        }
+
+        IndexHits<PropertyContainer> result = query ? query( parser, out ) : get( parser, out );
+        try
+        {
+            for ( PropertyContainer hit : result )
+            {
+                printAndInterpretTemplateLines( commandsToRun, false, !specialCommand, NodeOrRelationship.wrap( hit ),
+                        getServer(), session, out );
+            }
+        }
+        finally
+        {
+            result.close();
+        }
+        return false;
     }
 
     private String getIndexName( AppCommandParser parser ) throws ShellException
@@ -239,9 +248,14 @@ public class IndexProviderShellApp extends GraphDatabaseApp
         {
             return;
         }
-        String oldValue = value != null ? 
-                getServer().getDb().index().setConfiguration( index, key, value ) :
-                getServer().getDb().index().removeConfiguration( index, key );
+
+        if ( value == null )
+        {
+            getServer().getDb().index().removeConfiguration( index, key );
+        } else
+        {
+            getServer().getDb().index().setConfiguration( index, key, value );
+        }
         printWarning( out );
     }
 

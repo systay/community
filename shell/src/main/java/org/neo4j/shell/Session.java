@@ -30,7 +30,23 @@ public class Session
 {
     private final Serializable id;
     private final Map<String, Object> properties = new HashMap<String, Object>();
-    
+
+    public interface SessionInterpreter
+    {
+        Result execute(Session session, String line, Output out) throws Exception;
+    }
+    private SessionInterpreter interpreter;
+
+    public void setInterpreter(SessionInterpreter interpreter)
+    {
+        this.interpreter = interpreter;
+    }
+
+    public Object interpret( String line, Output out ) throws Exception
+    {
+        return interpreter.execute( this, line, out );
+    }
+
     public Session( Serializable id )
     {
         this.id = id;

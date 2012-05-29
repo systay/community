@@ -26,10 +26,10 @@ import java.util.Map;
 import org.neo4j.helpers.Service;
 import org.neo4j.shell.App;
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.OptionDefinition;
 import org.neo4j.shell.OptionValueType;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 import org.neo4j.shell.ShellException;
 
@@ -158,13 +158,12 @@ public class Set extends GraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session,
+    protected Result exec( AppCommandParser parser, Session session,
         Output out ) throws ShellException
     {
         if ( parser.arguments().size() < 2 )
         {
-            throw new ShellException( "Must supply key and value, " +
-                "like: set title \"This is a my title\"" );
+            throw new ShellException( "Must supply key and value, like: set title \"This is a my title\"" );
         }
 
         String key = parser.arguments().get( 0 );
@@ -173,12 +172,12 @@ public class Set extends GraphDatabaseApp
 
         NodeOrRelationship thing = getCurrent( session );
         thing.setProperty( key, value );
-        return Continuation.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE;
     }
 
     private static Object parseValue( String stringValue, ValueType valueType )
     {
-        Object result = null;
+        Object result;
         if ( valueType.isArray )
         {
             Class<?> componentType = valueType.context.boxClass;
@@ -186,8 +185,7 @@ public class Set extends GraphDatabaseApp
             result = Array.newInstance( componentType, rawArray.length );
             for ( int i = 0; i < rawArray.length; i++ )
             {
-                Array.set( result, i,
-                    parseValue( rawArray[ i ].toString(), componentType ) );
+                Array.set( result, i, parseValue( rawArray[ i ].toString(), componentType ) );
             }
         }
         else
@@ -201,7 +199,7 @@ public class Set extends GraphDatabaseApp
     private static Object parseValue( String value, Class<?> type )
     {
         // TODO Are you tellin' me this can't be done in a better way?
-        Object result = null;
+        Object result;
         if ( type.equals( String.class ) )
         {
             result = value;

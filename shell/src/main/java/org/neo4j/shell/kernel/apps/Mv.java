@@ -20,14 +20,7 @@
 package org.neo4j.shell.kernel.apps;
 
 import org.neo4j.helpers.Service;
-import org.neo4j.shell.App;
-import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
-import org.neo4j.shell.OptionDefinition;
-import org.neo4j.shell.OptionValueType;
-import org.neo4j.shell.Output;
-import org.neo4j.shell.Session;
-import org.neo4j.shell.ShellException;
+import org.neo4j.shell.*;
 
 /**
  * Mimics the POSIX application with the same name, i.e. renames a property. It
@@ -54,8 +47,7 @@ public class Mv extends GraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session, Output out )
-        throws ShellException
+    protected Result exec(AppCommandParser parser, Session session, Output out) throws ShellException
     {
         if ( parser.arguments().size() < 2 )
         {
@@ -86,6 +78,6 @@ public class Mv extends GraphDatabaseApp
 
         Object value = thing.removeProperty( fromKey );
         thing.setProperty( toKey, value );
-        return Continuation.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE;
     }
 }

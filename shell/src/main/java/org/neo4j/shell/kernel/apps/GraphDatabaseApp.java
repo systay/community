@@ -48,10 +48,10 @@ import org.neo4j.kernel.OrderedByTypeExpander;
 import org.neo4j.kernel.Traversal;
 import org.neo4j.shell.App;
 import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
 import org.neo4j.shell.OptionDefinition;
 import org.neo4j.shell.OptionValueType;
 import org.neo4j.shell.Output;
+import org.neo4j.shell.Result;
 import org.neo4j.shell.Session;
 import org.neo4j.shell.ShellException;
 import org.neo4j.shell.TextUtil;
@@ -174,13 +174,13 @@ public abstract class GraphDatabaseApp extends AbstractApp
     protected static Direction getDirection( String direction,
         Direction defaultDirection ) throws ShellException
     {
-        return ( Direction ) parseEnum( Direction.class, direction, defaultDirection );
+        return parseEnum( Direction.class, direction, defaultDirection );
     }
 
     protected static NodeOrRelationship getThingById(
         GraphDatabaseShellServer server, TypedId typedId ) throws ShellException
     {
-        NodeOrRelationship result = null;
+        NodeOrRelationship result;
         if ( typedId.isNode() )
         {
             try
@@ -221,13 +221,12 @@ public abstract class GraphDatabaseApp extends AbstractApp
         return this.getServer().getDb().getNodeById( id );
     }
     
-    public Continuation execute( AppCommandParser parser, Session session,
-        Output out ) throws Exception
+    public Result execute( AppCommandParser parser, Session session, Output out ) throws Exception
     {
         Transaction tx = getServer().getDb().beginTx();
         try
         {
-            Continuation result = this.exec( parser, session, out );
+            Result result = this.exec(parser, session, out);
             tx.success();
             return result;
         }
@@ -242,8 +241,7 @@ public abstract class GraphDatabaseApp extends AbstractApp
         return "OUTGOING, INCOMING, o, i";
     }
 
-    protected abstract Continuation exec( AppCommandParser parser, Session session,
-        Output out ) throws Exception;
+    protected abstract Result exec( AppCommandParser parser, Session session, Output out ) throws Exception;
 
     protected void printPath( Path path, boolean quietPrint, Session session, Output out )
             throws RemoteException, ShellException

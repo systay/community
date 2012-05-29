@@ -19,28 +19,14 @@
  */
 package org.neo4j.shell.impl;
 
+import org.neo4j.helpers.Service;
+import org.neo4j.shell.*;
+import org.neo4j.shell.apps.Alias;
+
 import java.io.Serializable;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Pattern;
-
-import org.neo4j.helpers.Service;
-import org.neo4j.shell.App;
-import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.AppShellServer;
-import org.neo4j.shell.Continuation;
-import org.neo4j.shell.Output;
-import org.neo4j.shell.Response;
-import org.neo4j.shell.Session;
-import org.neo4j.shell.ShellException;
-import org.neo4j.shell.TabCompletion;
-import org.neo4j.shell.TextUtil;
-import org.neo4j.shell.apps.Alias;
 
 /**
  * A common implementation of an {@link AppShellServer}. The server can be given
@@ -49,7 +35,7 @@ import org.neo4j.shell.apps.Alias;
  * {@link App} interface will be available to execute.
  */
 public abstract class AbstractAppServer extends AbstractServer
-	implements AppShellServer
+	implements AppShellServer, Session.SessionInterpreter
 {
     private final Map<String, App> apps = new TreeMap<String, App>();
 
@@ -113,26 +99,33 @@ public abstract class AbstractAppServer extends AbstractServer
 		throws ShellException
 	{
         Session session = getClientSession( clientId );
+        session.setInterpreter( this );
 		if ( line == null || line.trim().length() == 0 )
 			return new Response( getPrompt( session ), Continuation.INPUT_COMPLETE );
 
         try
         {
-            Continuation commandResult = null;
-            for ( String command : line.split( Pattern.quote( "&&" ) ) )
-            {
-                command = TextUtil.removeSpaces( command );
-                command = replaceAlias( command, session );
-                AppCommandParser parser = new AppCommandParser( this, command );
-                commandResult = parser.app().execute( parser, session, out );
-            }
-            return new Response( getPrompt( session ), commandResult );
+            Result commandResult = execute(session, line, out);
+            return new Response( getPrompt( session ), commandResult.getContinuation() );
         }
         catch ( Exception e )
         {
             throw wrapException( e );
         }
 	}
+
+    public Result execute(Session session, String line, Output out) throws Exception
+    {
+        Result commandResult = null;
+        for ( String command : line.split( Pattern.quote( "&&" ) ) )
+        {
+            command = TextUtil.removeSpaces( command );
+            command = replaceAlias( command, session );
+            AppCommandParser parser = new AppCommandParser( this, command );
+            commandResult = parser.app().execute( parser, session, out );
+        }
+        return commandResult;
+    }
 
     protected String replaceAlias( String line, Session session )
     {

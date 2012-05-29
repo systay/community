@@ -19,15 +19,12 @@
  */
 package org.neo4j.shell.kernel.apps;
 
-import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
-import org.neo4j.shell.Output;
-import org.neo4j.shell.Session;
+import org.neo4j.shell.*;
 
 public abstract class ReadOnlyGraphDatabaseApp extends GraphDatabaseApp
 {
     @Override
-    public Continuation execute( AppCommandParser parser, Session session, Output out ) throws Exception
+    public Result execute(AppCommandParser parser, Session session, Output out) throws Exception
     {
         return this.exec( parser, session, out );
     }

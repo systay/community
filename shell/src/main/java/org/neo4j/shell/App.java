@@ -47,18 +47,19 @@ public interface App
 	
 	/**
 	 * The actual code for the application.
-	 * @param parser holds the options (w/ or w/o values) as well as arguments.  
-	 * @param session the client session (sort of like the environment
-	 * for the execution).
-	 * @param out the output channel for the execution, just like System.out.
-	 * @return the result of the execution. It is up to the client to interpret
+	 *
+     *
+     * @param parser holds the options (w/ or w/o values) as well as arguments.
+     * @param session the client session (sort of like the environment
+     * for the execution).
+     * @param out the output channel for the execution, just like System.out.
+     * @return the result of the execution. It is up to the client to interpret
 	 * this string, one example is that all apps returns null and the "exit"
 	 * app returns "e" so that the server interprets the "e" as a sign that
 	 * it should exit. 
 	 * @throws Exception if the execution fails.
 	 */
-	Continuation execute( AppCommandParser parser, Session session, Output out )
-		throws Exception;
+	Result execute( AppCommandParser parser, Session session, Output out ) throws Exception;
 	
 	/**
 	 * Returns the server this app runs in.

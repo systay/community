@@ -26,14 +26,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.helpers.Service;
-import org.neo4j.shell.App;
-import org.neo4j.shell.AppCommandParser;
-import org.neo4j.shell.Continuation;
-import org.neo4j.shell.OptionDefinition;
-import org.neo4j.shell.OptionValueType;
-import org.neo4j.shell.Output;
-import org.neo4j.shell.Session;
-import org.neo4j.shell.ShellException;
+import org.neo4j.shell.*;
 
 /**
  * Mimics the POSIX application "mkdir", but neo4j has relationships instead of
@@ -76,29 +69,14 @@ public class Mkrel extends GraphDatabaseApp
     }
 
     @Override
-    protected Continuation exec( AppCommandParser parser, Session session, Output out )
+    protected Result exec(AppCommandParser parser, Session session, Output out)
         throws ShellException, RemoteException
     {
         assertCurrentIsNode( session );
 
         boolean createNode = parser.options().containsKey( "c" );
         boolean suppliedNode = !parser.arguments().isEmpty();
-        Node node = null;
-        if ( createNode )
-        {
-            node = getServer().getDb().createNode();
-            session.set( KEY_LAST_CREATED_NODE, "" + node.getId() );
-            setProperties( node, parser.options().get( "np" ) );
-        }
-        else if ( suppliedNode )
-        {
-            node = getNodeById( Long.parseLong( parser.arguments().get( 0 ) ) );
-        }
-        else
-        {
-            throw new ShellException( "Must either create node (-c)"
-                + " or supply node id as the first argument" );
-        }
+        Node node = getOrCreateNode(parser, session, createNode, suppliedNode);
 
         if ( parser.options().get( "t" ) == null )
         {
@@ -129,6 +107,25 @@ public class Mkrel extends GraphDatabaseApp
         }
         
         if ( parser.options().containsKey( "cd" ) ) cdTo( session, node );
-        return Continuation.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE;
+    }
+
+    private Node getOrCreateNode( AppCommandParser parser, Session session, boolean createNode, boolean suppliedNode ) throws ShellException
+    {
+        Node node;
+        if ( createNode )
+        {
+            node = getServer().getDb().createNode();
+            session.set( KEY_LAST_CREATED_NODE, "" + node.getId() );
+            setProperties( node, parser.options().get( "np" ) );
+        } else if ( suppliedNode )
+        {
+            node = getNodeById( Long.parseLong( parser.arguments().get( 0 ) ) );
+        } else
+        {
+            throw new ShellException( "Must either create node (-c)"
+                    + " or supply node id as the first argument" );
+        }
+        return node;
     }
 }
