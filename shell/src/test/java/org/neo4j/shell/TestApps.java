@@ -401,4 +401,10 @@ public class TestApps extends AbstractShellTest
         }
         executeCommand( client, "env", allStrings );
     }
+
+    @Test
+    public void testLet() throws Exception
+    {
+        executeCommand( "let x = start n=node(0) return n,n;", "WUT" );
+    }
 }

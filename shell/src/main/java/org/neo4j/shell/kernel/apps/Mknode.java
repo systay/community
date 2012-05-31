@@ -61,6 +61,6 @@ public class Mknode extends GraphDatabaseApp
         {
             out.println( "Node " + getDisplayName( getServer(), session, node, false ) + " created" );
         }
-        return Result.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE( node );
     }
 }

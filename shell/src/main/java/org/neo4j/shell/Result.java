@@ -35,7 +35,7 @@ public class Result
 
     public static Result INPUT_COMPLETE( Object returnValue )
     {
-        return new Result( Continuation.INPUT_COMPLETE, null );
+        return new Result( Continuation.INPUT_COMPLETE, returnValue );
     }
 
     public static Result EXIT = new Result( Continuation.EXIT, null );

@@ -107,7 +107,7 @@ public class Mkrel extends GraphDatabaseApp
         }
         
         if ( parser.options().containsKey( "cd" ) ) cdTo( session, node );
-        return Result.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE( relationship );
     }
 
     private Node getOrCreateNode( AppCommandParser parser, Session session, boolean createNode, boolean suppliedNode ) throws ShellException

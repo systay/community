@@ -99,7 +99,7 @@ public abstract class AbstractServer implements ShellServer
         }
 	}
 	
-	private Session newSession( Serializable id, Map<String, Serializable> initialSession )
+	protected Session newSession( Serializable id, Map<String, Serializable> initialSession )
     {
 	    Session session = new Session( id );
 	    initialPopulateSession( session );

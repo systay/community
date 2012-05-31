@@ -42,7 +42,7 @@ public class Session
         this.interpreter = interpreter;
     }
 
-    public Object interpret( String line, Output out ) throws Exception
+    public Result interpret( String line, Output out ) throws Exception
     {
         return interpreter.execute( this, line, out );
     }

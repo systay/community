@@ -73,6 +73,6 @@ public class Eval extends GraphDatabaseApp
         {
             out.println( result.toString() );
         }
-        return Result.INPUT_COMPLETE;
+        return Result.INPUT_COMPLETE( result );
     }
 }

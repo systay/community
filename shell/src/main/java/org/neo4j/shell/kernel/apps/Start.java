@@ -66,12 +66,12 @@ public class Start extends ReadOnlyGraphDatabaseApp
             {
                 ExecutionResult result = engine.execute( queryWithoutSemicolon, getParameters( session ) );
                 out.println( result.toString() );
+                return Result.INPUT_COMPLETE( result );
             }
             catch ( CypherException e )
             {
                 throw ShellException.wrapCause( e );
             }
-            return Result.INPUT_COMPLETE;
         }
         else
         {
