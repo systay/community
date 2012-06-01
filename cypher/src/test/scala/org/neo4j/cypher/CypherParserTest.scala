@@ -1146,8 +1146,8 @@ class CypherParserTest extends JUnitSuite with Assertions {
       executionTree)
   }
 
-  @Test def supportsHasRelationshipInTheWhereClause() {
-    testAll(
+  @Test def supportsHasRelationshipInTheWhereClauseOlder() {
+    testOlderParsers(
       """start a=node(0), b=node(1) where a-->b return a""",
       Query.
         start(NodeById("a", 0), NodeById("b", 1)).
@@ -1155,12 +1155,30 @@ class CypherParserTest extends JUnitSuite with Assertions {
         returns (ReturnItem(Entity("a"), "a")))
   }
 
-  @Test def supportsNotHasRelationshipInTheWhereClause() {
-    testAll(
+  @Test def supportsHasRelationshipInTheWhereClause() {
+    testFrom_1_8(
+      """start a=node(0), b=node(1) where a-->b return a""",
+      Query.
+        start(NodeById("a", 0), NodeById("b", 1)).
+        where(NonEmpty(PathExpression(Seq(RelatedTo("a", "b", "  UNNAMED3", Seq(), Direction.OUTGOING, optional = false, predicate = True()))))).
+        returns (ReturnItem(Entity("a"), "a")))
+  }
+
+  @Test def supportsNotHasRelationshipInTheWhereClauseOlder() {
+    testOlderParsers(
       """start a=node(0), b=node(1) where not(a-->()) return a""",
       Query.
         start(NodeById("a", 0), NodeById("b", 1)).
         where(Not(HasRelationship(Entity("a"), Direction.OUTGOING, Seq()))).
+        returns (ReturnItem(Entity("a"), "a")))
+  }
+
+  @Test def supportsNotHasRelationshipInTheWhereClause() {
+    testFrom_1_8(
+      """start a=node(0), b=node(1) where not(a-->()) return a""",
+      Query.
+        start(NodeById("a", 0), NodeById("b", 1)).
+        where(Not(NonEmpty(PathExpression(Seq(RelatedTo("a", "  UNNAMED1", "  UNNAMED6", Seq(), Direction.OUTGOING, optional = false, predicate = True())))))).
         returns (ReturnItem(Entity("a"), "a")))
   }
 
@@ -1354,14 +1372,24 @@ class CypherParserTest extends JUnitSuite with Assertions {
     )
   }
 
-  @Test def mutliple_relationship_type_in_relationship_predicate() {
-    testFrom_1_7(
+  @Test def mutliple_relationship_type_in_relationship_predicate_1_7() {
+    test_1_7(
       """start a=node(0), b=node(1) where a-[:KNOWS|BLOCKS]-b return a""",
       Query.
         start(NodeById("a", 0), NodeById("b", 1)).
         where(HasRelationshipTo(Entity("a"), Entity("b"), Direction.BOTH, Seq("KNOWS", "BLOCKS")))
         returns (ReturnItem(Entity("a"), "a")))
   }
+
+  @Test def mutliple_relationship_type_in_relationship_predicate() {
+    testFrom_1_8(
+      """start a=node(0), b=node(1) where a-[:KNOWS|BLOCKS]-b return a""",
+      Query.
+        start(NodeById("a", 0), NodeById("b", 1)).
+        where(NonEmpty(PathExpression(Seq(RelatedTo("a", "b", "  UNNAMED3", Seq("KNOWS","BLOCKS"), Direction.BOTH, optional = false, predicate = True())))))
+        returns (ReturnItem(Entity("a"), "a")))
+  }
+
 
   @Test def first_parsed_pipe_query() {
     val secondQ = Query.

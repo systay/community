@@ -1996,4 +1996,18 @@ RETURN x0.name?
     val result = parseAndExecute("start n=node(*) where 1 = 0 return count(*)").toList
     assert(List(Map("count(*)" -> 0)) === result)
   }
+
+  @Test def should_return_paths() {
+    val a = createNode()
+    val b = createNode()
+    val c = createNode()
+    val d = createNode()
+    relate(a, b, "X")
+    relate(a, c, "X")
+    relate(a, d, "X")
+
+    val result = parseAndExecute("start n=node(1) return n-->()").columnAs[List[Path]]("n-->()").toList.flatMap(p => p.map(_.endNode()))
+
+    assert(result === List(b, c, d))
+  }
 }

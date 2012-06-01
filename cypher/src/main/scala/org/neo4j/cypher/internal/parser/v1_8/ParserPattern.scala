@@ -53,6 +53,21 @@ trait ParserPattern extends Base {
       }
   }
 
+  def usePath[T](translator: AbstractPattern => Maybe[T]):Parser[Seq[T]] = Parser {
+    case in => path(in) match {
+      case Success(abstractPattern, rest) =>
+        val concretePattern = abstractPattern.map(p => translator(p))
+
+        concretePattern.find(!_.success) match {
+          case Some(No(msg)) => Failure(msg, rest)
+          case None => Success(concretePattern.map(_.value), rest)
+        }
+
+      case Failure(msg, rest) => Failure(msg, rest)
+      case Error(msg, rest) => Error(msg, rest)
+    }
+  }
+
   private def pattern: Parser[Seq[AbstractPattern]] = commaList(patternBit) ^^ (patterns => patterns.flatten)
 
   private def patternBit: Parser[Seq[AbstractPattern]] =
@@ -89,10 +104,6 @@ trait ParserPattern extends Base {
       case x: Error => x
       case Failure(msg, rest) => failure("expected an expression that is a node", rest)
     }
-  }
-
-  expression ^^ {
-    case expression => ParsedEntity(expression, Map[String, Expression](), True())
   }
 
   private def nodeIdentifier = identity ^^ {
