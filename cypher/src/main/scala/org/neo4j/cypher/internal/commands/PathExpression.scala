@@ -26,7 +26,7 @@ import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.graphdb.Path
 
 case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with PathExtractor {
-  val symbols = new SymbolTable(declareDependencies(AnyType()): _*)
+  val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
   val matchingContext = new MatchingContext(pathPattern, symbols, Seq())
 
   def compute(m: Map[String, Any]): Any = {
@@ -49,7 +49,7 @@ case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with Pat
     matches.map(getPath)
   }
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = pathPattern.flatMap(_.possibleStartPoints.filterNot(_.name.startsWith("  UNNAMED")))
+  def declareDependencies(extectedType: AnyType): Seq[Identifier] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(_.name.startsWith("  UNNAMED")))
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = Seq()
 

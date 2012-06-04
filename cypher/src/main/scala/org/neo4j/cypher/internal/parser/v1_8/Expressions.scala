@@ -50,10 +50,10 @@ trait Expressions extends Base with ParserPattern with Predicates {
   (ignoreCase("true") ^^^ Literal(true)
       | ignoreCase("false") ^^^ Literal(false)
       | ignoreCase("null") ^^^ Literal(null)
+      | pathExpression
       | extract
       | function
       | aggregateExpression
-      | identity ~> parens(expression | entity) ~> failure("unknown function")
       | coalesceFunc
       | filterFunc
       | nullableProperty
@@ -111,8 +111,8 @@ trait Expressions extends Base with ParserPattern with Predicates {
       inner(in) match {
 
         case Success(name ~ args, rest) => functions.get(name.toLowerCase) match {
-          case None => Failure("No such function found", rest)
-          case Some(func) if !func.acceptsTheseManyArguments(args.size) => Failure("Wrong number of parameters for function " + name, rest)
+          case None => failure("unknown function", rest)
+          case Some(func) if !func.acceptsTheseManyArguments(args.size) => failure("Wrong number of parameters for function " + name, rest)
           case Some(func) => Success(func.create(args), rest)
         }
 
@@ -141,6 +141,7 @@ trait Expressions extends Base with ParserPattern with Predicates {
     "head" -> func(1, args => HeadFunction(args.head)),
     "last" -> func(1, args => LastFunction(args.head)),
     "tail" -> func(1, args => TailFunction(args.head)),
+    "shortestpath" -> Function(x => false, args => null),
     "range" -> Function(x => x == 2 || x == 3, args => {
       val step = if (args.size == 2) Literal(1) else args(2)
       RangeFunction(args(0), args(1), step)

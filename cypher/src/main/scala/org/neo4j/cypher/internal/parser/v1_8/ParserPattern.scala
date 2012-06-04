@@ -85,10 +85,11 @@ trait ParserPattern extends Base {
   }
 
   private def node: Parser[ParsedEntity] =
-    singleNodeEqualsMap |
-      nodeIdentifier |
-      nodeInParenthesis |
-      nodeFromExpression
+    parens(nodeFromExpression) |  // whatever  // CREATE (last(p))-[:KNOWS]->me
+      singleNodeEqualsMap | // x = {}
+      nodeIdentifier |    // x
+      nodeInParenthesis | failure("expected an expression that is a node")
+
 
   private def singleNodeEqualsMap = identity ~ "=" ~ properties ^^ {
     case name ~ "=" ~ map => ParsedEntity(Entity(name), map, True())
