@@ -90,5 +90,5 @@ trait Predicates extends Base with ParserPattern {
   def aggregateFunctionNames:Parser[String]
   def property: Parser[Expression]
   def entity: Parser[Entity]
-  def pathExpression: Parser[PathExpression]
+  def pathExpression: Parser[Expression]
 }

@@ -175,7 +175,10 @@ trait Expressions extends Base with ParserPattern with Predicates {
 
   def countStar: Parser[Expression] = ignoreCase("count") ~> parens("*") ^^^ CountStar()
 
-  def pathExpression: Parser[PathExpression] = usePath(translate) ^^ (PathExpression(_))
+  def pathExpression: Parser[Expression] = usePath(translate) ^^ {//(pathPattern => PathExpression(pathPattern))
+    case Seq(x:ShortestPath) => ShortestPathExpression(x)
+    case patterns => PathExpression(patterns)
+  }
 
   private def translate(abstractPattern: AbstractPattern): Maybe[Pattern] = matchTranslator(abstractPattern) match {
     case Yes(x: NamedPath) => No("Can't assign to an identifier in a pattern expression")

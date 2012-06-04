@@ -72,16 +72,3 @@ abstract class ShortestPathPipe(source: Pipe, ast: ShortestPath) extends PipeWit
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "ShortestPath(" + ast + ")"
 }
-
-// My daughters wrote this when I left the laptop open 2011-09-22. Now it belongs here.
-//      lola
-//      nina
-//      wilma
-//      mimi
-
-//      nina
-//      andres tykör alla om andres är snel han jör mango till sina barn han tröstar sina barn när dom är lesna han -
-//      jör god mat han läsör bok och han har jet mej en ajpäd
-//      lola
-//      jag älskar andres andres pappa är rar du är fin du har fint namn
-

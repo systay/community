@@ -2010,4 +2010,17 @@ RETURN x0.name?
 
     assert(result === List(b, c, d))
   }
+
+  @Test def should_return_shortest_paths() {
+    val a = createNode()
+    val b = createNode()
+    val c = createNode()
+    relate(a, b)
+    relate(b, c)
+
+    val result = parseAndExecute("start a=node(1),c=node(3) return shortestPath(a-[*]->c)").columnAs[List[Path]]("shortestPath(a-[*]->c)").toList.head.head
+    assertEquals(result.endNode(), c)
+    assertEquals(result.startNode(), a)
+    assertEquals(result.length(), 2)
+  }
 }
