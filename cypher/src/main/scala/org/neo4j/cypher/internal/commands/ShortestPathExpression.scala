@@ -33,7 +33,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
 
   val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
 
-  def compute(m: Map[String, Any]): Any = {
+  def compute(m: Map[String, Any]): Stream[Path] = {
     if (anyStartpointsContainNull(m)) {
       null
     } else {
@@ -41,7 +41,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
     }
   }
 
-  private def getMatches(m: Map[String, Any]): Any = {
+  private def getMatches(m: Map[String, Any]): Stream[Path] = {
     val start = getEndPoint(m, ast.start)
     val end = getEndPoint(m, ast.end)
     foo.findResult(start, end)
@@ -81,21 +81,21 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
 }
 
 trait FOO {
-  def findResult(start: Node, end: Node): Seq[Path]
+  def findResult(start: Node, end: Node): Stream[Path]
 }
 
 class SingleShortestPathFOO(expander: Expander, depth: Int) extends FOO {
   private val finder = GraphAlgoFactory.shortestPath(expander, depth)
 
-  def findResult(start: Node, end: Node): Seq[Path] = {
-    Option(finder.findSinglePath(start, end)).toSeq
+  def findResult(start: Node, end: Node): Stream[Path] = {
+    Option(finder.findSinglePath(start, end)).toStream
   }
 }
 
 class AllShortestPathsFOO(expander: Expander, depth: Int) extends FOO {
   private val finder = GraphAlgoFactory.shortestPath(expander, depth)
 
-  def findResult(start: Node, end: Node): Seq[Path] = {
-    finder.findAllPaths(start, end).asScala.toSeq
+  def findResult(start: Node, end: Node): Stream[Path] = {
+    finder.findAllPaths(start, end).asScala.toStream
   }
 }
