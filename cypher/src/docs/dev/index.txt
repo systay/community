@@ -20,6 +20,8 @@ include::updating.txt[]
 
 include::transactions.txt[]
 
+include::ql/pattern/patterns.txt[]
+
 :leveloffset: 2
 
 include::ql/start/index.txt[]
