@@ -21,10 +21,10 @@ package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.cypher.internal.commands.{Literal, Expression}
 
-trait SkipLimitClause extends Base {
-  def skip: Parser[Expression] = ignoreCase("skip") ~> numberOrParam ^^ (x => x)
+trait SkipLimitClause extends Base with Strings {
+  def skip: Parser[Expression] = SKIP ~> numberOrParam ^^ (x => x)
 
-  def limit: Parser[Expression] = ignoreCase("limit") ~> numberOrParam ^^ (x => x)
+  def limit: Parser[Expression] = LIMIT ~> numberOrParam ^^ (x => x)
 
   private def numberOrParam: Parser[Expression] =
     (positiveNumber ^^ (x => Literal(x.toInt))

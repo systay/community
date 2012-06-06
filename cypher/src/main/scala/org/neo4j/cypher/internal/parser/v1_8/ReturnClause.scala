@@ -23,7 +23,7 @@ import org.neo4j.cypher.internal.commands._
 import org.neo4j.cypher.SyntaxException
 
 
-trait ReturnClause extends Base with Expressions {
+trait ReturnClause extends Base with Expressions with Strings {
   def column : Parser[ReturnColumn] = returnItem ~ alias ^^ {
     case col ~ Some(newName) => col.rename(newName)
     case col ~ None => col
@@ -35,14 +35,14 @@ trait ReturnClause extends Base with Expressions {
 
   def returns =
     (returnsClause
-      | ignoreCase("return") ~> failure("return column list expected")
+      | RETURN ~> failure("return column list expected")
       | failure("expected return clause"))
 
-  def returnsClause: Parser[(Return, Option[Aggregation])] = ignoreCase("return") ~> columnList
+  def returnsClause: Parser[(Return, Option[Aggregation])] = RETURN ~> columnList
 
-  def alias: Parser[Option[String]] = opt(ignoreCase("as") ~> identity)
+  def alias: Parser[Option[String]] = opt(AS ~> identity)
 
-  def columnList:Parser[(Return, Option[Aggregation])]  = opt(ignoreCase("distinct")) ~ commaList(column) ^^ {
+  def columnList:Parser[(Return, Option[Aggregation])]  = opt(DISTINCT) ~ commaList(column) ^^ {
     case distinct ~ returnItems => {
       val columnName = returnItems.map(_.name).toList
 
@@ -64,9 +64,9 @@ trait ReturnClause extends Base with Expressions {
     }
   }
 
-  def withSyntax = ignoreCase("with") ~> columnList | "===" ~> rep("=") ~> columnList <~ "===" <~ rep("=")
+  def withSyntax = WITH ~> columnList | "===" ~> rep("=") ~> columnList <~ "===" <~ rep("=")
 
-  def WITH: Parser[(Return, Option[Aggregation])] = withSyntax ^^ (columns => {
+  def withClause: Parser[(Return, Option[Aggregation])] = withSyntax ^^ (columns => {
 
     val problemColumns = columns._1.returnItems.flatMap {
       case ReturnItem(_, _, true) => None

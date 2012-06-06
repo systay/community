@@ -21,8 +21,8 @@ package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.cypher.internal.commands._
 
-trait MatchClause extends Base with ParserPattern {
-  def matching: Parser[(Match, NamedPaths)] = ignoreCase("match") ~> usePattern(matchTranslator) ^^ {
+trait MatchClause extends Base with ParserPattern with Strings {
+  def matching: Parser[(Match, NamedPaths)] = MATCH ~> usePattern(matchTranslator) ^^ {
     case matching =>
       val namedPaths = matching.filter(_.isInstanceOf[NamedPath]).map(_.asInstanceOf[NamedPath])
       val unnamedPaths = matching.filter(_.isInstanceOf[List[Pattern]]).map(_.asInstanceOf[List[Pattern]]).flatten ++ matching.filter(_.isInstanceOf[Pattern]).map(_.asInstanceOf[Pattern])

@@ -23,12 +23,12 @@ import org.neo4j.cypher.internal.commands._
 import org.neo4j.graphdb.Direction
 
 
-trait StartClause extends Base with Expressions {
+trait StartClause extends Base with Expressions with Strings {
   def start: Parser[Start] = createStart | readStart
 
-  def readStart :Parser[Start] = ignoreCase("start") ~> commaList(startBit) ^^ (x => Start(x: _*)) | failure("expected START or CREATE")
+  def readStart :Parser[Start] = START ~> commaList(startBit) ^^ (x => Start(x: _*)) | failure("expected START or CREATE")
 
-  def createStart = ignoreCase("create") ~> commaList(usePattern(translate)) ^^ (x => Start(x.flatten: _*))
+  def createStart = CREATE ~> commaList(usePattern(translate)) ^^ (x => Start(x.flatten: _*))
 
   private def translate(abstractPattern: AbstractPattern): Maybe[StartItem] = abstractPattern match {
 
@@ -55,24 +55,23 @@ trait StartClause extends Base with Expressions {
       | identity ~> "=" ~> opt("(") ~> failure("expected either node or relationship here")
       | identity ~> failure("expected identifier assignment"))
 
-  def nodes = ignoreCase("node")
 
-  def rels = (ignoreCase("relationship") | ignoreCase("rel")) ^^^ "rel"
+  def rels = (RELATIONSHIP | REL) ^^^ "rel"
 
-  def typ = nodes | rels | failure("expected either node or relationship here")
+  def typ = NODE | rels | failure("expected either node or relationship here")
 
   def lookup: Parser[String => StartItem] =
-    nodes ~> parens(parameter) ^^ (p => (column: String) => NodeById(column, p)) |
-      nodes ~> ids ^^ (p => (column: String) => NodeById(column, p)) |
-      nodes ~> idxLookup ^^ nodeIndexLookup |
-      nodes ~> idxString ^^ nodeIndexString |
-      nodes ~> parens("*") ^^ (x => (column: String) => AllNodes(column)) |
+    NODE ~> parens(parameter) ^^ (p => (column: String) => NodeById(column, p)) |
+      NODE ~> ids ^^ (p => (column: String) => NodeById(column, p)) |
+      NODE ~> idxLookup ^^ nodeIndexLookup |
+      NODE ~> idxString ^^ nodeIndexString |
+      NODE ~> parens("*") ^^ (x => (column: String) => AllNodes(column)) |
       rels ~> parens(parameter) ^^ (p => (column: String) => RelationshipById(column, p)) |
       rels ~> ids ^^ (p => (column: String) => RelationshipById(column, p)) |
       rels ~> idxLookup ^^ relationshipIndexLookup |
       rels ~> idxString ^^ relationshipIndexString |
       rels ~> parens("*") ^^ (x => (column: String) => AllRelationships(column)) |
-      nodes ~> opt("(") ~> failure("expected node id, or *") |
+      NODE ~> opt("(") ~> failure("expected node id, or *") |
       rels ~> opt("(") ~> failure("expected relationship id, or *")
 
 
@@ -119,14 +118,6 @@ trait StartClause extends Base with Expressions {
       | "=" ~> failure("Need index key"))
 
   def id: Parser[Expression] = identity ^^ (x => Literal(x))
-
-  def andQuery: Parser[String] = idxQuery ~ ignoreCase("and") ~ idxQueries ^^ {
-    case q ~ and ~ qs => q + " AND " + qs
-  }
-
-  def orQuery: Parser[String] = idxQuery ~ ignoreCase("or") ~ idxQueries ^^ {
-    case q ~ or ~ qs => q + " OR " + qs
-  }
 }
 
 

@@ -22,8 +22,8 @@ package org.neo4j.cypher.internal.parser.v1_8
 import org.neo4j.cypher.internal.commands.Predicate
 
 
-trait WhereClause extends Base with Expressions {
-  def where: Parser[Predicate] = ignoreCase("where") ~> predicate
+trait WhereClause extends Base with Expressions with Strings {
+  def where: Parser[Predicate] = WHERE ~> predicate
 }
 
 

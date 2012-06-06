@@ -22,21 +22,21 @@ package org.neo4j.cypher.internal.parser.v1_8
 import org.neo4j.cypher.internal.commands._
 
 
-trait Predicates extends Base with ParserPattern {
-  def predicate: Parser[Predicate] = predicateLvl1 ~ rep( ignoreCase("or") ~> predicateLvl1 ) ^^ {
+trait Predicates extends Base with ParserPattern with Strings {
+  def predicate: Parser[Predicate] = predicateLvl1 ~ rep( OR ~> predicateLvl1 ) ^^ {
     case head ~ rest => rest.foldLeft(head)((a,b) => Or(a,b))
   }
 
-  def predicateLvl1: Parser[Predicate] = predicateLvl2 ~ rep( ignoreCase("and") ~> predicateLvl2 ) ^^{
+  def predicateLvl1: Parser[Predicate] = predicateLvl2 ~ rep(AND ~> predicateLvl2 ) ^^{
     case head ~ rest => rest.foldLeft(head)((a,b) => And(a,b))
   }
 
   def predicateLvl2: Parser[Predicate] = (
-    expressionOrEntity <~ ignoreCase("is null") ^^ (x => IsNull(x))
-      | expressionOrEntity <~ ignoreCase("is not null") ^^ (x => Not(IsNull(x)))
+    expressionOrEntity <~ IS ~ ignoreCase("null") ^^ (x => IsNull(x))
+      | expressionOrEntity <~ IS <~ NOT <~ ignoreCase("null") ^^ (x => Not(IsNull(x)))
       | operators
-      | ignoreCase("not") ~> predicate ^^ ( inner => Not(inner) )
-      | ignoreCase("has") ~> parens(property) ^^ ( prop => Has(prop.asInstanceOf[Property]))
+      | NOT ~> predicate ^^ ( inner => Not(inner) )
+      | HAS ~> parens(property) ^^ ( prop => Has(prop.asInstanceOf[Property]))
       | parens(predicate)
       | sequencePredicate
       | patternPredicate
@@ -46,20 +46,20 @@ trait Predicates extends Base with ParserPattern {
   def sequencePredicate: Parser[Predicate] = allInSeq | anyInSeq | noneInSeq | singleInSeq | in
 
   def symbolIterablePredicate: Parser[(Expression, String, Predicate)] =
-    (identity ~ ignoreCase("in") ~ expression ~ ignoreCase("where")  ~ predicate ^^ { case symbol ~ in ~ iterable ~ where ~ klas => (iterable, symbol, klas) }
-      |identity ~> ignoreCase("in") ~ expression ~> failure("expected where"))
+    (identity ~ IN ~ expression ~ WHERE  ~ predicate ^^ { case symbol ~ in ~ iterable ~ where ~ klas => (iterable, symbol, klas) }
+      |identity ~> IN ~ expression ~> failure("expected where"))
 
-  def in : Parser[Predicate] = expression ~ ignoreCase("in") ~ expression ^^ {
+  def in : Parser[Predicate] = expression ~ IN ~ expression ^^ {
     case checkee ~ in ~ collection => AnyInIterable(collection, "-_-INNER-_-", Equals(checkee, Entity("-_-INNER-_-")))
   }
 
-  def allInSeq: Parser[Predicate] = ignoreCase("all") ~> parens(symbolIterablePredicate) ^^ (x => AllInIterable(x._1, x._2, x._3))
+  def allInSeq: Parser[Predicate] = ALL ~> parens(symbolIterablePredicate) ^^ (x => AllInIterable(x._1, x._2, x._3))
 
-  def anyInSeq: Parser[Predicate] = ignoreCase("any") ~> parens(symbolIterablePredicate) ^^ (x => AnyInIterable(x._1, x._2, x._3))
+  def anyInSeq: Parser[Predicate] = ANY ~> parens(symbolIterablePredicate) ^^ (x => AnyInIterable(x._1, x._2, x._3))
 
-  def noneInSeq: Parser[Predicate] = ignoreCase("none") ~> parens(symbolIterablePredicate) ^^ (x => NoneInIterable(x._1, x._2, x._3))
+  def noneInSeq: Parser[Predicate] = NONE ~> parens(symbolIterablePredicate) ^^ (x => NoneInIterable(x._1, x._2, x._3))
 
-  def singleInSeq: Parser[Predicate] = ignoreCase("single") ~> parens(symbolIterablePredicate) ^^ (x => SingleInIterable(x._1, x._2, x._3))
+  def singleInSeq: Parser[Predicate] = SINGLE ~> parens(symbolIterablePredicate) ^^ (x => SingleInIterable(x._1, x._2, x._3))
 
   def operators:Parser[Predicate] =
     (expression ~ "=" ~ expression ^^ { case l ~ "=" ~ r => nullable(Equals(l, r),l,r)  } |

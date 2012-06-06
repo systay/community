@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.cypher.internal.commands._
 
-trait Expressions extends Base with ParserPattern with Predicates {
+trait Expressions extends Base with ParserPattern with Predicates with Strings {
   def expression: Parser[Expression] = term ~ rep("+" ~ term | "-" ~ term) ^^ {
     case head ~ rest =>
       var result = head
@@ -47,9 +47,9 @@ trait Expressions extends Base with ParserPattern with Predicates {
   }
 
   def factor: Parser[Expression] =
-  (ignoreCase("true") ^^^ Literal(true)
-      | ignoreCase("false") ^^^ Literal(false)
-      | ignoreCase("null") ^^^ Literal(null)
+    (TRUE ^^^ Literal(true)
+      | FALSE ^^^ Literal(false)
+      | NULL ^^^ Literal(null)
       | pathExpression
       | extract
       | function
@@ -92,15 +92,15 @@ trait Expressions extends Base with ParserPattern with Predicates {
     property <~ "?" ^^ (p => new Nullable(p) with DefaultTrue) |
       property <~ "!" ^^ (p => new Nullable(p) with DefaultFalse))
 
-  def extract: Parser[Expression] = ignoreCase("extract") ~> parens(identity ~ ignoreCase("in") ~ expression ~ ":" ~ expression) ^^ {
+  def extract: Parser[Expression] = EXTRACT ~> parens(identity ~ IN ~ expression ~ ":" ~ expression) ^^ {
     case (id ~ in ~ iter ~ ":" ~ expression) => ExtractFunction(iter, id, expression)
   }
 
-  def coalesceFunc: Parser[Expression] = ignoreCase("coalesce") ~> parens(commaList(expression)) ^^ {
+  def coalesceFunc: Parser[Expression] = COALESCE ~> parens(commaList(expression)) ^^ {
     case expressions => CoalesceFunction(expressions: _*)
   }
 
-  def filterFunc: Parser[Expression] = ignoreCase("filter") ~> parens(identity ~ ignoreCase("in") ~ expression ~ (ignoreCase("where") | ":") ~ predicate) ^^ {
+  def filterFunc: Parser[Expression] = FILTER ~> parens(identity ~ IN ~ expression ~ (WHERE | ":") ~ predicate) ^^ {
     case symbol ~ in ~ collection ~ where ~ pred => FilterFunction(collection, symbol, pred)
   }
 
@@ -152,7 +152,7 @@ trait Expressions extends Base with ParserPattern with Predicates {
 
   def aggregateFunctionNames: Parser[String] = ignoreCases("count", "sum", "min", "max", "avg", "collect")
 
-  def aggregationFunction: Parser[Expression] = aggregateFunctionNames ~ parens(opt(ignoreCase("distinct")) ~ expression) ^^ {
+  def aggregationFunction: Parser[Expression] = aggregateFunctionNames ~ parens(opt(DISTINCT) ~ expression) ^^ {
     case function ~ (distinct ~ inner) => {
 
       val aggregateExpression = function match {
@@ -173,7 +173,7 @@ trait Expressions extends Base with ParserPattern with Predicates {
     }
   }
 
-  def countStar: Parser[Expression] = ignoreCase("count") ~> parens("*") ^^^ CountStar()
+  def countStar: Parser[Expression] = COUNT ~> parens("*") ^^^ CountStar()
 
   def pathExpression: Parser[Expression] = usePath(translate) ^^ {//(pathPattern => PathExpression(pathPattern))
     case Seq(x:ShortestPath) => ShortestPathExpression(x)

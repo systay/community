@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.parser.v1_8
 import org.neo4j.graphdb.Direction
 import org.neo4j.cypher.internal.commands.{True, Entity, Expression}
 
-trait ParserPattern extends Base {
+trait ParserPattern extends Base with Strings  {
 
   def usePattern[T](translator: AbstractPattern => Maybe[T], acceptable: Seq[T] => Boolean): Parser[Seq[T]] = Parser {
     case in =>
@@ -129,7 +129,7 @@ trait ParserPattern extends Base {
 
   private def patternForShortestPath: Parser[AbstractPattern] = onlyOne("expected single path segment", relationship)
 
-  private def shortestPath: Parser[List[AbstractPattern]] = (ignoreCase("shortestPath") | ignoreCase("allShortestPaths")) ~ parens(patternForShortestPath) ^^ {
+  private def shortestPath: Parser[List[AbstractPattern]] = (SHORTEST_PATH | ALL_SHORTEST_PATHS) ~ parens(patternForShortestPath) ^^ {
     case algo ~ relInfo =>
       val single = algo match {
         case "shortestpath" => true
