@@ -1888,14 +1888,14 @@ create a-[r:REL]->b
       returns(ReturnItem(Entity("p"), "p"))
 
     val q = Query.
-      start(NodeById("a", 1)).
+      start(NodeById("a", 0)).
       tail(q2).
       returns(AllIdentifiers())
 
     testFrom_1_8("start a=node(0) relate p = a-[r:KNOWS]->() return p", q)
   }
 
-  @Test def assign_to_path_inside_foreach_should_work() {
+  @Test(expected = classOf[SyntaxException]) def assign_to_path_inside_foreach_should_work() {
     testFrom_1_8(
 """start n=node(0)
 foreach(x in [1,2,3] :

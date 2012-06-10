@@ -69,11 +69,12 @@ Thank you, the Neo4j Team.
   def body = bodyWith | simpleUpdate | bodyReturn | noBody
 
   def simpleUpdate: Parser[Body] = opt(matching) ~ opt(where) ~ atLeastOneUpdateCommand ~ body ^^ {
-    case matching ~ where ~ updates ~ nextQ => {
+    case matching ~ where ~ updateCmds ~ nextQ => {
+      val (updates, startItems, paths) = updateCmds
       val (pattern, namedPaths) = extractMatches(matching)
 
       val returns = Return(List("*"), AllIdentifiers())
-      BodyWith(updates._1, pattern, namedPaths, where, returns, None, updates._2, Seq(), nextQ)
+      BodyWith(updates, pattern, namedPaths, where, returns, None, startItems, paths, nextQ)
     }
   }
 
@@ -83,7 +84,7 @@ Thank you, the Neo4j Team.
       val startItems = start.toSeq.flatMap(_._1)
       val startPaths = start.toSeq.flatMap(_._2)
 
-      BodyWith(updates, pattern, matchPaths, where, returns._1, returns._2, startItems, startPaths, nextQ)
+      BodyWith(updates._1, pattern, matchPaths ++ updates._2, where, returns._1, returns._2, startItems, startPaths, nextQ)
     }
   }
 
@@ -111,14 +112,14 @@ Thank you, the Neo4j Team.
   private def expandQuery(start: Seq[StartItem], namedPaths: Seq[NamedPath], updates: Seq[UpdateAction], body: Body): Query = body match {
     case b: BodyWith => {
       checkForAggregates(b.where)
-      Query(b.returns, start, updates, b.matching, b.where, b.aggregate, Seq(), None, b.namedPath, Some(expandQuery(b.start, b.startPaths, b.updates, b.next)))
+      Query(b.returns, start, updates, b.matching, b.where, b.aggregate, Seq(), None, b.namedPath ++ namedPaths, Some(expandQuery(b.start, b.startPaths, b.updates, b.next)))
     }
     case b: BodyReturn => {
       checkForAggregates(b.where)
-      Query(b.returns, start, updates, b.matching, b.where, b.aggregate, b.order, b.slice, b.namedPath, None)
+      Query(b.returns, start, updates, b.matching, b.where, b.aggregate, b.order, b.slice, b.namedPath ++ namedPaths, None)
     }
     case NoBody() => {
-      Query(Return(List()), start, updates, Seq(), None, None, Seq(), None, Seq(), None)
+      Query(Return(List()), start, updates, Seq(), None, None, Seq(), None, namedPaths, None)
     }
   }
 
@@ -156,18 +157,19 @@ Thank you, the Neo4j Team.
     case None => (Seq(), Seq())
   }
 
-  private def updateCommands: Parser[(Seq[UpdateAction], Seq[StartItem])] = opt(createStart) ~ updates ^^ {
+  private def updateCommands: Parser[(Seq[UpdateAction], Seq[StartItem], Seq[NamedPath])] = opt(createStart) ~ updates ^^ {
     case starts ~ updates =>
       val createCommands = starts.toSeq.flatMap(_._1)
-      (updates, createCommands)
+      val paths = starts.toSeq.flatMap(_._2) ++ updates._2
+      val updateActions = updates._1
+
+      (updateActions , createCommands, paths)
   }
 
-  private def atLeastOneUpdateCommand:Parser[(Seq[UpdateAction], Seq[StartItem])] = Parser {
-    case in => {
-      updateCommands(in) match {
-        case Success((changes, starts), rest) if (starts.size + changes.size) == 0 => Failure("", rest)
-        case x => x
-      }
+  private def atLeastOneUpdateCommand: Parser[(Seq[UpdateAction], Seq[StartItem], Seq[NamedPath])] = Parser {
+    case in => updateCommands(in) match {
+      case Success((changes, starts, paths), rest) if (starts.size + changes.size) == 0 => Failure("", rest)
+      case x => x
     }
   }
 }
