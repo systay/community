@@ -57,6 +57,31 @@ case class Query(returns: Return,
         namedPaths == other.namedPaths &&
         tail == other.tail
     }
+
+  override def toString: String =
+"""
+start  : %s
+updates: %s
+match  : %s
+paths  : %s
+where  : %s
+aggreg : %s
+return : %s
+order  : %s
+slice  : %s
+next   : %s
+""".format(
+  start.startItems.mkString,
+  updatedCommands.mkString,
+  matching,
+  namedPaths,
+  where,
+  aggregation,
+  returns.returnItems.mkString,
+  sort,
+  slice,
+  tail
+)
 }
 
 case class Return(columns: List[String], returnItems: ReturnColumn*)

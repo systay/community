@@ -27,7 +27,7 @@ trait Updates extends Base with Expressions with StartClause {
 
   def foreach: Parser[Seq[UpdateAction]] = ignoreCase("foreach") ~> "(" ~> identity ~ ignoreCase("in") ~ expression ~ ":" ~ opt(createStart) ~ opt(updates) <~ ")" ^^ {
     case id ~ in ~ iterable ~ ":" ~ creates ~ innerUpdates => {
-      val createCmds = creates.toSeq.map(_.startItems.map(_.asInstanceOf[UpdateAction])).flatten
+      val createCmds = creates.toSeq.map(_._1.startItems.map(_.asInstanceOf[UpdateAction])).flatten
       val updateCmds = innerUpdates.toSeq.flatten
       List(ForeachAction(iterable, id, createCmds ++ updateCmds))
     }
@@ -41,14 +41,14 @@ trait Updates extends Base with Expressions with StartClause {
   }
 
   private def translate(abstractPattern: AbstractPattern): Maybe[RelateLink] = abstractPattern match {
-    case ParsedRelation(name, props, ParsedEntity(Entity(startName), startProps, True()), ParsedEntity(Entity(endName), endProps, True()), typ, dir, map, True()) if typ.size == 1 => Yes(RelateLink(
+    case ParsedRelation(name, props, ParsedEntity(Entity(startName), startProps, True()), ParsedEntity(Entity(endName), endProps, True()), typ, dir, map, True()) if typ.size == 1 => Yes(Seq(RelateLink(
       start = NamedExpectation(startName, startProps),
       end = NamedExpectation(endName, endProps),
       rel = NamedExpectation(name, props),
       relType = typ.head,
       dir = dir
-    ))
-    case _ => No("")
+    )))
+    case _ => No(Seq())
   }
 
   def set: Parser[Seq[UpdateAction]] = ignoreCase("set") ~> commaList(propertySet)
