@@ -58,7 +58,7 @@ Thank you, the Neo4j Team.
       val q: Query = expandQuery(start._1, start._2, Seq(), body)
 
       if (q.returns == Return(List()) &&
-        !q.start.startItems.forall(_.mutating)) {
+        !q.start.forall(_.mutating)) {
         throw new SyntaxException("Non-mutating queries must return data")
       }
 
@@ -80,8 +80,8 @@ Thank you, the Neo4j Team.
   def bodyWith: Parser[Body] = opt(matching) ~ opt(where) ~ WITH ~ opt(start) ~ updates ~ body ^^ {
     case matching ~ where ~ returns ~ start ~ updates ~ nextQ => {
       val (pattern, matchPaths) = extractMatches(matching)
-      val startItems = start.toSeq.flatMap(_._1.startItems)
-      val startPaths = start.toSeq.flatMap(_._2.paths)
+      val startItems = start.toSeq.flatMap(_._1)
+      val startPaths = start.toSeq.flatMap(_._2)
 
       BodyWith(updates, pattern, matchPaths, where, returns._1, returns._2, startItems, startPaths, nextQ)
     }
@@ -95,7 +95,7 @@ Thank you, the Neo4j Team.
       }
 
       val (pattern, namedPaths) = extractMatches(matching)
-      BodyReturn(pattern, namedPaths, slice, where, order, returns._1, returns._2)
+      BodyReturn(pattern, namedPaths, slice, where, order.toSeq.flatten, returns._1, returns._2)
     }
   }
 
@@ -108,17 +108,17 @@ Thank you, the Neo4j Team.
     }
   }
 
-  private def expandQuery(start: Start, namedPaths: NamedPaths, updates: Seq[UpdateAction], body: Body): Query = body match {
+  private def expandQuery(start: Seq[StartItem], namedPaths: Seq[NamedPath], updates: Seq[UpdateAction], body: Body): Query = body match {
     case b: BodyWith => {
       checkForAggregates(b.where)
-      Query(b.returns, start, updates, b.matching, b.where, b.aggregate, None, None, b.namedPath, Some(expandQuery(Start(b.start:_*), NamedPaths(b.startPaths:_*), b.updates, b.next)))
+      Query(b.returns, start, updates, b.matching, b.where, b.aggregate, Seq(), None, b.namedPath, Some(expandQuery(b.start, b.startPaths, b.updates, b.next)))
     }
     case b: BodyReturn => {
       checkForAggregates(b.where)
       Query(b.returns, start, updates, b.matching, b.where, b.aggregate, b.order, b.slice, b.namedPath, None)
     }
     case NoBody() => {
-      Query(Return(List()), start, updates, None, None, None, None, None, None, None)
+      Query(Return(List()), start, updates, Seq(), None, None, Seq(), None, Seq(), None)
     }
   }
 
@@ -151,16 +151,15 @@ Thank you, the Neo4j Team.
     }
   }
 
-  private def extractMatches(matching: Option[(Match, NamedPaths)]): (Option[Match], Option[NamedPaths]) = matching match {
-    case Some((p, NamedPaths())) => (Some(p), None)
-    case Some((Match(), nP)) => (None, Some(nP))
-    case Some((p, nP)) => (Some(p), Some(nP))
-    case None => (None, None)
+  private def extractMatches(matching: Option[(Seq[Pattern], Seq[NamedPath])]): (Seq[Pattern], Seq[NamedPath]) = matching match {
+    case Some((a,b)) => (a,b)
+    case None => (Seq(), Seq())
   }
 
   private def updateCommands: Parser[(Seq[UpdateAction], Seq[StartItem])] = opt(createStart) ~ updates ^^ {
-    case starts ~ updates => val createCommands = starts.toSeq.flatMap(_._1.startItems)
-    (updates, createCommands)
+    case starts ~ updates =>
+      val createCommands = starts.toSeq.flatMap(_._1)
+      (updates, createCommands)
   }
 
   private def atLeastOneUpdateCommand:Parser[(Seq[UpdateAction], Seq[StartItem])] = Parser {
@@ -184,16 +183,16 @@ abstract sealed class Body
 This Body is used when a query ends in a RETURN clause. Once you RETURN, no more query parts are allowed, so this structure
 is one of two possible query tails
  */
-case class BodyReturn(matching: Option[Match], namedPath: Option[NamedPaths], slice: Option[Slice], where: Option[Predicate], order: Option[Sort], returns: Return, aggregate: Option[Aggregation]) extends Body
+case class BodyReturn(matching: Seq[Pattern], namedPath: Seq[NamedPath], slice: Option[Slice], where: Option[Predicate], order: Seq[SortItem], returns: Return, aggregate: Option[Seq[AggregationExpression]]) extends Body
 
 /*
 If a Body is an intermediate part, either explicitly with WITH, or implicitly when first MATCHing and then updating the graph, this structure will be used.
 
 This structure has three parts
  */
-case class BodyWith(updates:Seq[UpdateAction], matching: Option[Match], namedPath: Option[NamedPaths], where: Option[Predicate], returns: Return, aggregate: Option[Aggregation], // These items belong to the query part before the WITH delimiter
-                    start:Seq[StartItem], startPaths:Seq[NamedPath],                                                                                                              // These are START or CREATE clauses directly following WITH
-                    next: Body) extends Body                                                                                                                                      // This is the pointer to the next query part
+case class BodyWith(updates:Seq[UpdateAction], matching: Seq[Pattern], namedPath: Seq[NamedPath], where: Option[Predicate], returns: Return, aggregate: Option[Seq[AggregationExpression]],// These items belong to the query part before the WITH delimiter
+                    start:Seq[StartItem], startPaths:Seq[NamedPath],                                                                                                                       // These are START or CREATE clauses directly following WITH
+                    next: Body) extends Body                                                                                                                                               // This is the pointer to the next query part
 
 /*
 This is the plug used when a query doesn't end in RETURN.

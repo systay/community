@@ -22,12 +22,12 @@ package org.neo4j.cypher.internal.parser.v1_8
 import org.neo4j.cypher.internal.commands._
 
 trait MatchClause extends Base with ParserPattern {
-  def matching: Parser[(Match, NamedPaths)] = ignoreCase("match") ~> usePattern(matchTranslator) ^^ {
+  def matching: Parser[(Seq[Pattern], Seq[NamedPath])] = ignoreCase("match") ~> usePattern(matchTranslator) ^^ {
     case matching =>
       val namedPaths = matching.filter(_.isInstanceOf[NamedPath]).map(_.asInstanceOf[NamedPath])
       val unnamedPaths = matching.filter(_.isInstanceOf[List[Pattern]]).map(_.asInstanceOf[List[Pattern]]).flatten ++ matching.filter(_.isInstanceOf[Pattern]).map(_.asInstanceOf[Pattern])
 
-      (Match(unnamedPaths: _*), NamedPaths(namedPaths: _*))
+      (unnamedPaths, namedPaths)
   }
 
   private def successIfEntities[T](l: Expression, r: Expression)(f: (String, String) => T): Maybe[T] = (l, r) match {

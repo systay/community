@@ -27,7 +27,7 @@ trait Updates extends Base with Expressions with StartClause {
 
   def foreach: Parser[Seq[UpdateAction]] = ignoreCase("foreach") ~> "(" ~> identity ~ ignoreCase("in") ~ expression ~ ":" ~ opt(createStart) ~ opt(updates) <~ ")" ^^ {
     case id ~ in ~ iterable ~ ":" ~ creates ~ innerUpdates => {
-      val createCmds = creates.toSeq.map(_._1.startItems.map(_.asInstanceOf[UpdateAction])).flatten
+      val createCmds = creates.toSeq.map(_._1.map(_.asInstanceOf[UpdateAction])).flatten
       val updateCmds = innerUpdates.toSeq.flatten
       List(ForeachAction(iterable, id, createCmds ++ updateCmds))
     }

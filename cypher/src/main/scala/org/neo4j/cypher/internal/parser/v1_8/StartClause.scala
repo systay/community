@@ -24,18 +24,34 @@ import org.neo4j.graphdb.Direction
 
 
 trait StartClause extends Base with Expressions {
-  def start: Parser[(Start, NamedPaths)] = createStart | readStart
+  def start: Parser[(Seq[StartItem], Seq[NamedPath])] = createStart | readStart
 
-  def readStart: Parser[(Start, NamedPaths)] = ignoreCase("start") ~> commaList(startBit) ^^ (x => (Start(x: _*), NamedPaths())) | failure("expected START or CREATE")
+  def readStart: Parser[(Seq[StartItem], Seq[NamedPath])] = ignoreCase("start") ~> commaList(startBit) ^^ (x => (x, Seq())) | failure("expected START or CREATE")
 
-  def createStart = ignoreCase("create") ~> commaList(usePattern(translate)) ^^ (x => (Start(x.flatten: _*), NamedPaths()))
+  def createStart = ignoreCase("create") ~> commaList(usePattern(translate)) ^^ {
+    case matching =>
+      val pathsAndItems = matching.flatten.filter(_.isInstanceOf[NamedPathWStartItems]).map(_.asInstanceOf[NamedPathWStartItems])
+      val startItems = matching.flatten.filter(_.isInstanceOf[StartItem]).map(_.asInstanceOf[StartItem])
+      val namedPaths = pathsAndItems.map(_.path)
+      val pathItems = pathsAndItems.flatMap(_.items)
 
-  private def translate(abstractPattern: AbstractPattern): Maybe[StartItem] = abstractPattern match {
+      ((startItems ++ pathItems), namedPaths)
+  }
 
+  case class NamedPathWStartItems(path:NamedPath, items:Seq[StartItem])
+
+  private def translate(abstractPattern: AbstractPattern): Maybe[Any] = abstractPattern match {
     case ParsedNamedPath(name, patterns) =>
-      val namedPathPatterns = patterns.map(matchTranslator)
-      val result = namedPathPatterns.reduce(_ ++ _)
-      result.seqMap(p => Seq(NamedPath(name, p.map(_.asInstanceOf[Pattern]):_*)))
+      val namedPathPatterns = patterns.map(matchTranslator).reduce(_ ++ _)
+      val startItems = patterns.map(translate).reduce(_ ++ _)
+
+      startItems match {
+        case No(msg) => No(msg)
+        case Yes(stuff) => namedPathPatterns.seqMap(p => {
+          val namedPath: NamedPath = NamedPath(name, p.map(_.asInstanceOf[Pattern]): _*)
+          Seq(NamedPathWStartItems(namedPath, stuff.map(_.asInstanceOf[StartItem])))
+        })
+      }
 
     case ParsedRelation(name, props, ParsedEntity(a, startProps, True()), ParsedEntity(b, endProps, True()), relType, dir, map, True()) if relType.size == 1 =>
       val (from, to) = if (dir == Direction.OUTGOING)
