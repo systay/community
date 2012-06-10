@@ -2053,4 +2053,14 @@ RETURN x0.name?
     val result = parseAndExecute("START a=node(1) foreach(n in extract(p in a-->() : last(p)) : set n.touched = true) return a-->()").dumpToString()
     println(result)
   }
+
+  @Test
+  def paths_from_match_relate_and_create() {
+    val a = createNode()
+    val b = createNode()
+    relate(a,b)
+
+    val result = parseAndExecute("START a=node(1) match p1=a-->b create p2=b-[:BACK]->a relate p3 = a-[:DOUBLE]->b return p1, p2, p3").dumpToString()
+    println(result)
+  }
 }
