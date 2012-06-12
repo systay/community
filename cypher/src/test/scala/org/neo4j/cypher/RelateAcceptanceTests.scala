@@ -79,7 +79,7 @@ class RelateAcceptanceTests extends ExecutionEngineHelper with Assertions with S
     val c = createNode()
     val d = createNode()
 
-    val result = parseAndExecute("start a = node(1,2), b=node(3), c=node(4) relate a-[:X]->b-[:X]->c")
+    val result = parseAndExecute("start a = node(1,2), b=node(3), c=node(4) relate a-[r1:X]->b-[r2:X]->c")
 
     assertStats(result, relationshipsCreated = 3)
 
@@ -93,7 +93,7 @@ class RelateAcceptanceTests extends ExecutionEngineHelper with Assertions with S
   def creates_minimal_amount_of_nodes_reverse() {
     val a = createNode()
 
-    val result = parseAndExecute("start a = node(1) relate c-[:X]->b-[:X]->a")
+    val result = parseAndExecute("start a = node(1) relate c-[r2:X]->b-[r1:X]->a")
 
     assertStats(result, nodesCreated = 2, relationshipsCreated = 2)
 
