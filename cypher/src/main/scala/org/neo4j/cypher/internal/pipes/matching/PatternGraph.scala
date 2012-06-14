@@ -22,6 +22,7 @@ package org.neo4j.cypher.internal.pipes.matching
 import org.neo4j.cypher.internal.symbols.{MapType, SymbolTable}
 import collection.mutable.{Set => MutableSet}
 import org.neo4j.cypher.{PatternException, SyntaxException}
+import org.neo4j.helpers.ThisShouldNotHappenError
 
 class PatternGraph(val patternNodes: Map[String, PatternNode],
                    val patternRels: Map[String, PatternRelationship],
@@ -30,8 +31,8 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
   val (patternGraph, optionalElements, containsLoops, doubleOptionalPaths) = validatePattern(patternNodes, patternRels, bindings)
 
   def apply(key: String) = patternGraph(key)
-  
-  val hasDoubleOptionals:Boolean = doubleOptionalPaths.nonEmpty
+
+  val hasDoubleOptionals: Boolean = doubleOptionalPaths.nonEmpty
 
   def get(key: String) = patternGraph.get(key)
 
@@ -63,54 +64,55 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
     (elementsMap, optionalSet, hasLoops, doubleOptionals)
   }
 
+  private def reduceDoubleOptionals(dops: Seq[DoubleOptionalPath]) = {
+    dops.distinct
+
+  }
+
   private def getDoubleOptionals(boundPatternElements: Seq[PatternElement]): Seq[DoubleOptionalPath] = {
-    var visited = Set[PatternElement]()
     var doubleOptionals = Seq[DoubleOptionalPath]()
-    
+
 
     boundPatternElements.foreach(e => e.traverse(
-      shouldFollow = e => !visited.contains(e),
+      shouldFollow = e => true,
       visit = (e, data: Seq[PatternElement]) => {
-        visited += e
         val result = data :+ e
 
         val foundPathBetweenBoundElements = boundPatternElements.contains(e) && result.size > 1
 
         if (foundPathBetweenBoundElements) {
-          val numberOfOptionals = result.foldLeft(0)((count, element) => {
+          val numberOfOptionals = result.foldLeft(Seq[String]())((count, element) => {
             val r = element match {
-              case x: PatternRelationship => if (x.optional) 1 else 0
-              case _ => 0
+              case x: PatternRelationship if x.optional => Some(x.key)
+              case _                                    => None
             }
 
-            count + r
+            count ++ r
           })
 
-          if (numberOfOptionals > 2) {
+          if (numberOfOptionals.size > 2) {
             throw new PatternException("Your pattern has at least one path between two bound elements, and these patterns are undefined for the time being. Valid use cases for this are very interesting to us - let us know at cypher@neo4j.org")
           }
-          
-          if(numberOfOptionals > 1) {
-            
+
+          if (numberOfOptionals.size == 2) {
+
             val leftNode = data(0)
-            val leftRel = data(1)
+            val leftRel = numberOfOptionals(0)
             val rightNode = e
-            val rightRel = data.last
+            val rightRel = numberOfOptionals(1)
 
-
-            doubleOptionals = doubleOptionals ++ Seq[DoubleOptionalPath](
-              DoubleOptionalPath(leftNode.key, rightNode.key, leftRel.key),
-              DoubleOptionalPath(rightNode.key, leftNode.key, rightRel.key))
+            doubleOptionals = doubleOptionals :+ DoubleOptionalPath.create(leftNode.key, rightNode.key, leftRel, rightRel)
           }
         }
 
 
         result
       },
-      data = Seq[PatternElement]()
+      data = Seq[PatternElement](),
+      path = Seq()
     ))
 
-    doubleOptionals
+    reduceDoubleOptionals(doubleOptionals)
   }
 
   private def getOptionalElements(boundPatternElements: Seq[PatternElement], allPatternElements: Seq[PatternElement]): Set[String] = {
@@ -120,7 +122,7 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
     boundPatternElements.foreach(n => n.traverse(
       shouldFollow = e => {
         e match {
-          case x: PatternNode => !visited.contains(e)
+          case x: PatternNode         => !visited.contains(e)
           case x: PatternRelationship => !visited.contains(e) && !x.optional
         }
       },
@@ -128,7 +130,8 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
         optionalElements.remove(e.key)
         visited = visited ++ Set(e)
       },
-      data = ()
+      data = (),
+      path = Seq()
     ))
 
     optionalElements.toSet
@@ -139,7 +142,7 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
     var loop = false
 
     val follow = (element: PatternElement) => element match {
-      case n: PatternNode => true
+      case n: PatternNode         => true
       case r: PatternRelationship => !visited.contains(r)
     }
 
@@ -152,8 +155,8 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
     val vRel = (r: PatternRelationship, x: Unit) => visited :+= r
 
     boundPatternElements.foreach {
-      case pr: PatternRelationship => pr.startNode.traverse(follow, vNode, vRel, ())
-      case pn: PatternNode => pn.traverse(follow, vNode, vRel, ())
+      case pr: PatternRelationship => pr.startNode.traverse(follow, vNode, vRel, (), Seq())
+      case pn: PatternNode         => pn.traverse(follow, vNode, vRel, (), Seq())
     }
 
     val notVisitedElements = allPatternElements.filterNot(visited contains)
@@ -162,5 +165,44 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
     }
 
     loop
+  }
+}
+
+
+object DoubleOptionalPath {
+  def create(n1: String, n2: String, r1: String, r2: String) = {
+    val (startNode, endNode, startRel, endRel) = if (n1 < n2)
+      (n1, n2, r1, r2)
+    else
+      (n2, n1, r2, r1)
+
+    new DoubleOptionalPath(startNode, endNode, Seq(startRel), Seq(endRel))
+  }
+}
+
+case class DoubleOptionalPath(startNode: String, endNode: String, rel1: Seq[String], rel2: Seq[String]) {
+  def canRun(s: String): Boolean = startNode == s || endNode == s
+
+  def reduceWith(other:DoubleOptionalPath):DoubleOptionalPath= {
+    require(other.startNode == startNode)
+    require(other.endNode == endNode)
+
+    new DoubleOptionalPath(startNode, endNode, (rel1 ++ other.rel1).distinct, (rel2 ++ other.rel2).distinct)
+  }
+
+  def otherNode(nodeName: String) = nodeName match {
+    case x if x == startNode => endNode
+    case x if x == endNode   => startNode
+  }
+
+  def otherRel(nodeName: String) = nodeName match {
+    case x if x == startNode => rel2
+    case x if x == endNode   => rel1
+  }
+
+  def shouldDoWork(current: String, remaining: Set[MatchingPair]): Boolean = {
+    val fromLeft = startNode == current && remaining.exists(_.patternNode.key == endNode)
+    val fromRight = endNode == current && remaining.exists(_.patternNode.key == startNode)
+    fromLeft || fromRight
   }
 }
