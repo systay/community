@@ -2062,4 +2062,46 @@ RETURN x0.name?
     val result = parseAndExecute("START a=node(1),b=node(2) MATCH a-[?]->X<-[?]-b return X").toList
     assert(result === List(Map("X"->null)))
   }
+
+  @Test
+  def two_double_optional_with_one_full_and_two_halfs() {
+    val a = createNode()
+    val b = createNode()
+    val X = createNode()
+    val Z1 = createNode()
+    val Z2 = createNode()
+    val r1 = relate(a, X)
+    val r2 = relate(b, X)
+    val r3 = relate(Z1, a)
+    val r4 = relate(Z2, b)
+
+    val result = parseAndExecute("START a=node(1), b=node(2) MATCH a-[r1?]->X<-[r2?]-b, a<-[r3?]-Z-[r4?]->b return r1,r2,r3,r4").toSet
+    assert(result === Set(
+      Map("r1" -> r1, "r2" -> r2, "r3" -> r3, "r4" -> null),
+      Map("r1" -> r1, "r2" -> r2, "r3" -> null, "r4" -> r4)))
+  }
+
+  @Test
+  def two_double_optional_with_four_halfs() {
+    val a = createNode()
+    val b = createNode()
+    val X1 = createNode()
+    val X2 = createNode()
+    val Z1 = createNode()
+    val Z2 = createNode()
+    val r1 = relate(a, X1)
+    val r2 = relate(b, X2)
+    val r3 = relate(Z1, a)
+    val r4 = relate(Z2, b)
+
+    val result = () => parseAndExecute("START a=node(1), b=node(2) MATCH a-[r1?]->X<-[r2?]-b, a<-[r3?]-Z-[r4?]->b return r1,r2,r3,r4 order by id(r1),id(r2),id(r3),id(r4)")
+
+    println(result().dumpToString())
+//    assertEquals(result().toSet ,Set(
+//      Map("r1" -> r1, "r2" -> null, "r3" -> r3, "r4" -> null),
+//      Map("r1" -> r1, "r2" -> null, "r3" -> null, "r4" -> r4),
+//      Map("r1" -> null, "r2" -> r2, "r3" -> r3, "r4" -> null),
+//      Map("r1" -> null, "r2" -> r2, "r3" -> null, "r4" -> r4)))
+//    assert(result().toList.size === 4)
+  }
 }

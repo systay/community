@@ -56,11 +56,14 @@ class PatternNode(key: String) extends PatternElement(key) {
   def traverse[T](shouldFollow: (PatternElement) => Boolean,
                   visitNode: (PatternNode, T) => T,
                   visitRelationship: (PatternRelationship, T) => T,
-                  data: T) {
+                  data: T,
+                  path: Seq[PatternElement]) {
+    if (!path.contains(this)) {
+      val moreData = visitNode(this, data)
 
-    val moreData = visitNode(this, data)
-
-    val filter = relationships.filter(shouldFollow)
-    filter.foreach(r => r.traverse(shouldFollow, visitNode, visitRelationship, moreData, this))
+      relationships.
+        filter(shouldFollow).
+        foreach(r => r.traverse(shouldFollow, visitNode, visitRelationship, moreData, this, path :+ this))
+    }
   }
 }
