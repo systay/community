@@ -88,18 +88,17 @@ DoubleOP  = %s
   from yielding subgraphs that have already been found.
    */
   private def createYielder[A](inner: Map[String, Any] => A, dop: DoubleOptionalPath, current: MatchingPair)(m: Map[String, Any]) {
-    val relationships = dop.relationshipsSeenFrom(current.patternElement.key)
+    val Relationships(closestRel, oppositeRel) = dop.relationshipsSeenFrom(current.patternElement.key)
 
-    val weShouldYield = relationships.exists {
-      case Relationships(closestRel, oppositeRel) => m.get(closestRel) != Some(null) && m.get(oppositeRel) == Some(null)
-    }
+    val weShouldYield = m.get(closestRel) != Some(null) && m.get(oppositeRel) == Some(null)
 
     if (weShouldYield) {
-      println(String.format("""optional extra yield:
+      inner(m)
+
+      if (isDebugging) println(String.format("""optional extra yield:
       m=%s
 """, m))
 
-      inner(m)
     }
 
   }

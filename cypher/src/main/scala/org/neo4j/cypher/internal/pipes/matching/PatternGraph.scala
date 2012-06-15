@@ -64,21 +64,7 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
     (elementsMap, optionalSet, hasLoops, doubleOptionals)
   }
 
-  private def reduceDoubleOptionals(dops: Seq[DoubleOptionalPath]) = {
-
-    val reducedDops = mutable.Map[(String, String), DoubleOptionalPath]()
-
-    dops.distinct.foreach {
-      case dop => val key = (dop.startNode, dop.endNode)
-      reducedDops.get(key) match {
-        case Some(otherDop) => throw new PatternException("Between `%s` and `%s`, there are at least two paths with two optional relationships each. This is currently not supported by Cypher".format(dop.startNode, dop.endNode))
-        //TODO: reducedDops(key) = dop reduceWith otherDop
-        case None           => reducedDops(key) = dop
-      }
-    }
-
-    reducedDops.values.toSeq
-  }
+  private def reduceDoubleOptionals(dops: Seq[DoubleOptionalPath]) = dops.distinct
 
   private def getDoubleOptionals(boundPatternElements: Seq[PatternElement]): Seq[DoubleOptionalPath] = {
     var doubleOptionals = Seq[DoubleOptionalPath]()
@@ -92,9 +78,11 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
         val foundPathBetweenBoundElements = boundPatternElements.contains(e) && result.size > 1
 
         if (foundPathBetweenBoundElements) {
-          val numberOfOptionals = result.foldLeft(Seq[String]())((count, element) => {
+          val init = Seq[PatternRelationship]()
+
+          val numberOfOptionals = result.foldLeft(init)((count, element) => {
             val r = element match {
-              case x: PatternRelationship if x.optional => Some(x.key)
+              case x: PatternRelationship if x.optional => Some(x)
               case _                                    => None
             }
 
@@ -106,13 +94,14 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
           }
 
           if (numberOfOptionals.size == 2) {
-
-            val leftNode = data(0)
             val leftRel = numberOfOptionals(0)
-            val rightNode = e
             val rightRel = numberOfOptionals(1)
 
-            doubleOptionals = doubleOptionals :+ DoubleOptionalPath.create(leftNode.key, rightNode.key, leftRel, rightRel)
+            val leftNode = data(data.indexOf(leftRel) - 1)
+            val idxOfRightNode = data.indexOf(rightRel) + 1
+            val rightNode = if (idxOfRightNode == data.size) e else data(idxOfRightNode)
+
+            doubleOptionals = doubleOptionals :+ DoubleOptionalPath.create(leftNode.key, rightNode.key, leftRel.key, rightRel.key)
           }
         }
 
@@ -187,21 +176,14 @@ object DoubleOptionalPath {
     else
       (n2, n1, r2, r1)
 
-    new DoubleOptionalPath(startNode, endNode, Seq(startRel), Seq(endRel))
+    new DoubleOptionalPath(startNode, endNode, startRel, endRel)
   }
 }
 
-case class Relationships(closestRel:String, oppositeRel:String)
+case class Relationships(closestRel: String, oppositeRel: String)
 
-case class DoubleOptionalPath(startNode: String, endNode: String, rel1: Seq[String], rel2: Seq[String]) {
+case class DoubleOptionalPath(startNode: String, endNode: String, rel1: String, rel2: String) {
   def canRun(s: String): Boolean = startNode == s || endNode == s
-
-  def reduceWith(other:DoubleOptionalPath):DoubleOptionalPath= {
-    require(other.startNode == startNode)
-    require(other.endNode == endNode)
-
-    new DoubleOptionalPath(startNode, endNode, (rel1 ++ other.rel1).distinct, (rel2 ++ other.rel2).distinct)
-  }
 
   def otherNode(nodeName: String) = nodeName match {
     case x if x == startNode => endNode
@@ -209,8 +191,8 @@ case class DoubleOptionalPath(startNode: String, endNode: String, rel1: Seq[Stri
   }
 
   def relationshipsSeenFrom(nodeName: String) = nodeName match {
-    case x if x == startNode => (rel1 zip rel2).map { case (r1,r2) => Relationships(r1,r2) }
-    case x if x == endNode   => (rel2 zip rel1).map { case (r1,r2) => Relationships(r1,r2) }
+    case x if x == startNode => Relationships(rel1, rel2)
+    case x if x == endNode   => Relationships(rel2, rel1)
   }
 
   def thisRel(nodeName: String) = nodeName match {
