@@ -20,10 +20,10 @@
 package org.neo4j.cypher.internal.pipes.matching
 
 import org.scalatest.Assertions
-import org.junit.Test
 import org.neo4j.graphdb.Direction
 import org.neo4j.cypher.internal.commands.True
 import org.neo4j.cypher.internal.symbols.{NodeType, Identifier, SymbolTable}
+import org.junit.{Ignore, Test}
 
 class PatternGraphTest extends Assertions {
 
@@ -35,15 +35,15 @@ class PatternGraphTest extends Assertions {
     val a = createNode("a")
     val x = createNode("x")
     val b = createNode("b")
-    relate(a, x, "r1")
-    relate(b, x, "r2")
+    val r1 = relate(a, x, "r1")
+    val r2 = relate(b, x, "r2")
     val symbols = bind("a", "b")
 
     //when
     val graph = new PatternGraph(nodes, rels, symbols)
 
     //then
-    assert(graph.doubleOptionalPaths.toSeq === Seq(DoubleOptionalPath.create("a", "b", "r1", "r2")))
+    assert(graph.doubleOptionalPaths.toSeq === Seq(DoubleOptionalPath(Seq(a,r1,x,r2,b))))
   }
 
 
@@ -54,16 +54,16 @@ class PatternGraphTest extends Assertions {
   }
 
   @Test def should_handle_two_optional_paths_between_two_pattern_nodes() {
-    //given a-[r1?]->x<-[r2?]-b,a<-[r3?]-x-[r4?]->b   where a and b are bound
+    //given a-[r1?]->x<-[r2?]-b,a<-[r3?]-z-[r4?]->b   where a and b are bound
     val a = createNode("a")
     val x = createNode("x")
     val b = createNode("b")
     val z = createNode("z")
 
-    relate(a, x, "r1")
-    relate(b, x, "r2")
-    relate(z, a, "r3")
-    relate(z, b, "r4")
+    val r1 = relate(a, x, "r1")
+    val r2 = relate(b, x, "r2")
+    val r3 = relate(z, a, "r3")
+    val r4 = relate(z, b, "r4")
 
     val symbols = bind("a", "b")
 
@@ -71,7 +71,7 @@ class PatternGraphTest extends Assertions {
     val graph = new PatternGraph(nodes, rels, symbols)
 
     //then
-    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath("a", "b", "r1", "r2"), DoubleOptionalPath("a", "b", "r3", "r4")))
+    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath(Seq(a, r1, x, r2, b)), DoubleOptionalPath(Seq(a, r3, z, r4, b))))
   }
 
   @Test def should_trim_away() {
@@ -82,10 +82,10 @@ class PatternGraphTest extends Assertions {
     val z = createNode("z")
     val x = createNode("x")
 
-    relate(a, x, "r1", optional = false)
-    relate(x, unknown, "r2")
-    relate(z, unknown, "r3")
-    relate(b, z, "r4", optional = false)
+    val r1 = relate(a, x, "r1", optional = false)
+    val r2 = relate(x, unknown, "r2")
+    val r3 = relate(z, unknown, "r3")
+    val r4 = relate(b, z, "r4", optional = false)
 
     val symbols = bind("a", "b")
 
@@ -93,7 +93,28 @@ class PatternGraphTest extends Assertions {
     val graph = new PatternGraph(nodes, rels, symbols)
 
     //then we should find the shortest possible DOP
-    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath("x", "z", "r2", "r3")))
+    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath(Seq(x,r2,unknown,r3,z))))
+  }
+
+  @Ignore("Not strictly neccessary, more of a performance thing")
+  @Test def dop_with_connected_middle_not_emitted() {
+    //given a-[r1?]->x<-[r2?]-b, c-[r3]->x   where a, b and c are bound
+    val a = createNode("a")
+    val b = createNode("b")
+    val c = createNode("c")
+    val x = createNode("x")
+
+    relate(a, x, "r1")
+    relate(b, x, "r2")
+    relate(c, x, "r3", optional = false)
+
+    val symbols = bind("a", "b", "c")
+
+    //when
+    val graph = new PatternGraph(nodes, rels, symbols)
+
+    //then we should find the shortest possible DOP
+    assert(graph.doubleOptionalPaths === Seq())
   }
 
 

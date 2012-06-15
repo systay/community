@@ -22,7 +22,6 @@ package org.neo4j.cypher.internal.pipes.matching
 import org.neo4j.cypher.internal.symbols.{MapType, SymbolTable}
 import collection.mutable.{Set => MutableSet}
 import org.neo4j.cypher.{PatternException, SyntaxException}
-import collection.mutable
 
 class PatternGraph(val patternNodes: Map[String, PatternNode],
                    val patternRels: Map[String, PatternRelationship],
@@ -96,12 +95,18 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
           if (numberOfOptionals.size == 2) {
             val leftRel = numberOfOptionals(0)
             val rightRel = numberOfOptionals(1)
-
             val leftNode = data(data.indexOf(leftRel) - 1)
-            val idxOfRightNode = data.indexOf(rightRel) + 1
-            val rightNode = if (idxOfRightNode == data.size) e else data(idxOfRightNode)
+            val leftSide: Seq[PatternElement] = data.dropWhile(_ != leftNode)
+            val idxOfRightNode = leftSide.indexOf(rightRel) + 1
 
-            doubleOptionals = doubleOptionals :+ DoubleOptionalPath.create(leftNode.key, rightNode.key, leftRel.key, rightRel.key)
+            val path: Seq[PatternElement] = if (idxOfRightNode == data.size) leftSide :+ e else leftSide.slice(0, idxOfRightNode+1)
+
+            val correctSidedPath = if(path.head.key < path.last.key) {
+              path
+            } else
+              path.reverse
+
+            doubleOptionals = doubleOptionals :+ DoubleOptionalPath(correctSidedPath)
           }
         }
 
@@ -168,21 +173,14 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
   }
 }
 
-
-object DoubleOptionalPath {
-  def create(n1: String, n2: String, r1: String, r2: String) = {
-    val (startNode, endNode, startRel, endRel) = if (n1 < n2)
-      (n1, n2, r1, r2)
-    else
-      (n2, n1, r2, r1)
-
-    new DoubleOptionalPath(startNode, endNode, startRel, endRel)
-  }
-}
-
 case class Relationships(closestRel: String, oppositeRel: String)
 
-case class DoubleOptionalPath(startNode: String, endNode: String, rel1: String, rel2: String) {
+case class DoubleOptionalPath(path: Seq[PatternElement]) {
+  val startNode = path.head.key
+  val endNode = path.last.key
+  val rel1 = path.tail.head.key
+  val rel2 = path.reverse.tail.head.key
+
   def canRun(s: String): Boolean = startNode == s || endNode == s
 
   def otherNode(nodeName: String) = nodeName match {
