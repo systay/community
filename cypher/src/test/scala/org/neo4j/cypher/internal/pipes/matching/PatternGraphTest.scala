@@ -1,3 +1,22 @@
+/**
+ * Copyright (c) 2002-2012 "Neo Technology,"
+ * Network Engine for Objects in Lund AB [http://neotechnology.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.neo4j.cypher.internal.pipes.matching
 
 import org.scalatest.Assertions
@@ -52,12 +71,36 @@ class PatternGraphTest extends Assertions {
     val graph = new PatternGraph(nodes, rels, symbols)
 
     //then
-    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath("a", "b", Seq("r1", "r3"), Seq("r2", "r4"))))
+    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath("a", "b", "r1", "r2"), DoubleOptionalPath("a", "b", "r3", "r4")))
+  }
+
+  @Test def should_trim_away() {
+    //given a-[r1]->x-[r2?]->()<-[r3?]-z<-[r4]-b   where a and b are bound
+    val a = createNode("a")
+    val b = createNode("b")
+    val unknown = createNode("unknown")
+    val z = createNode("z")
+    val x = createNode("x")
+
+    relate(a, x, "r1", optional = false)
+    relate(x, unknown, "r2")
+    relate(z, unknown, "r3")
+    relate(b, z, "r4", optional = false)
+
+    val symbols = bind("a", "b")
+
+    //when
+    val graph = new PatternGraph(nodes, rels, symbols)
+
+    //then we should find the shortest possible DOP
+    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath("x", "z", "r2", "r3")))
   }
 
 
-  private def relate(a: PatternNode, x: PatternNode, key: String): PatternRelationship = {
-    val r = a.relateTo(key, x, Seq(), Direction.OUTGOING, optional = true, predicate = True())
+  private def relate(a: PatternNode, x: PatternNode, key: String): PatternRelationship = relate(a, x, key, optional = true)
+
+  private def relate(a: PatternNode, x: PatternNode, key: String, optional: Boolean): PatternRelationship = {
+    val r = a.relateTo(key, x, Seq(), Direction.OUTGOING, optional, predicate = True())
     rels = rels + (key -> r)
     r
   }
