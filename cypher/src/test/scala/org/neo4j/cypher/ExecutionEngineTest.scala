@@ -2059,7 +2059,7 @@ RETURN x0.name?
     createNode()
     createNode()
 
-    val result = parseAndExecute("START a=node(1),b=node(2) MATCH a-[?]->X<-[?]-b return X").toList
+    val result = parseAndExecute("START a=node(1),b=node(2) MATCH a-[r1?]->X<-[r2?]-b return X").toList
     assert(result === List(Map("X"->null)))
   }
 
@@ -2097,11 +2097,11 @@ RETURN x0.name?
     val result = () => parseAndExecute("START a=node(1), b=node(2) MATCH a-[r1?]->X<-[r2?]-b, a<-[r3?]-Z-[r4?]->b return r1,r2,r3,r4 order by id(r1),id(r2),id(r3),id(r4)")
 
     println(result().dumpToString())
-//    assertEquals(result().toSet ,Set(
+//    assertEquals(Set(
 //      Map("r1" -> r1, "r2" -> null, "r3" -> r3, "r4" -> null),
 //      Map("r1" -> r1, "r2" -> null, "r3" -> null, "r4" -> r4),
 //      Map("r1" -> null, "r2" -> r2, "r3" -> r3, "r4" -> null),
-//      Map("r1" -> null, "r2" -> r2, "r3" -> null, "r4" -> r4)))
+//      Map("r1" -> null, "r2" -> r2, "r3" -> null, "r4" -> r4)), result().toSet)
 //    assert(result().toList.size === 4)
   }
 }
