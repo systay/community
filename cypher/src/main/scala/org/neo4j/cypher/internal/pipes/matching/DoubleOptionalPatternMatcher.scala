@@ -47,8 +47,8 @@ class DoubleOptionalPatternMatcher(bindings: Map[String, MatchingPair],
 
     // To prevent going around for infinity, we check that we are not already checking for double optionals
     if (includeOptionals && !alreadyInExtraWork) {
+      val pathsToCheck: List[DoubleOptionalPath] = shouldDoExtraWork(current, remaining).toList
 
-      val pathsToCheck = shouldDoExtraWork(current, remaining)
       val extendedCheck = pathsToCheck.foldLeft(initialResult)((last, next) => {
         val (newRemaining: Set[MatchingPair], newCurrent: MatchingPair) = swap(remaining, current, next)
 
@@ -88,11 +88,19 @@ DoubleOP  = %s
   from yielding subgraphs that have already been found.
    */
   private def createYielder[A](inner: Map[String, Any] => A, dop: DoubleOptionalPath, current: MatchingPair)(m: Map[String, Any]) {
-    val x = dop.otherRel(current.patternElement.key)
+    val relationships = dop.relationshipsSeenFrom(current.patternElement.key)
 
-    m.get(x) match {
-      case Some(null) => inner(m)
-      case _          =>
+    val weShouldYield = relationships.exists {
+      case Relationships(closestRel, oppositeRel) => m.get(closestRel) != Some(null) && m.get(oppositeRel) == Some(null)
     }
+
+    if (weShouldYield) {
+      println(String.format("""optional extra yield:
+      m=%s
+""", m))
+
+      inner(m)
+    }
+
   }
 }

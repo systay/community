@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.pipes.matching
 import org.neo4j.cypher.internal.symbols.{MapType, SymbolTable}
 import collection.mutable.{Set => MutableSet}
 import org.neo4j.cypher.{PatternException, SyntaxException}
-import org.neo4j.helpers.ThisShouldNotHappenError
+import collection.mutable
 
 class PatternGraph(val patternNodes: Map[String, PatternNode],
                    val patternRels: Map[String, PatternRelationship],
@@ -65,8 +65,19 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
   }
 
   private def reduceDoubleOptionals(dops: Seq[DoubleOptionalPath]) = {
-    dops.distinct
 
+    val reducedDops = mutable.Map[(String, String), DoubleOptionalPath]()
+
+    dops.distinct.foreach {
+      case dop => val key = (dop.startNode, dop.endNode)
+      reducedDops.get(key) match {
+        case Some(otherDop) => throw new PatternException("Between `%s` and `%s`, there are at least two paths with two optional relationships each. This is currently not supported by Cypher".format(dop.startNode, dop.endNode))
+        //TODO: reducedDops(key) = dop reduceWith otherDop
+        case None           => reducedDops(key) = dop
+      }
+    }
+
+    reducedDops.values.toSeq
   }
 
   private def getDoubleOptionals(boundPatternElements: Seq[PatternElement]): Seq[DoubleOptionalPath] = {
@@ -91,7 +102,7 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
           })
 
           if (numberOfOptionals.size > 2) {
-            throw new PatternException("Your pattern has at least one path between two bound elements, and these patterns are undefined for the time being. Valid use cases for this are very interesting to us - let us know at cypher@neo4j.org")
+            throw new PatternException("Your pattern has at least one path between two bound elements with more than two optional relationships. This is currently not supported by Cypher")
           }
 
           if (numberOfOptionals.size == 2) {
@@ -180,6 +191,8 @@ object DoubleOptionalPath {
   }
 }
 
+case class Relationships(closestRel:String, oppositeRel:String)
+
 case class DoubleOptionalPath(startNode: String, endNode: String, rel1: Seq[String], rel2: Seq[String]) {
   def canRun(s: String): Boolean = startNode == s || endNode == s
 
@@ -195,9 +208,14 @@ case class DoubleOptionalPath(startNode: String, endNode: String, rel1: Seq[Stri
     case x if x == endNode   => startNode
   }
 
-  def otherRel(nodeName: String) = nodeName match {
-    case x if x == startNode => rel2
-    case x if x == endNode   => rel1
+  def relationshipsSeenFrom(nodeName: String) = nodeName match {
+    case x if x == startNode => (rel1 zip rel2).map { case (r1,r2) => Relationships(r1,r2) }
+    case x if x == endNode   => (rel2 zip rel1).map { case (r1,r2) => Relationships(r1,r2) }
+  }
+
+  def thisRel(nodeName: String) = nodeName match {
+    case x if x == startNode => rel1
+    case x if x == endNode   => rel2
   }
 
   def shouldDoWork(current: String, remaining: Set[MatchingPair]): Boolean = {

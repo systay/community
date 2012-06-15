@@ -181,7 +181,7 @@ class PatternMatcher(bindings: Map[String, MatchingPair], predicates: Seq[Predic
   private def getPatternRelationshipsNotYetVisited[U](patternNode: PatternNode, history: History): List[PatternRelationship] =
     history.filter(patternNode.relationships).filter(_.optional == false || includeOptionals == true).toList
 
-  protected val isDebugging = true
+  protected val isDebugging = false
 
   private def debug[U](history: History, remaining: Set[MatchingPair]) {
     if (isDebugging)

@@ -43,7 +43,7 @@ class PatternGraphTest extends Assertions {
     val graph = new PatternGraph(nodes, rels, symbols)
 
     //then
-    assert(graph.doubleOptionalPaths.toSeq === Seq(DoubleOptionalPath("a", "b", "r1", "r2")))
+    assert(graph.doubleOptionalPaths.toSeq === Seq(DoubleOptionalPath.create("a", "b", "r1", "r2")))
   }
 
 
@@ -71,7 +71,7 @@ class PatternGraphTest extends Assertions {
     val graph = new PatternGraph(nodes, rels, symbols)
 
     //then
-    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath("a", "b", "r1", "r2"), DoubleOptionalPath("a", "b", "r3", "r4")))
+    assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath("a", "b", Seq("r1", "r3"), Seq("r2", "r4"))))
   }
 
 
