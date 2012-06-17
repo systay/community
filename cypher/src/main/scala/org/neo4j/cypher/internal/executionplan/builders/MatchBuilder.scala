@@ -21,11 +21,10 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.{MatchPipe, Pipe}
 import org.neo4j.cypher.internal.commands._
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.executionplan.PlanBuilder
 import org.neo4j.cypher.internal.symbols.{NodeType, SymbolTable}
 import org.neo4j.cypher.internal.pipes.matching.{PatternRelationship, PatternNode, PatternGraph}
 import org.neo4j.cypher.SyntaxException
-import org.neo4j.cypher.internal.executionplan.builders.Unsolved
 import scala.Some
 import org.neo4j.cypher.internal.executionplan.ExecutionPlanInProgress
 import org.neo4j.cypher.internal.commands.ShortestPath
@@ -40,7 +39,7 @@ class MatchBuilder extends PlanBuilder with PatternGraphBuilder {
     val predicates = q.where.filter(!_.solved).map(_.token)
     val graph = buildPatternGraph(p.symbols, patterns)
 
-    val newPipe = new MatchPipe(p, patterns, predicates, graph)
+    val newPipe = new MatchPipe(p, predicates, graph)
 
     plan.copy(
       query = q.copy(patterns = q.patterns.filterNot(items.contains) ++ items.map(_.solve)),

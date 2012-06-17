@@ -28,7 +28,7 @@ import org.neo4j.cypher.internal.executionplan.builders.PatternGraphBuilder
 
 case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with PathExtractor with PatternGraphBuilder {
   val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
-  val matchingContext = new MatchingContext(pathPattern, symbols, Seq(), buildPatternGraph(symbols, pathPattern))
+  val matchingContext = new MatchingContext(symbols, Seq(), buildPatternGraph(symbols, pathPattern))
   val interestingPoints = pathPattern.flatMap(_.possibleStartPoints.map(_.name)).distinct
 
   def compute(m: Map[String, Any]): Any = {

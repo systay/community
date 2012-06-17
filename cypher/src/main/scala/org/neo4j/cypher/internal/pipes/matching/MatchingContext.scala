@@ -19,7 +19,6 @@
  */
 package org.neo4j.cypher.internal.pipes.matching
 
-import org.neo4j.cypher.SyntaxException
 import collection.Map
 import collection.{Traversable, Seq}
 import org.neo4j.cypher.internal.commands._
@@ -31,22 +30,13 @@ import org.neo4j.cypher.internal.symbols._
  * The deciding factor is whether or not the pattern has loops in it. If it does, we have to use the much more
  * expensive pattern matching. If it doesn't, we get away with much simpler methods
  */
-class MatchingContext(patterns: Seq[Pattern],
-                      boundIdentifiers: SymbolTable,
+class MatchingContext(boundIdentifiers: SymbolTable,
                       predicates: Seq[Predicate] = Seq(),
                       patternGraph: PatternGraph) {
-  val containsHardPatterns = patterns.find(!_.isInstanceOf[RelatedTo]).nonEmpty
+
   val builder: MatcherBuilder = decideWhichMatcherToUse()
 
-  private def identifiers:Seq[Identifier] = patterns.flatMap(_ match {
-    case RelatedTo(left, right, rel, _, _, _, _) => Seq(Identifier(left, NodeType()), Identifier(right, NodeType()), Identifier(rel, RelationshipType()))
-    case path: PathPattern => Seq(
-      Identifier(path.start, NodeType()),
-      Identifier(path.end, NodeType()),
-      Identifier(path.pathName, PathType())
-    ) ++ path.relIterator.map(Identifier(_, new IterableType(RelationshipType())))
-    case _ => Seq()
-  })
+  private def identifiers:Seq[Identifier] = patternGraph.patternRels.values.flatMap(p => p.identifiers).toSeq
 
   lazy val symbols = boundIdentifiers.add(identifiers: _*)
 
