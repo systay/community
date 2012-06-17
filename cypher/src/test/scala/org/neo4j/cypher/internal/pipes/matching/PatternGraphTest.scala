@@ -96,7 +96,6 @@ class PatternGraphTest extends Assertions {
     assert(graph.doubleOptionalPaths.toSet === Set(DoubleOptionalPath(Seq(x,r2,unknown,r3,z))))
   }
 
-  @Ignore("Not strictly neccessary, more of a performance thing")
   @Test def dop_with_connected_middle_not_emitted() {
     //given a-[r1?]->x<-[r2?]-b, c-[r3]->x   where a, b and c are bound
     val a = createNode("a")
