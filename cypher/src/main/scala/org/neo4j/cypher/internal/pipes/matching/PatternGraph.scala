@@ -58,14 +58,13 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
 
     val hasLoops = checkIfWeHaveLoops(boundElements, allElements)
     val optionalSet = getOptionalElements(boundElements, allElements)
-    val doubleOptionals = getDoubleOptionals(boundElements)
+    val doubleOptionals = getDoubleOptionals(boundElements, optionalSet)
 
     (elementsMap, optionalSet, hasLoops, doubleOptionals)
   }
 
-  private def reduceDoubleOptionals(dops: Seq[DoubleOptionalPath]) = dops.distinct
 
-  private def getDoubleOptionals(boundPatternElements: Seq[PatternElement]): Seq[DoubleOptionalPath] = {
+  private def getDoubleOptionals(boundPatternElements: Seq[PatternElement], optionalElements:Set[String]): Seq[DoubleOptionalPath] = {
     var doubleOptionals = Seq[DoubleOptionalPath]()
 
 
@@ -117,7 +116,12 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
       path = Seq()
     ))
 
-    reduceDoubleOptionals(doubleOptionals)
+    //Before we return, let's remove all double optional paths that have a at least one node between the optional
+    //relationships that is not optional.
+    doubleOptionals.distinct.filterNot(dop => {
+      val optionalPartOfDop: Seq[PatternElement] = dop.path.tail.reverse.tail
+      optionalPartOfDop.exists(x => !optionalElements.contains(x.key))
+    })
   }
 
   private def getOptionalElements(boundPatternElements: Seq[PatternElement], allPatternElements: Seq[PatternElement]): Set[String] = {

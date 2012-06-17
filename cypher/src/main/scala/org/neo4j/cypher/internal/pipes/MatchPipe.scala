@@ -19,12 +19,12 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import matching.MatchingContext
+import matching.{PatternGraph, MatchingContext}
 import java.lang.String
 import org.neo4j.cypher.internal.commands.{Predicate, Pattern}
 
-class MatchPipe(source: Pipe, patterns: Seq[Pattern], predicates: Seq[Predicate]) extends Pipe {
-  val matchingContext = new MatchingContext(patterns, source.symbols, predicates)
+class MatchPipe(source: Pipe, patterns: Seq[Pattern], predicates: Seq[Predicate], patternGraph:PatternGraph) extends Pipe {
+  val matchingContext = new MatchingContext(patterns, source.symbols, predicates, patternGraph)
   val symbols = matchingContext.symbols
 
   def createResults(state: QueryState) =
