@@ -23,6 +23,7 @@ import org.neo4j.graphdb.{Direction, Node}
 import org.neo4j.cypher.internal.commands.Predicate
 
 class PatternNode(key: String) extends PatternElement(key) {
+
   val relationships = scala.collection.mutable.Set[PatternRelationship]()
 
   def getPRels(history: Seq[MatchingPair]): Seq[PatternRelationship] = relationships.filterNot(r => history.exists(_.matches(r))).toSeq

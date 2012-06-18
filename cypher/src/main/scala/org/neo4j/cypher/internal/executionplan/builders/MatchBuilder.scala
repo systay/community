@@ -99,7 +99,7 @@ trait PatternGraphBuilder {
       case _ =>
     })
 
-    new PatternGraph(patternNodeMap.toMap, patternRelMap.toMap, boundIdentifiers)
+    new PatternGraph(patternNodeMap.toMap, patternRelMap.toMap, boundIdentifiers.keys)
   }
 
 }

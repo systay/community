@@ -19,15 +19,51 @@
  */
 package org.neo4j.cypher.internal.pipes.matching
 
-import org.neo4j.cypher.internal.symbols.{MapType, SymbolTable}
 import collection.mutable.{Set => MutableSet}
 import org.neo4j.cypher.{PatternException, SyntaxException}
 
 class PatternGraph(val patternNodes: Map[String, PatternNode],
                    val patternRels: Map[String, PatternRelationship],
-                   val bindings: SymbolTable) {
+                   val boundElements: Seq[String]) {
 
-  val (patternGraph, optionalElements, containsLoops, doubleOptionalPaths) = validatePattern(patternNodes, patternRels, bindings)
+  val (patternGraph, optionalElements, containsLoops, doubleOptionalPaths) = validatePattern(patternNodes, patternRels)
+
+  def doubleOptionalPatterns(): Seq[PatternGraph] = {
+    val mandatory = mandatoryGraph()
+
+    if (mandatory == this)
+      return Seq()
+
+    null
+  }
+
+  lazy val hasBoundRelationships:Boolean = boundElements.exists(patternRels.keys.toSeq.contains)
+  lazy val hasVarLengthPaths:Boolean = patternRels.values.exists(_.isInstanceOf[VariableLengthPatternRelationship])
+
+  def mandatoryGraph(): PatternGraph = {
+    val relationshipsNotInDoubleOptionalPaths = patternRels.values.filterNot(p => doubleOptionalPaths.exists(dop => dop.rel1 == p.key || dop.rel2 == p.key))
+
+    if (relationshipsNotInDoubleOptionalPaths.size == patternRels.size)
+      return this
+
+    extractGraphFromPaths(relationshipsNotInDoubleOptionalPaths)
+  }
+
+
+  def extractGraphFromPaths(relationshipsNotInDoubleOptionalPaths: Iterable[PatternRelationship]): PatternGraph = {
+    val oldNodes = relationshipsNotInDoubleOptionalPaths.flatMap(p => Seq(p.startNode, p.endNode)).toSeq.distinct
+
+    val newNodes = oldNodes.map(patternNode => patternNode.key -> new PatternNode(patternNode.key)).toMap
+    val newRelationships = relationshipsNotInDoubleOptionalPaths.map {
+      case pr: VariableLengthPatternRelationship => throw new Exception("apa")
+      case pr: PatternRelationship               =>
+        val s = newNodes(pr.startNode.key)
+        val e = newNodes(pr.endNode.key)
+        pr.key -> s.relateTo(pr.key, e, pr.relTypes, pr.dir, pr.optional, pr.predicate)
+    }.toMap
+
+    new PatternGraph(newNodes, newRelationships, boundElements)
+  }
 
   def apply(key: String) = patternGraph(key)
 
@@ -39,13 +75,12 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
 
   def keySet = patternGraph.keySet
 
-  def containsOptionalElements = optionalElements.nonEmpty
-
-  def boundElements = bindings.identifiers.filter(id => MapType().isAssignableFrom(id.typ)).map(_.name)
+  lazy val containsOptionalElements = optionalElements.nonEmpty
 
   private def validatePattern(patternNodes: Map[String, PatternNode],
-                              patternRels: Map[String, PatternRelationship],
-                              bindings: SymbolTable): (Map[String, PatternElement], Set[String], Boolean, Seq[DoubleOptionalPath]) = {
+                              patternRels: Map[String, PatternRelationship]):
+  (Map[String, PatternElement], Set[String], Boolean, Seq[DoubleOptionalPath]) = {
+
     val overlaps = patternNodes.keys.filter(patternRels.keys.toSeq contains)
     if (overlaps.nonEmpty) {
       throw new PatternException("Some identifiers are used as both relationships and nodes: " + overlaps.mkString(", "))
@@ -54,17 +89,17 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
     val elementsMap: Map[String, PatternElement] = (patternNodes.values ++ patternRels.values).map(x => (x.key -> x)).toMap
     val allElements = elementsMap.values.toSeq
 
-    val boundElements = bindings.identifiers.flatMap(i => elementsMap.get(i.name))
+    val boundPattern: Seq[PatternElement] = boundElements.flatMap(i => elementsMap.get(i))
 
-    val hasLoops = checkIfWeHaveLoops(boundElements, allElements)
-    val optionalSet = getOptionalElements(boundElements, allElements)
-    val doubleOptionals = getDoubleOptionals(boundElements, optionalSet)
+    val hasLoops = checkIfWeHaveLoops(boundPattern, allElements)
+    val optionalSet = getOptionalElements(boundPattern, allElements)
+    val doubleOptionals = getDoubleOptionals(boundPattern, optionalSet)
 
     (elementsMap, optionalSet, hasLoops, doubleOptionals)
   }
 
 
-  private def getDoubleOptionals(boundPatternElements: Seq[PatternElement], optionalElements:Set[String]): Seq[DoubleOptionalPath] = {
+  private def getDoubleOptionals(boundPatternElements: Seq[PatternElement], optionalElements: Set[String]): Seq[DoubleOptionalPath] = {
     var doubleOptionals = Seq[DoubleOptionalPath]()
 
 
@@ -98,9 +133,9 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
             val leftSide: Seq[PatternElement] = data.dropWhile(_ != leftNode)
             val idxOfRightNode = leftSide.indexOf(rightRel) + 1
 
-            val path: Seq[PatternElement] = if (idxOfRightNode == data.size) leftSide :+ e else leftSide.slice(0, idxOfRightNode+1)
+            val path: Seq[PatternElement] = if (idxOfRightNode == data.size) leftSide :+ e else leftSide.slice(0, idxOfRightNode + 1)
 
-            val correctSidedPath = if(path.head.key < path.last.key) {
+            val correctSidedPath = if (path.head.key < path.last.key) {
               path
             } else
               path.reverse
