@@ -28,29 +28,29 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
 
   val (patternGraph, optionalElements, containsLoops, doubleOptionalPaths) = validatePattern(patternNodes, patternRels)
 
-  def doubleOptionalPatterns(): Seq[PatternGraph] = {
-    val mandatory = mandatoryGraph()
+  def doubleOptionalPatterns(): Seq[PatternGraph] =
+    doubleOptionalPaths.map(
+      dop => {
+        println(dop.rel1)
+        println(dop.rel2)
+        extractGraphFromPaths(Seq(patternRels(dop.rel1), patternRels(dop.rel2)), (mandatoryGraph.patternNodes.keys ++ mandatoryGraph.patternRels.keys).toSeq)
+      }
+    )
 
-    if (mandatory == this)
-      return Seq()
+  lazy val hasBoundRelationships: Boolean = boundElements.exists(patternRels.keys.toSeq.contains)
+  lazy val hasVarLengthPaths: Boolean = patternRels.values.exists(_.isInstanceOf[VariableLengthPatternRelationship])
 
-    null
-  }
-
-  lazy val hasBoundRelationships:Boolean = boundElements.exists(patternRels.keys.toSeq.contains)
-  lazy val hasVarLengthPaths:Boolean = patternRels.values.exists(_.isInstanceOf[VariableLengthPatternRelationship])
-
-  def mandatoryGraph(): PatternGraph = {
+  lazy val mandatoryGraph: PatternGraph = {
     val relationshipsNotInDoubleOptionalPaths = patternRels.values.filterNot(p => doubleOptionalPaths.exists(dop => dop.rel1 == p.key || dop.rel2 == p.key))
 
     if (relationshipsNotInDoubleOptionalPaths.size == patternRels.size)
-      return this
-
-    extractGraphFromPaths(relationshipsNotInDoubleOptionalPaths)
+      this
+    else
+      extractGraphFromPaths(relationshipsNotInDoubleOptionalPaths, boundElements)
   }
 
 
-  def extractGraphFromPaths(relationshipsNotInDoubleOptionalPaths: Iterable[PatternRelationship]): PatternGraph = {
+  def extractGraphFromPaths(relationshipsNotInDoubleOptionalPaths: Iterable[PatternRelationship], boundPoints: Seq[String]): PatternGraph = {
     val oldNodes = relationshipsNotInDoubleOptionalPaths.flatMap(p => Seq(p.startNode, p.endNode)).toSeq.distinct
 
     val newNodes = oldNodes.map(patternNode => patternNode.key -> new PatternNode(patternNode.key)).toMap
@@ -62,7 +62,7 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
         pr.key -> s.relateTo(pr.key, e, pr.relTypes, pr.dir, pr.optional, pr.predicate)
     }.toMap
 
-    new PatternGraph(newNodes, newRelationships, boundElements)
+    new PatternGraph(newNodes, newRelationships, boundPoints)
   }
 
   def apply(key: String) = patternGraph(key)
@@ -130,10 +130,10 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
             val leftRel = numberOfOptionals(0)
             val rightRel = numberOfOptionals(1)
             val leftNode = data(data.indexOf(leftRel) - 1)
-            val leftSide: Seq[PatternElement] = data.dropWhile(_ != leftNode)
-            val idxOfRightNode = leftSide.indexOf(rightRel) + 1
+            val leftIdx = data.indexOf(leftNode)
+            val rightIdx = data.indexOf(rightRel) + 2
 
-            val path: Seq[PatternElement] = if (idxOfRightNode == data.size) leftSide :+ e else leftSide.slice(0, idxOfRightNode + 1)
+            val path: Seq[PatternElement] = result.slice(leftIdx, rightIdx)
 
             val correctSidedPath = if (path.head.key < path.last.key) {
               path
@@ -215,6 +215,23 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
 case class Relationships(closestRel: String, oppositeRel: String)
 
 case class DoubleOptionalPath(path: Seq[PatternElement]) {
+
+  assert(isProperPath, "The DoubleOptionalPath created is not valid: " + path.mkString(","))
+
+  def isProperPath: Boolean = {
+    var x = true
+    val (nodes, rels) = path.partition(e => {
+      x = !x
+      !x
+    })
+
+    val nodesContainOnlyNodes = nodes.forall(_.isInstanceOf[PatternNode])
+    val relsAreAllRels = rels.forall(_.isInstanceOf[PatternRelationship])
+    val atLeastOneNode = nodes.length > 0
+    val relsLengthEqualsToNodesLengthMinusOne = rels.length == nodes.length - 1
+    nodesContainOnlyNodes && relsAreAllRels && atLeastOneNode && relsLengthEqualsToNodesLengthMinusOne
+  }
+
   val startNode = path.head.key
   val endNode = path.last.key
   val rel1 = path.tail.head.key

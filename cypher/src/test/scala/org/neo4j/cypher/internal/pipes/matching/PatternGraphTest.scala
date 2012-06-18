@@ -22,8 +22,7 @@ package org.neo4j.cypher.internal.pipes.matching
 import org.scalatest.Assertions
 import org.neo4j.graphdb.Direction
 import org.neo4j.cypher.internal.commands.True
-import org.neo4j.cypher.internal.symbols.{NodeType, Identifier, SymbolTable}
-import org.junit.{Ignore, Test}
+import org.junit.Test
 
 class PatternGraphTest extends Assertions {
 
@@ -103,10 +102,10 @@ class PatternGraphTest extends Assertions {
     assert(graph.doubleOptionalPaths === Seq())
   }
 
-  @Ignore @Test def mandatory_graph_is_extracted_correctly() {
+  @Test def mandatory_graph_is_extracted_correctly() {
     //given a-[r1]->z-[r2?]->x<-[r3?]-b, where a and b are bound
     val a = createNode("a")
-    val z = createNode("a")
+    val z = createNode("z")
     val x = createNode("x")
     val b = createNode("b")
     val r1 = relate(a, z, "r1", optional = false)
@@ -116,13 +115,14 @@ class PatternGraphTest extends Assertions {
     val graph = new PatternGraph(nodes, rels, Seq("a", "b"))
 
     //when
-    val mandatory: PatternGraph = graph.mandatoryGraph()
+    val mandatory: PatternGraph = graph.mandatoryGraph
     val optionals: Seq[PatternGraph] = graph.doubleOptionalPatterns()
+
 
     //then
     assert(mandatory.patternRels === Map("r1" -> r1))
     assert(optionals.size === 1)
-    assert(optionals.head.patternRels.keys.toSeq === Seq("r2", "r3"))
+    assert(optionals.head.patternRels.keys.toSet === Set("r2", "r3"))
   }
 
   private def createNode(name: String): PatternNode = {
@@ -138,10 +138,4 @@ class PatternGraphTest extends Assertions {
     rels = rels + (key -> r)
     r
   }
-
-  private def bind(boundSymbols: String*): SymbolTable = {
-    val identifiersToCreate = boundSymbols.map(x => Identifier(x, NodeType()))
-    new SymbolTable(identifiersToCreate: _*)
-  }
-
 }
