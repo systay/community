@@ -28,7 +28,6 @@ import org.neo4j.graphdb.{Path, Relationship, Direction, Node}
 import org.junit.{Ignore, Test}
 import org.neo4j.index.lucene.ValueContext
 import org.neo4j.test.ImpermanentGraphDatabase
-import java.text.DecimalFormat
 
 class ExecutionEngineTest extends ExecutionEngineHelper {
 
@@ -2081,7 +2080,7 @@ RETURN x0.name?
       Map("r1" -> r1, "r2" -> r2, "r3" -> null, "r4" -> r4)))
   }
 
-  @Ignore @Test
+  @Test
   def two_double_optional_with_four_halfs() {
     val a = createNode()
     val b = createNode()

@@ -125,6 +125,32 @@ class PatternGraphTest extends Assertions {
     assert(optionals.head.patternRels.keys.toSet === Set("r2", "r3"))
   }
 
+  @Test def two_double_optional_paths_found() {
+    //given a-[r1?]->X<-[r2?]-b, a<-[r3?]-Z-[r4?]->b, where a and b are bound
+    val a = createNode("a")
+    val z = createNode("z")
+    val x = createNode("x")
+    val b = createNode("b")
+
+    val r1 = relate(a, x, "r1")
+    val r2 = relate(b, x, "r2")
+    val r3 = relate(a, z, "r3")
+    val r4 = relate(b, z, "r4")
+
+    val graph = new PatternGraph(nodes, rels, Seq("a", "b"))
+
+    //when
+    val mandatory: PatternGraph = graph.mandatoryGraph
+    val optionals: Seq[PatternGraph] = graph.doubleOptionalPatterns()
+
+
+    //then
+    assert(mandatory.isEmpty)
+    assert(optionals.size === 2)
+
+    assert(optionals.map(_.patternRels.keys.toSet).toSet === Set(Set("r1", "r2"), Set("r3", "r4")))
+  }
+
   private def createNode(name: String): PatternNode = {
     val node = new PatternNode(name)
     nodes = nodes + (name -> node)

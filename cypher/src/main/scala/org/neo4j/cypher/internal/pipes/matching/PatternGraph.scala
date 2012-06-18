@@ -25,17 +25,24 @@ import org.neo4j.cypher.{PatternException, SyntaxException}
 class PatternGraph(val patternNodes: Map[String, PatternNode],
                    val patternRels: Map[String, PatternRelationship],
                    val boundElements: Seq[String]) {
+  def nonEmpty: Boolean = !isEmpty
+
+
+  def isEmpty: Boolean = patternNodes.isEmpty && patternRels.isEmpty
 
   val (patternGraph, optionalElements, containsLoops, doubleOptionalPaths) = validatePattern(patternNodes, patternRels)
 
-  def doubleOptionalPatterns(): Seq[PatternGraph] =
+  def doubleOptionalPatterns(): Seq[PatternGraph] = {
+    val newBoundElements = ((mandatoryGraph.patternNodes.keys ++ mandatoryGraph.patternRels.keys).toSeq ++ boundElements).distinct
+
     doubleOptionalPaths.map(
       dop => {
-        println(dop.rel1)
-        println(dop.rel2)
-        extractGraphFromPaths(Seq(patternRels(dop.rel1), patternRels(dop.rel2)), (mandatoryGraph.patternNodes.keys ++ mandatoryGraph.patternRels.keys).toSeq)
+        val relationships = Seq(patternRels(dop.rel1), patternRels(dop.rel2))
+        extractGraphFromPaths(relationships, newBoundElements)
       }
     )
+  }
+
 
   lazy val hasBoundRelationships: Boolean = boundElements.exists(patternRels.keys.toSeq.contains)
   lazy val hasVarLengthPaths: Boolean = patternRels.values.exists(_.isInstanceOf[VariableLengthPatternRelationship])
@@ -80,6 +87,9 @@ class PatternGraph(val patternNodes: Map[String, PatternNode],
   private def validatePattern(patternNodes: Map[String, PatternNode],
                               patternRels: Map[String, PatternRelationship]):
   (Map[String, PatternElement], Set[String], Boolean, Seq[DoubleOptionalPath]) = {
+
+    if (isEmpty)
+      return (Map(), Set(), false, Seq())
 
     val overlaps = patternNodes.keys.filter(patternRels.keys.toSeq contains)
     if (overlaps.nonEmpty) {
