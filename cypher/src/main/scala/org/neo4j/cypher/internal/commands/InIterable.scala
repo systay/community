@@ -20,38 +20,47 @@
 package org.neo4j.cypher.internal.commands
 
 import collection.Seq
-import org.neo4j.cypher.internal.symbols.{Identifier, AnyIterableType}
+import org.neo4j.cypher.internal.symbols.{AnyType, CypherType, Identifier, AnyIterableType}
 import collection.Map
 import java.lang.{Iterable => JavaIterable}
 import java.util.{Map => JavaMap}
 
 import collection.JavaConverters._
 
-abstract class InIterable(expression: Expression, symbol: String, closure: Predicate) extends Predicate with IterableSupport {
+abstract class InIterable(collection: Expression, id: String, predicate: Predicate) extends Predicate with IterableSupport {
   def seqMethod[U](f: Seq[U]): ((U) => Boolean) => Boolean
 
   def isMatch(m: Map[String, Any]): Boolean = {
-    val seq = makeTraversable(expression(m)).toSeq
+    val seq = makeTraversable(collection(m)).toSeq
 
     seqMethod(seq)(item => {
-      val innerMap = m ++ Map(symbol -> item)
-      closure.isMatch(innerMap)
+      val innerMap = m ++ Map(id -> item)
+      predicate.isMatch(innerMap)
     })
   }
 
-  def dependencies: Seq[Identifier] = expression.dependencies(AnyIterableType()) ++ closure.dependencies.filterNot(_.name == symbol)
+  def dependencies: Seq[Identifier] = collection.dependencies(AnyIterableType()) ++ predicate.dependencies.filterNot(_.name == id)
 
   def atoms: Seq[Predicate] = Seq(this)
 
-  def exists(f: (Expression) => Boolean) = expression.exists(f) || closure.exists(f)
+  def exists(f: (Expression) => Boolean) = collection.exists(f) || predicate.exists(f)
 
   def name: String
 
-  override def toString = name + "(" + symbol + " in " + expression + " where " + closure + ")"
+  override def toString = name + "(" + id + " in " + collection + " where " + predicate + ")"
 
-  def containsIsNull = closure.containsIsNull
+  def containsIsNull = predicate.containsIsNull
 
-  def filter(f: (Expression) => Boolean): Seq[Expression] = expression.filter(f) ++ closure.filter(f)
+  def filter(f: (Expression) => Boolean): Seq[Expression] = collection.filter(f) ++ predicate.filter(f)
+
+  def deps(expectedType: CypherType) = {
+    val mergedDeps = mergeDeps(collection.deps(AnyIterableType()), predicate.deps(AnyType()))
+
+    // Filter depends on everything that the iterable and the predicate depends on, except
+    // the new identifier inserted into the predicate symbol table, named with id
+    mergedDeps.filterKeys(_ != id)
+  }
+
 }
 
 case class AllInIterable(iterable: Expression, symbolName: String, inner: Predicate) extends InIterable(iterable, symbolName, inner) {

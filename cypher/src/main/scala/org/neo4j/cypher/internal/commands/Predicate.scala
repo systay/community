@@ -31,16 +31,17 @@ import org.neo4j.cypher.SyntaxException
 
 abstract class Predicate extends Dependant {
   def ++(other: Predicate): Predicate = And(this, other)
-
   def isMatch(m: Map[String, Any]): Boolean
 
   // This is the un-dividable list of predicates. They can all be ANDed
   // together
   def atoms: Seq[Predicate]
-  def exists(f:Expression=>Boolean):Boolean
-  def rewrite(f:Expression=>Expression):Predicate
-  def containsIsNull:Boolean
+  def exists(f: Expression => Boolean): Boolean
+  def rewrite(f: Expression => Expression): Predicate
+  def containsIsNull: Boolean
   def filter(f: Expression => Boolean): Seq[Expression]
+
+  def deps(expectedType: CypherType): Map[String, CypherType]
 }
 
 case class NullablePredicate(inner: Predicate, exp: Seq[(Expression, Boolean)]) extends Predicate {
@@ -66,6 +67,8 @@ case class NullablePredicate(inner: Predicate, exp: Seq[(Expression, Boolean)]) 
   })
 
   def filter(f: (Expression) => Boolean) = exp.flatMap { case (e,_) => e.filter(f)  }
+
+  def deps(expectedType: CypherType) = inner.deps(AnyType())
 }
 
 
@@ -78,9 +81,10 @@ case class And(a: Predicate, b: Predicate) extends Predicate {
   def containsIsNull = a.containsIsNull||b.containsIsNull
   def rewrite(f: (Expression) => Expression) = And(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ b.filter(f)
+  def deps(expectedType: CypherType) = mergeDeps(a.deps(AnyType()), b.deps(AnyType()))
 }
 
-case class Or(a: Predicate, b: Predicate) extends Predicate {
+case class Or(a: Predicate, b: Predicate) extends Predicate with Dependant {
   def isMatch(m: Map[String, Any]): Boolean = a.isMatch(m) || b.isMatch(m)
   def atoms: Seq[Predicate] = Seq(this)
   def dependencies: Seq[Identifier] = a.dependencies ++ b.dependencies
@@ -89,6 +93,7 @@ case class Or(a: Predicate, b: Predicate) extends Predicate {
   def containsIsNull = a.containsIsNull||b.containsIsNull
   def rewrite(f: (Expression) => Expression) = Or(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ b.filter(f)
+  def deps(expectedType: CypherType) = mergeDeps(a.deps(AnyType()), b.deps(AnyType()))
 }
 
 case class Not(a: Predicate) extends Predicate {
@@ -100,6 +105,7 @@ case class Not(a: Predicate) extends Predicate {
   def containsIsNull = a.containsIsNull
   def rewrite(f: (Expression) => Expression) = Not(a.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f)
+  def deps(expectedType: CypherType) = a.deps(AnyType())
 }
 
 case class HasRelationshipTo(from: Expression, to: Expression, dir: Direction, relType: Seq[String]) extends Predicate {
@@ -126,6 +132,7 @@ case class HasRelationshipTo(from: Expression, to: Expression, dir: Direction, r
   def containsIsNull = false
   def rewrite(f: (Expression) => Expression) = HasRelationshipTo(from.rewrite(f), to.rewrite(f), dir, relType)
   def filter(f: (Expression) => Boolean) = from.filter(f) ++ to.filter(f)
+  def deps(expectedType: CypherType) = mergeDeps(from.deps(NodeType()), to.deps(NodeType()))
 }
 
 case class HasRelationship(from: Expression, dir: Direction, relType: Seq[String]) extends Predicate {
@@ -149,6 +156,7 @@ case class HasRelationship(from: Expression, dir: Direction, relType: Seq[String
   def containsIsNull = false
   def filter(f: (Expression) => Boolean) = from.filter(f)
   def rewrite(f: (Expression) => Expression) = HasRelationship(from.rewrite(f), dir, relType)
+  def deps(expectedType: CypherType) = from.deps(AnyType())
 }
 
 case class IsNull(expression: Expression) extends Predicate {
@@ -160,6 +168,7 @@ case class IsNull(expression: Expression) extends Predicate {
   def containsIsNull = true
   def rewrite(f: (Expression) => Expression) = IsNull(expression.rewrite(f))
   def filter(f: (Expression) => Boolean) = expression.filter(f)
+  def deps(expectedType: CypherType) = expression.deps(AnyType())
 }
 
 case class True() extends Predicate {
@@ -171,6 +180,7 @@ case class True() extends Predicate {
   def containsIsNull = false
   def rewrite(f: (Expression) => Expression) = True()
   def filter(f: (Expression) => Boolean) = Seq()
+  def deps(expectedType: CypherType) = Map()
 }
 
 case class Has(property: Property) extends Predicate {
@@ -191,6 +201,7 @@ case class Has(property: Property) extends Predicate {
     case _ => throw new ThisShouldNotHappenError("Andres", "Something went wrong rewriting a Has(Property)")
   }
   def filter(f: (Expression) => Boolean) = property.filter(f)
+  def deps(expectedType: CypherType) = property.deps(AnyType())
 }
 
 case class LiteralRegularExpression(a: Expression, regex: Literal) extends Predicate {
@@ -206,6 +217,7 @@ case class LiteralRegularExpression(a: Expression, regex: Literal) extends Predi
     case other => RegularExpression(a.rewrite(f), other)
   }
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ regex.filter(f)
+  def deps(expectedType: CypherType) = a.deps(StringType())
 }
 
 case class RegularExpression(a: Expression, regex: Expression) extends Predicate {
@@ -226,6 +238,7 @@ case class RegularExpression(a: Expression, regex: Expression) extends Predicate
     case other => RegularExpression(a.rewrite(f), other)
   }
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ regex.filter(f)
+  def deps(expectedType: CypherType) = mergeDeps(a.deps(StringType()), regex.deps(StringType()))
 }
 
 case class NonEmpty(inner:Expression) extends Predicate with IterableSupport {
@@ -248,4 +261,5 @@ case class NonEmpty(inner:Expression) extends Predicate with IterableSupport {
   def exists(f: (Expression) => Boolean) = inner.exists(f)
   def rewrite(f: (Expression) => Expression) = NonEmpty(inner.rewrite(f))
   def filter(f: (Expression) => Boolean) = inner.filter(f)
+  def deps(expectedType: CypherType) = inner.deps(AnyIterableType())
 }

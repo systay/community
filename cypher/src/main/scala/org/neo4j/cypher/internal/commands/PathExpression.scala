@@ -19,12 +19,15 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable, PathType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.pipes.matching.MatchingContext
 import collection.Map
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.graphdb.Path
 import org.neo4j.cypher.internal.executionplan.builders.PatternGraphBuilder
+import org.neo4j.cypher.internal.symbols.Identifier
+import scala.Some
+import org.neo4j.cypher.internal.commands.PathExpression
 
 case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with PathExtractor with PatternGraphBuilder {
   val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
@@ -57,4 +60,6 @@ case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with Pat
   val identifier: Identifier = Identifier(pathPattern.mkString(","), PathType())
 
   def rewrite(f: (Expression) => Expression): Expression = f(PathExpression(pathPattern.map(_.rewrite(f))))
+
+  def deps(expectedType: CypherType) = mergeDeps(pathPattern.map(_.deps(AnyType())))
 }

@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal.symbols
 
 import java.lang.String
+import org.neo4j.cypher.CypherTypeException
 
 object AnyType {
 
@@ -44,7 +45,17 @@ object AnyType {
   def apply() = instance
 }
 
-class AnyType {
+trait CypherType {
+  def isAssignableFrom(other: AnyType): Boolean
+
+  def mergeWith(other: CypherType): CypherType = {
+    if (this.isAssignableFrom(other.asInstanceOf[AnyType])) other
+    else if (other.isAssignableFrom(this.asInstanceOf[AnyType])) this
+    else throw new CypherTypeException("Failed merging " + this + " with " + other)
+  }
+}
+
+class AnyType extends CypherType {
   override def equals(other: Any) = if (other == null)
     false
   else

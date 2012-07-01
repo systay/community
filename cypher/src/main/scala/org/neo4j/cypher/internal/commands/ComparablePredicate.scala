@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.commands
 import collection.Seq
 import org.neo4j.cypher.internal.Comparer
 import java.lang.String
-import org.neo4j.cypher.internal.symbols.{AnyType, ScalarType, Identifier}
+import org.neo4j.cypher.internal.symbols.{CypherType, AnyType, ScalarType, Identifier}
 import collection.Map
 
 abstract sealed class ComparablePredicate(left: Expression, right: Expression) extends Predicate with Comparer {
@@ -44,6 +44,7 @@ abstract sealed class ComparablePredicate(left: Expression, right: Expression) e
   def exists(f: (Expression) => Boolean) = left.exists(f) || right.exists(f)
   def containsIsNull = false
   def filter(f: (Expression) => Boolean): Seq[Expression] = left.filter(f) ++ right.filter(f)
+  def deps(expectedType: CypherType) = mergeDeps(left.deps(AnyType()), right.deps(AnyType()))
 }
 
 case class Equals(a: Expression, b: Expression) extends Predicate with Comparer {
@@ -59,6 +60,8 @@ case class Equals(a: Expression, b: Expression) extends Predicate with Comparer 
   def containsIsNull = false
   def rewrite(f: (Expression) => Expression) = Equals(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean): Seq[Expression] = a.filter(f) ++ b.filter(f)
+
+  def deps(expectedType: CypherType) = mergeDeps(a.deps(AnyType()), b.deps(AnyType()))
 }
 
 case class LessThan(a: Expression, b: Expression) extends ComparablePredicate(a, b) {

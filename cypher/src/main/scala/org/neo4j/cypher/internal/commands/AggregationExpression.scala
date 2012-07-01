@@ -56,6 +56,7 @@ case class CountStar() extends AggregationExpression {
     Seq()
 
   override def toString() = "count(*)"
+  def deps(expectedType: CypherType) = Map()
 }
 
 abstract class AggregationWithInnerExpression(inner:Expression) extends AggregationExpression {
@@ -71,6 +72,8 @@ abstract class AggregationWithInnerExpression(inner:Expression) extends Aggregat
     Seq(this) ++ inner.filter(f)
   else
     inner.filter(f)
+
+  def deps(expectedType: CypherType) = inner.deps(ScalarType())
 }
 
 case class Distinct(innerAggregator: AggregationExpression, expression: Expression) extends AggregationWithInnerExpression(expression) {
@@ -90,6 +93,8 @@ case class Distinct(innerAggregator: AggregationExpression, expression: Expressi
     case inner: AggregationExpression => f(Distinct(inner, expression.rewrite(f)))
     case _ => f(Distinct(innerAggregator, expression.rewrite(f)))
   }
+
+  override def deps(expectedType: CypherType) = mergeDeps(innerAggregator.deps(AnyType()), expression.deps(AnyType()))
 }
 
 case class Count(anInner: Expression) extends AggregationWithInnerExpression(anInner) {

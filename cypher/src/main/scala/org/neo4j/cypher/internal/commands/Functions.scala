@@ -58,6 +58,14 @@ case class ExtractFunction(iterable: Expression, id: String, expression: Express
     Seq(this) ++ iterable.filter(f) ++ expression.filter(f)
   else
     iterable.filter(f) ++ expression.filter(f)
+
+  def deps(expectedType: CypherType) = {
+    val mergedDeps: Map[String, CypherType] = mergeDeps(iterable.deps(AnyIterableType()), expression.deps(AnyType()))
+
+    // Extract depends on everything that the iterable and the expression depends on, except
+    // the new identifier inserted into the expression context, named with id
+    mergedDeps.filterKeys( _ != id )
+  }
 }
 
 case class RelationshipFunction(path: Expression) extends NullInNullOutExpression(path) {
@@ -76,6 +84,8 @@ case class RelationshipFunction(path: Expression) extends NullInNullOutExpressio
     Seq(this) ++ path.filter(f)
   else
     path.filter(f)
+
+  def deps(expectedType: CypherType) = path.deps(PathType())
 }
 
 case class CoalesceFunction(expressions: Expression*) extends Expression {
@@ -101,6 +111,8 @@ case class CoalesceFunction(expressions: Expression*) extends Expression {
     Seq(this) ++ expressions.flatMap(_.filter(f))
   else
     expressions.flatMap(_.filter(f))
+
+  def deps(expectedType: CypherType) = mergeDeps(expressions.map(_.deps(AnyType())))
 }
 
 case class RelationshipTypeFunction(relationship: Expression) extends NullInNullOutExpression(relationship) {
@@ -116,6 +128,8 @@ case class RelationshipTypeFunction(relationship: Expression) extends NullInNull
     Seq(this) ++ relationship.filter(f)
   else
     relationship.filter(f)
+
+  def deps(expectedType: CypherType) = relationship.deps(RelationshipType())
 }
 
 case class LengthFunction(inner: Expression) extends NullInNullOutExpression(inner) with IterableSupport {
@@ -135,6 +149,8 @@ case class LengthFunction(inner: Expression) extends NullInNullOutExpression(inn
     Seq(this) ++ inner.filter(f)
   else
     inner.filter(f)
+
+  def deps(expectedType: CypherType) = inner.deps(AnyIterableType())
 }
 
 case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) {
@@ -154,6 +170,8 @@ case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) 
     Seq(this) ++ inner.filter(f)
   else
     inner.filter(f)
+
+  def deps(expectedType: CypherType) = inner.deps(MapType())
 }
 
 case class HeadFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
@@ -176,6 +194,8 @@ case class HeadFunction(collection: Expression) extends NullInNullOutExpression(
     Seq(this) ++ collection.filter(f)
   else
     collection.filter(f)
+
+  def deps(expectedType: CypherType) = null
 }
 
 case class LastFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
@@ -191,6 +211,8 @@ case class LastFunction(collection: Expression) extends NullInNullOutExpression(
     Seq(this) ++ collection.filter(f)
   else
     collection.filter(f)
+
+  def deps(expectedType: CypherType) = collection.deps(AnyIterableType())
 }
 
 case class TailFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
@@ -206,6 +228,8 @@ case class TailFunction(collection: Expression) extends NullInNullOutExpression(
     Seq(this) ++ collection.filter(f)
   else
     collection.filter(f)
+
+  def deps(expectedType: CypherType) = collection.deps(AnyIterableType())
 }
 
 case class NodesFunction(path: Expression) extends NullInNullOutExpression(path) {
@@ -224,22 +248,32 @@ case class NodesFunction(path: Expression) extends NullInNullOutExpression(path)
     Seq(this) ++ path.filter(f)
   else
     path.filter(f)
+
+  def deps(expectedType: CypherType) = path.deps(AnyIterableType())
 }
 
-case class FilterFunction(collection: Expression, symbol: String, predicate: Predicate)
+case class FilterFunction(collection: Expression, id: String, predicate: Predicate)
   extends NullInNullOutExpression(collection)
   with IterableSupport
 {
-  def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).filter(element => predicate.isMatch(m + (symbol -> element)))
+  def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).filter(element => predicate.isMatch(m + (id -> element)))
 
-  val identifier = Identifier("filter(%s in %s : %s)".format(symbol, collection.identifier.name, predicate), collection.identifier.typ)
+  val identifier = Identifier("filter(%s in %s : %s)".format(id, collection.identifier.name, predicate), collection.identifier.typ)
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = (collection.dependencies(AnyIterableType()) ++ predicate.dependencies).filterNot(_.name == symbol)
+  def declareDependencies(extectedType: AnyType): Seq[Identifier] = (collection.dependencies(AnyIterableType()) ++ predicate.dependencies).filterNot(_.name == id)
 
-  def rewrite(f: (Expression) => Expression) = f(FilterFunction(collection.rewrite(f), symbol, predicate.rewrite(f)))
+  def rewrite(f: (Expression) => Expression) = f(FilterFunction(collection.rewrite(f), id, predicate.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ collection.filter(f)
   else
     collection.filter(f)
+
+  def deps(expectedType: CypherType) = {
+    val mergedDeps: Map[String, CypherType] = mergeDeps(collection.deps(AnyIterableType()), predicate.deps(AnyType()))
+
+    // Filter depends on everything that the iterable and the predicate depends on, except
+    // the new identifier inserted into the predicate symbol table, named with id
+    mergedDeps.filterKeys( _ != id )
+  }
 }

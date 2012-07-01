@@ -41,6 +41,8 @@ abstract class MathFunction(arg: Expression) extends Expression with NumericHelp
     Seq(this) ++ arg.filter(f)
   else
     arg.filter(f)
+
+  def deps(expectedType: CypherType) = arg.deps(NumberType())
 }
 
 trait NumericHelper {
@@ -51,7 +53,7 @@ trait NumericHelper {
     a.asInstanceOf[Number]
   }
   catch {
-    case x: ClassCastException => throw new CypherTypeException("Expected a numeric value for " + toString() + ", but got: " + a.toString)
+    case x: ClassCastException => throw new CypherTypeException("Expected a numeric value for " + toString + ", but got: " + a.toString)
   }
 }
 
@@ -88,6 +90,8 @@ case class RangeFunction(start: Expression, end: Expression, step: Expression) e
   val identifier = Identifier("range("+ start + "," + end + "," + step + ")", new IterableType(NumberType()))
 
   def rewrite(f: (Expression) => Expression) = f(RangeFunction(start.rewrite(f), end.rewrite(f), step.rewrite(f)))
+
+  def deps(expectedType: CypherType) = mergeDeps(Seq(start.deps(NumberType()), end.deps(NumberType()), step.deps(NumberType())))
 }
 
 case class SignFunction(argument: Expression) extends MathFunction(argument) {

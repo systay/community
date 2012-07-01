@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.commands
 import org.scalatest.Assertions
 import collection.Map
 import org.junit.{Assert, Test}
-import org.neo4j.cypher.internal.symbols.{Identifier, AnyType}
+import org.neo4j.cypher.internal.symbols.{CypherType, Identifier, AnyType}
 
 
 class CoalesceTest extends Assertions {
@@ -57,4 +57,6 @@ case class BreakingExpression() extends Expression {
   def rewrite(f: (Expression) => Expression) = null
 
   def filter(f: (Expression) => Boolean) = null
+
+  def deps(expectedType: CypherType) = Map()
 }

@@ -21,16 +21,95 @@ package org.neo4j.cypher.internal.commands
 
 import org.junit.Test
 import org.scalatest.Assertions
+import org.neo4j.cypher.internal.symbols._
+import collection.Map
+import org.neo4j.cypher.CypherTypeException
+import org.neo4j.cypher.internal.symbols.Identifier
 
 class ExpressionTest extends Assertions {
   @Test def replacePropWithCache() {
     val a = Collect(Nullable(Property("r", "age")))
-    
+
     val b = a.rewrite {
-        case Property(n, p) => Literal(n + "." + p)
-        case x => x
-      }
+      case Property(n, p) => Literal(n + "." + p)
+      case x              => x
+    }
 
     assert(b === Collect(Nullable(Literal("r.age"))))
   }
+
+  @Test def merge_two_different_identifiers() {
+    testMerge(
+      Map("a" -> AnyType()),
+      Map("b" -> AnyType()),
+
+      Map("a" -> AnyType(), "b" -> AnyType()))
+  }
+
+  @Test def merge_two_deps_on_the_same_identifier() {
+    testMerge(
+      Map("a" -> AnyType()),
+      Map("a" -> AnyType()),
+
+      Map("a" -> AnyType()))
+  }
+
+  @Test def merge_two_deps_same_id_different_types() {
+    testMerge(
+      Map("a" -> AnyType()),
+      Map("a" -> MapType()),
+
+      Map("a" -> MapType()))
+  }
+
+  @Test def merge_two_deps_same_id_different_incompatible_types() {
+    expectFailure(
+      Map("a" -> StringType()),
+      Map("a" -> NumberType()))
+  }
+
+  private def expectFailure(a: Map[String, CypherType], b: Map[String, CypherType]) {
+    intercept[CypherTypeException](merge(a, b, a))
+    intercept[CypherTypeException](merge(a, b, a))
+  }
+
+  private def testMerge(a: Map[String, CypherType], b: Map[String, CypherType], expected: Map[String, CypherType]) {
+    merge(a, b, expected)
+    merge(b, a, expected)
+  }
+
+  val e = new TestExpression
+
+  private def merge(a: Map[String, CypherType], b: Map[String, CypherType], expected: Map[String, CypherType]) {
+    val r = e.exposedMergeDeps(a, b)
+    if (r != expected) {
+      fail("""
+Merged:
+    %s with
+    %s
+
+     Got: %s
+Expected: %s""".format(a, b, r, expected))
+    }
+  }
+}
+
+class TestExpression extends Expression {
+  protected def compute(v1: Map[String, Any]): Any = null
+
+  def declareDependencies(expectedType: AnyType): Seq[Identifier] = null
+
+  def deps: Map[String, CypherType] = null
+
+  def filter(f: (Expression) => Boolean): Seq[Expression] = null
+
+  val identifier: Identifier = null
+
+  def rewrite(f: (Expression) => Expression): Expression = null
+
+  def exposedMergeDeps(a: Map[String, CypherType], b: Map[String, CypherType]): Map[String, CypherType] = mergeDeps(a, b)
+
+  /*This is a declaration of the identifiers that this particular expression expects to
+  find in the symboltable to be able to run successfully.*/
+  def deps(expectedType: CypherType) = Map()
 }

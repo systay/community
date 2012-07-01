@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable, PathType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.graphalgo.GraphAlgoFactory
@@ -27,6 +27,8 @@ import scala.collection.JavaConverters._
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.kernel.Traversal
 import org.neo4j.graphdb.{Path, DynamicRelationshipType, Node, Expander}
+import org.neo4j.cypher.internal.symbols.Identifier
+import scala.Some
 
 case class ShortestPathExpression(ast: ShortestPath) extends Expression with PathExtractor {
   val pathPattern:Seq[Pattern] = Seq(ast)
@@ -78,6 +80,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
   else
     new AllShortestPathsFOO(expander, ast.maxDepth.getOrElse(15))
 
+  def deps(expectedType: CypherType) = ast.deps(PathType())
 }
 
 trait FOO {

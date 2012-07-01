@@ -20,14 +20,34 @@
 package org.neo4j.cypher.internal.pipes
 
 import collection.Seq
-import org.neo4j.cypher.internal.symbols.Identifier
-
+import collection.Map
+import org.neo4j.cypher.internal.symbols.{CypherType, Identifier}
 
 abstract class PipeWithSource(val source: Pipe) extends Pipe with Dependant {
   dependencies.foreach(source.symbols.assertHas(_))
-  def dependencies: Seq[Identifier]
+
+  def deps: Map[String, CypherType] = Map()
 }
 
 trait Dependant {
   def dependencies: Seq[Identifier]
+
+  def mergeDeps(deps: Seq[Map[String, CypherType]]): Map[String, CypherType] = deps.foldLeft(Map[String, CypherType]()) {
+    case (result, current) => mergeDeps(result, current)
+  }
+
+  def mergeDeps(a: Map[String, CypherType], b: Map[String, CypherType]): Map[String, CypherType] = {
+    val keys = (a.keys ++ b.keys).toSeq.distinct
+    val allDeps: Seq[(String, List[CypherType])] = keys.map(key => key -> (a.get(key) ++ b.get(key)).toList.distinct)
+    val map: Seq[(String, CypherType)] = allDeps.map {
+      case (key, types) => val t: CypherType = types match {
+        case List(single: CypherType)               => single
+        case List(one: CypherType, two: CypherType) => one.mergeWith(two)
+      }
+      key -> t
+    }
+    map.toMap
+  }
+
+  //  def deps:Map[String,CypherType] //The identifiers that should exist in the source pipe, and their types.
 }

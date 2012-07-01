@@ -22,10 +22,13 @@ package org.neo4j.cypher.internal.commands
 import org.neo4j.graphdb.Direction
 import java.lang.String
 import collection.Seq
-import org.neo4j.cypher.internal.symbols.{PathType, RelationshipType, NodeType, Identifier}
+import org.neo4j.cypher.internal.symbols._
+import org.neo4j.cypher.internal.symbols.Identifier
+import scala.Some
+import org.neo4j.cypher.internal.pipes.Dependant
 
 
-abstract class Pattern {
+abstract class Pattern extends Dependant {
   def optional: Boolean
   def predicate: Predicate
   def possibleStartPoints: Seq[Identifier]
@@ -37,6 +40,19 @@ abstract class Pattern {
 
   def rewrite( f : Expression => Expression) : Pattern
   def equalOrUnnamed(name1: String, name2: String) = name1 == name2 || (name1.startsWith("  UNNAMED") && name2.startsWith("  UNNAMED"))
+  protected def filtered(x:Seq[String]): Seq[String] =x.filter(!_.startsWith("  UNNAMED"))
+
+
+
+  def nodes:Seq[String]
+  def rels:Seq[String]
+  def deps(expectedType: CypherType) = {
+    val nodeDeps: Map[String, CypherType] = filtered(nodes).map(_ -> NodeType.asInstanceOf[CypherType]).toMap
+    val relDeps: Map[String, CypherType] = filtered(rels).map(_ -> RelationshipType.asInstanceOf[CypherType]).toMap
+    mergeDeps(nodeDeps,relDeps)
+  }
+
+  def dependencies: Seq[Identifier]= null
 }
 
 object RelatedTo {
@@ -69,6 +85,10 @@ case class RelatedTo(left: String, right: String, relName: String, relTypes: Seq
         other.predicate == predicate
     case _ => false
   }
+
+  def nodes = Seq(left,right)
+
+  def rels = Seq(relName)
 }
 
 abstract class PathPattern extends Pattern {
@@ -137,6 +157,10 @@ case class VarLengthRelatedTo(pathName: String,
         other.predicate == predicate
     case _ => false
   }
+
+  def nodes = Seq(start,end)
+
+  def rels = Seq()
 }
 
 case class ShortestPath(pathName: String,
@@ -154,7 +178,7 @@ case class ShortestPath(pathName: String,
 
   private def algo = if (single) "singleShortestPath" else "allShortestPath"
 
-  def dependencies: Seq[Identifier] = Seq(Identifier(start, NodeType()), Identifier(end, NodeType())) ++ predicate.dependencies
+  override def dependencies: Seq[Identifier] = Seq(Identifier(start, NodeType()), Identifier(end, NodeType())) ++ predicate.dependencies
 
   def cloneWithOtherName(newName: String) = ShortestPath(newName, start, end, relTypes, dir, maxDepth, optional, single, None)
 
@@ -170,4 +194,8 @@ case class ShortestPath(pathName: String,
   lazy val possibleStartPoints: Seq[Identifier] = Seq(Identifier(start, NodeType()), Identifier(end, NodeType()))
 
   def rewrite(f: (Expression) => Expression) = new ShortestPath(pathName,start,end,relTypes,dir,maxDepth,optional,single,relIterator,predicate.rewrite(f))
+
+  def rels = Seq()
+
+  def nodes = Seq(start,end)
 }
