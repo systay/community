@@ -21,6 +21,7 @@ package org.neo4j.cypher.internal.pipes
 
 import java.lang.String
 import org.neo4j.cypher.internal.commands.Predicate
+import org.neo4j.cypher.internal.symbols.AnyType
 
 class FilterPipe(source: Pipe, predicate: Predicate) extends PipeWithSource(source) {
   val symbols = source.symbols
@@ -30,4 +31,6 @@ class FilterPipe(source: Pipe, predicate: Predicate) extends PipeWithSource(sour
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "Filter(" + predicate.toString + ")"
 
   def dependencies = predicate.dependencies
+
+  def deps = predicate.deps(AnyType())
 }

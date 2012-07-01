@@ -25,10 +25,10 @@ import collection.Seq
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.symbols.Identifier
 import scala.Some
-import org.neo4j.cypher.internal.pipes.Dependant
+import org.neo4j.cypher.internal.pipes.IdentifierDependant
 
 
-abstract class Pattern extends Dependant {
+abstract class Pattern extends IdentifierDependant {
   def optional: Boolean
   def predicate: Predicate
   def possibleStartPoints: Seq[Identifier]

@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.mutation
 
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import collection.JavaConverters._
-import org.neo4j.cypher.internal.symbols.{RelationshipType, NodeType, Identifier}
+import org.neo4j.cypher.internal.symbols.{CypherType, RelationshipType, NodeType, Identifier}
 import collection.Map
 import org.neo4j.graphdb._
 import org.neo4j.cypher.internal.commands._
@@ -46,6 +46,7 @@ case class NamedExpectation(name: String, properties: Map[String, Expression])
         else isCollection(expectationValue) && isCollection(elementValue) && makeTraversable(expectationValue).toList == makeTraversable(elementValue).toList
       }
   }
+  def deps: Map[String, CypherType] = deps(properties)
 }
 
 object RelateLink {
@@ -152,4 +153,6 @@ case class RelateLink(start: NamedExpectation, end: NamedExpectation, rel: Named
   }
 
   def filter(f: (Expression) => Boolean) = Seq.empty
+
+  def deps:Map[String,CypherType] = mergeDeps(Seq(start.deps, end.deps, rel.deps))
 }

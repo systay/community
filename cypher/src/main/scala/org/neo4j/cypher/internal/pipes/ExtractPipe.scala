@@ -41,5 +41,7 @@ class ExtractPipe(source: Pipe, val expressions: Seq[Expression]) extends PipeWi
   }
 
   override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols.keys.mkString(",") + "] => [" + expressions.map(_.identifier.name).mkString(", ") + "])"
+
+  def deps = mergeDeps(expressions.map(_.deps(AnyType())))
 }
 

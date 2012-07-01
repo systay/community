@@ -85,6 +85,8 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
   def filter(f: (Expression) => Boolean): Seq[Expression] = props.values.flatMap(_.filter(f)).toSeq
 
   def rewrite(f: (Expression) => Expression): UpdateAction = CreateNodeStartItem(key, rewrite(props, f))
+
+  def deps = deps(props)
 }
 
 case class CreateRelationshipStartItem(key: String, from: (Expression, Map[String, Expression]), to: (Expression, Map[String, Expression]), typ: String, props: Map[String, Expression])
@@ -121,6 +123,14 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
   }
 
   def identifier = Seq(Identifier(key, RelationshipType()))
+
+  def deps = {
+    val fromDeps = deps(from._2)
+    val toDeps = deps(to._2)
+    val relDeps = deps(props)
+
+    mergeDeps(Seq(fromDeps, toDeps, relDeps))
+  }
 }
 
 trait Mutator extends StartItem {

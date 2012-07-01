@@ -25,8 +25,6 @@ import org.neo4j.graphdb.{Relationship, Node, GraphDatabaseService, NotInTransac
 import org.neo4j.cypher.{ParameterWrongTypeException, InternalException}
 
 class ExecuteUpdateCommandsPipe(source: Pipe, db: GraphDatabaseService, commands: Seq[UpdateAction]) extends PipeWithSource(source) {
-
-
   def createResults(state: QueryState) = {
     val deletedNodes = MutableHashSet[Long]()
     val deletedRelationships = MutableHashSet[Long]()
@@ -69,7 +67,7 @@ class ExecuteUpdateCommandsPipe(source: Pipe, db: GraphDatabaseService, commands
           case _ => cmd.exec(ctx, state)
         }
       }
-      case cmd => cmd.exec(ctx, state)
+      case c => c.exec(ctx, state)
     }
     f(result)
     result
@@ -81,4 +79,6 @@ class ExecuteUpdateCommandsPipe(source: Pipe, db: GraphDatabaseService, commands
   def symbols = source.symbols.add(commands.flatMap(_.identifier): _*)
 
   def dependencies = commands.flatMap(_.dependencies)
+
+  def deps = null
 }

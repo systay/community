@@ -35,4 +35,6 @@ class EmptyResultPipe(source: Pipe)
   override def executionPlan(): String = source.executionPlan() + "\nEmptyResult()"
 
   def dependencies = Seq()
+
+  def deps = Map()
 }

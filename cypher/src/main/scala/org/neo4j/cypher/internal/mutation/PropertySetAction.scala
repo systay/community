@@ -49,4 +49,6 @@ case class PropertySetAction(prop: Property, e: Expression)
   def filter(f: (Expression) => Boolean): Seq[Expression] = prop.filter(f) ++ e.filter(f)
 
   def rewrite(f: (Expression) => Expression): UpdateAction = PropertySetAction(prop, e.rewrite(f))
+
+  def deps = mergeDeps(prop.deps(AnyType()), e.deps(AnyType()))
 }

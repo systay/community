@@ -23,13 +23,13 @@ import java.lang.String
 import collection.Seq
 import scala.collection.JavaConverters._
 import org.neo4j.graphdb.{DynamicRelationshipType, Node, Direction, PropertyContainer}
-import org.neo4j.cypher.internal.pipes.Dependant
+import org.neo4j.cypher.internal.pipes.{IdentifierDependant, Dependant}
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.helpers.ThisShouldNotHappenError
 import collection.Map
 import org.neo4j.cypher.SyntaxException
 
-abstract class Predicate extends Dependant {
+abstract class Predicate extends Dependant with IdentifierDependant {
   def ++(other: Predicate): Predicate = And(this, other)
   def isMatch(m: Map[String, Any]): Boolean
 
@@ -40,8 +40,6 @@ abstract class Predicate extends Dependant {
   def rewrite(f: Expression => Expression): Predicate
   def containsIsNull: Boolean
   def filter(f: Expression => Boolean): Seq[Expression]
-
-  def deps(expectedType: CypherType): Map[String, CypherType]
 }
 
 case class NullablePredicate(inner: Predicate, exp: Seq[(Expression, Boolean)]) extends Predicate {

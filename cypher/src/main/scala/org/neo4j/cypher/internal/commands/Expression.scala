@@ -20,11 +20,12 @@
 package org.neo4j.cypher.internal.commands
 
 import org.neo4j.cypher._
+import internal.pipes.IdentifierDependant
 import internal.symbols._
 import org.neo4j.graphdb.{NotFoundException, PropertyContainer}
 import collection.Map
 
-abstract class Expression extends (Map[String, Any] => Any) {
+abstract class Expression extends (Map[String, Any] => Any) with IdentifierDependant {
   protected def compute(v1: Map[String, Any]) : Any
   def apply(m: Map[String, Any]) = m.getOrElse(identifier.name, compute(m))
 
@@ -44,29 +45,6 @@ abstract class Expression extends (Map[String, Any] => Any) {
   def containsAggregate = exists(_.isInstanceOf[AggregationExpression])
 
   override def toString() = identifier.name
-
-  /*This is a declaration of the identifiers that this particular expression expects to
-  find in the symboltable to be able to run successfully.*/
-  def deps(expectedType:CypherType):Map[String, CypherType]
-
-
-  protected def mergeDeps(deps: Seq[Map[String, CypherType]]):Map[String, CypherType] = deps.foldLeft(Map[String, CypherType]()) {
-    case (result, current) => mergeDeps(result, current)
-  }
-
-  protected def mergeDeps(a: Map[String, CypherType], b: Map[String, CypherType]): Map[String, CypherType] = {
-    val keys = (a.keys ++ b.keys).toSeq.distinct
-    val allDeps: Seq[(String, List[CypherType])] = keys.map(key => key -> (a.get(key) ++ b.get(key)).toList.distinct)
-    val map: Seq[(String, CypherType)] = allDeps.map {
-      case (key, types) => val t: CypherType = types match {
-        case List(single: CypherType)               => single
-        case List(one: CypherType, two: CypherType) => one.mergeWith(two)
-      }
-      key -> t
-    }
-    map.toMap
-  }
-
 }
 
 case class CachedExpression(key:String, identifier:Identifier) extends CastableExpression {

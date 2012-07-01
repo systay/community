@@ -22,28 +22,31 @@ package org.neo4j.cypher.internal.mutation
 import org.neo4j.cypher.CypherTypeException
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.graphdb.{RelationshipType => KernelRelType, _}
-import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
+import org.neo4j.cypher.internal.pipes.{IdentifierDependantHelper, IdentifierDependant, QueryState, ExecutionContext}
 
 import java.util.{Map => JavaMap}
 import scala.collection.JavaConverters._
 import collection.Map
 import org.neo4j.cypher.internal.commands._
 
-trait UpdateAction {
+trait UpdateAction extends IdentifierDependantHelper {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
   def dependencies:Seq[Identifier]
   def identifier:Seq[Identifier]
   def rewrite(f: Expression => Expression):UpdateAction
   def filter(f: Expression => Boolean): Seq[Expression]
+  def deps:Map[String,CypherType]
 }
 
-trait GraphElementPropertyFunctions extends IterableSupport {
+trait GraphElementPropertyFunctions extends IterableSupport with IdentifierDependantHelper {
   def setProperties(pc: PropertyContainer, props: Map[String, Expression], context: ExecutionContext, state: QueryState) {
     props.foreach {
       case ("*", expression) => setAllMapKeyValues(expression, context, pc, state)
       case (key, expression) => setSingleValue(expression, context, pc, key, state)
     }
   }
+
+  def deps(props: Map[String, Expression]): Map[String, CypherType] = mergeDeps(props.values.map(_.deps(AnyType())).toSeq)
 
   def propDependencies(props: Map[String, Expression]) = props.values.flatMap(_.dependencies(AnyType())).toSeq.distinct
 
@@ -81,7 +84,7 @@ trait GraphElementPropertyFunctions extends IterableSupport {
     val seq = a.asInstanceOf[Traversable[_]].toSeq
 
     if (seq.size == 0) {
-      Array[String]();
+      Array[String]()
     } else try {
       seq.head match {
         case c: String => seq.map(_.asInstanceOf[String]).toArray[String]

@@ -27,10 +27,12 @@ import collection.mutable.{Map => MutableMap}
 // Eager aggregation means that this pipe will eagerly load the whole resulting sub graphs before starting
 // to emit aggregated results.
 // Cypher is lazy until it has to - this pipe makes stops the lazyness
-class EagerAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], aggregations: Seq[AggregationExpression]) extends PipeWithSource(source) {
+class EagerAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], aggregations: Seq[AggregationExpression])
+  extends PipeWithSource(source) {
   val symbols: SymbolTable = createSymbols()
 
-  def dependencies: Seq[Identifier] = keyExpressions.flatMap(_.dependencies(AnyType())) ++ aggregations.flatMap(_.dependencies(AnyType()))
+  def dependencies: Seq[Identifier] = keyExpressions.flatMap(_.dependencies(AnyType())) ++
+                                      aggregations.flatMap(_.dependencies(AnyType()))
 
   def createSymbols() = {
     val map = keyExpressions.map(_.identifier.name)
@@ -80,4 +82,6 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], ag
   }
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "EagerAggregation( keys: [" + keyExpressions.map(_.identifier.name).mkString(", ") + "], aggregates: [" + aggregations.mkString(", ") + "])"
+
+  def deps = mergeDeps(keyExpressions.map(_.deps(AnyType())) ++ aggregations.map(_.deps(AnyType())))
 }

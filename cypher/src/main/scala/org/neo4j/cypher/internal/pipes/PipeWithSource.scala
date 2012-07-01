@@ -23,15 +23,27 @@ import collection.Seq
 import collection.Map
 import org.neo4j.cypher.internal.symbols.{CypherType, Identifier}
 
-abstract class PipeWithSource(val source: Pipe) extends Pipe with Dependant {
+abstract class PipeWithSource(val source: Pipe) extends Pipe with Dependant with IdentifierDependantHelper {
   dependencies.foreach(source.symbols.assertHas(_))
 
-  def deps: Map[String, CypherType] = Map()
+  def deps:Map[String, CypherType]
 }
 
-trait Dependant {
-  def dependencies: Seq[Identifier]
 
+
+/*
+Classes that have dependencies on identifiers and their types
+
+PipeWithSource is then responsible for taking the dependencies of all expressions used by a pipe, and check if the
+underlying pipe meets them.
+ */
+trait IdentifierDependant extends IdentifierDependantHelper {
+  /*This is a declaration of the identifiers that this particular expression expects to
+  find in the symboltable to be able to run successfully.*/
+  def deps(expectedType:CypherType):Map[String, CypherType]
+}
+
+trait IdentifierDependantHelper {
   def mergeDeps(deps: Seq[Map[String, CypherType]]): Map[String, CypherType] = deps.foldLeft(Map[String, CypherType]()) {
     case (result, current) => mergeDeps(result, current)
   }
@@ -48,6 +60,10 @@ trait Dependant {
     }
     map.toMap
   }
+}
 
-  //  def deps:Map[String,CypherType] //The identifiers that should exist in the source pipe, and their types.
+
+
+trait Dependant {
+  def dependencies: Seq[Identifier]
 }

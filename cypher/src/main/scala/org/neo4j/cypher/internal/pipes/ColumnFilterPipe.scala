@@ -55,4 +55,6 @@ class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe:
     "%s\r\nColumnFilter([%s] => [%s])".format(source.executionPlan(), source.symbols.keys, returnItemNames.mkString(","))
 
   def dependencies = Seq()
+
+  def deps = mergeDeps(returnItems.map(_.deps))
 }

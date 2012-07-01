@@ -19,14 +19,11 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import org.neo4j.kernel.Traversal
-import org.neo4j.cypher.SyntaxException
 import java.lang.String
 import collection.Seq
-import org.neo4j.cypher.internal.symbols.{NodeType, Identifier, PathType}
-import collection.mutable.Map
+import org.neo4j.cypher.internal.symbols.{AnyType, NodeType, Identifier, PathType}
 import org.neo4j.cypher.internal.commands.{ShortestPathExpression, ReturnItem, ShortestPath}
-import org.neo4j.graphdb.{Path, Expander, DynamicRelationshipType, Node}
+import org.neo4j.graphdb.Path
 
 /**
  * Shortest pipe inserts a single shortest path between two already found nodes
@@ -72,4 +69,6 @@ class ShortestPathPipe(source: Pipe, ast: ShortestPath) extends PipeWithSource(s
   val symbols = source.symbols.add(Identifier(pathName, PathType()))
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "ShortestPath(" + ast + ")"
+
+  def deps = ast.deps(AnyType())
 }

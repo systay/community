@@ -69,4 +69,6 @@ class CommitPipe(source: Pipe, graph: GraphDatabaseService) extends PipeWithSour
   def symbols = source.symbols
 
   def dependencies = Seq()
+
+  def deps = Map()
 }

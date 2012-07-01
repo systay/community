@@ -139,6 +139,8 @@ case class RelateAction(links: RelateLink*) extends UpdateAction {
   def identifier: Seq[Identifier] = links.flatMap(_.identifier).distinct
 
   def rewrite(f: (Expression) => Expression): UpdateAction = RelateAction(links.map(_.rewrite(f)): _*)
+
+  def deps = mergeDeps(links.map(_.deps))
 }
 
 sealed abstract class RelateResult

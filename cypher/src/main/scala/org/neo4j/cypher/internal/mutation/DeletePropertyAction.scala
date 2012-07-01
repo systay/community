@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.mutation
 import org.neo4j.cypher.internal.commands.Expression
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.graphdb.PropertyContainer
-import org.neo4j.cypher.internal.symbols.MapType
+import org.neo4j.cypher.internal.symbols.{ScalarType, MapType}
 
 case class DeletePropertyAction(element: Expression, property: String)
   extends UpdateAction {
@@ -44,4 +44,6 @@ case class DeletePropertyAction(element: Expression, property: String)
   def filter(f: (Expression) => Boolean): Seq[Expression] = element.filter(f)
 
   def rewrite(f: (Expression) => Expression): UpdateAction = DeletePropertyAction(element.rewrite(f), property: String)
+
+  def deps = element.deps(ScalarType())
 }
