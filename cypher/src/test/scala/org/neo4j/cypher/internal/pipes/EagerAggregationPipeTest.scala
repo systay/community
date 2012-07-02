@@ -24,6 +24,7 @@ import org.junit.Assert._
 import org.junit.matchers.JUnitMatchers._
 import scala.collection.JavaConverters._
 import org.neo4j.cypher.internal.commands._
+import expressions._
 import org.scalatest.junit.JUnitSuite
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.cypher.internal.symbols._

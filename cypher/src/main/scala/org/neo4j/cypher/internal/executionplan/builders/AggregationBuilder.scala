@@ -20,18 +20,18 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.{ExtractPipe, EagerAggregationPipe}
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PartiallySolvedQuery, PlanBuilder}
-import org.neo4j.cypher.internal.commands.{CachedExpression, Entity, Expression, AggregationExpression}
+import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.commands.expressions.{CachedExpression, AggregationExpression, Expression}
 
 class AggregationBuilder extends PlanBuilder with ExpressionExtractor {
   def apply(plan: ExecutionPlanInProgress) = {
 
-    val (keyExpressionsToExtract,_) = getExpressions(plan)
+    val (keyExpressionsToExtract, _) = getExpressions(plan)
 
     val newPlan = ExtractBuilder.extractIfNecessary(plan, keyExpressionsToExtract)
 
     val (
-      keyExpressions:Seq[Expression],
+      keyExpressions: Seq[Expression],
       aggregationExpressions: Seq[AggregationExpression]
       ) = getExpressions(newPlan)
 
@@ -63,15 +63,15 @@ class AggregationBuilder extends PlanBuilder with ExpressionExtractor {
 
   private def removeAggregates(e: Expression) = e match {
     case e: AggregationExpression => CachedExpression(e.identifier.name, e.identifier)
-    case x => x
+    case x                        => x
   }
 
   def canWorkWith(plan: ExecutionPlanInProgress) = {
     val q = plan.query
 
     q.aggregateQuery.token &&
-      q.aggregateQuery.unsolved &&
-      q.readyToAggregate
+    q.aggregateQuery.unsolved &&
+    q.readyToAggregate
 
   }
 

@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.cypher.internal.commands
+package org.neo4j.cypher.internal.commands.expressions
 
 import org.junit.Test
 import org.scalatest.Assertions
@@ -97,7 +97,7 @@ Expected: %s""".format(a, b, r, expected))
 class TestExpression extends Expression {
   protected def compute(v1: Map[String, Any]): Any = null
 
-  def declareDependencies(expectedType: AnyType): Seq[Identifier] = null
+  def declareDependencies(expectedType: CypherType): Seq[Identifier] = null
 
   def deps: Map[String, CypherType] = null
 
@@ -111,5 +111,5 @@ class TestExpression extends Expression {
 
   /*This is a declaration of the identifiers that this particular expression expects to
   find in the symboltable to be able to run successfully.*/
-  def deps(expectedType: CypherType) = Map()
+  def identifierDependencies(expectedType: CypherType) = Map()
 }

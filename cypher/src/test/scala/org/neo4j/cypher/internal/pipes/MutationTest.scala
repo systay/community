@@ -21,13 +21,14 @@ package org.neo4j.cypher.internal.pipes
 
 import org.scalatest.Assertions
 import org.junit.Test
-import org.neo4j.cypher.internal.mutation.{DeleteEntityAction}
+import org.neo4j.cypher.internal.mutation.DeleteEntityAction
 import org.neo4j.cypher.{CypherTypeException, ExecutionEngineHelper}
 import collection.mutable.{Map => MutableMap}
 import org.neo4j.graphdb.{Node, NotFoundException}
-import org.neo4j.cypher.internal.symbols.{CypherType, NodeType, Identifier, AnyType}
+import org.neo4j.cypher.internal.symbols.{CypherType, NodeType, Identifier}
 import collection.{Map => CollectionMap, mutable}
-import org.neo4j.cypher.internal.commands.{CreateRelationshipStartItem, CreateNodeStartItem, Expression, Literal}
+import org.neo4j.cypher.internal.commands.{CreateRelationshipStartItem, CreateNodeStartItem}
+import org.neo4j.cypher.internal.commands.expressions.{Expression, Literal}
 
 
 class MutationTest extends ExecutionEngineHelper with Assertions {
@@ -134,11 +135,11 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
 case class InjectValue(value:Any, identifier:Identifier) extends Expression {
   protected def compute(v1: CollectionMap[String, Any]) = value
 
-  def declareDependencies(x: AnyType) = Seq()
+  def declareDependencies(x: CypherType) = Seq()
 
   def filter(f: (Expression) => Boolean) = Seq(this)
 
   def rewrite(f: (Expression) => Expression) = this
 
-  def deps(expectedType: CypherType) = mutable.Map()
+  def identifierDependencies(expectedType: CypherType) = mutable.Map()
 }

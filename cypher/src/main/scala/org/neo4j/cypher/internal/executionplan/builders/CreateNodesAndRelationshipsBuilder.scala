@@ -26,6 +26,7 @@ import org.neo4j.cypher.internal.mutation.UpdateAction
 import org.neo4j.cypher.internal.symbols.{NodeType, Identifier, SymbolTable}
 import org.neo4j.cypher.internal.commands._
 import collection.Map
+import expressions.{Entity, Expression}
 
 
 class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanBuilder {

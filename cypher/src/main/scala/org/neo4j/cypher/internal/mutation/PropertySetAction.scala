@@ -19,10 +19,10 @@
  */
 package org.neo4j.cypher.internal.mutation
 
-import org.neo4j.cypher.internal.commands.{Expression, Property}
 import org.neo4j.cypher.internal.symbols.AnyType
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.graphdb.PropertyContainer
+import org.neo4j.cypher.internal.commands.expressions.{Expression, Property}
 
 case class PropertySetAction(prop: Property, e: Expression)
   extends UpdateAction with GraphElementPropertyFunctions{
@@ -50,5 +50,5 @@ case class PropertySetAction(prop: Property, e: Expression)
 
   def rewrite(f: (Expression) => Expression): UpdateAction = PropertySetAction(prop, e.rewrite(f))
 
-  def deps = mergeDeps(prop.deps(AnyType()), e.deps(AnyType()))
+  def deps = mergeDeps(prop.identifierDependencies(AnyType()), e.identifierDependencies(AnyType()))
 }

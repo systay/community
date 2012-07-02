@@ -28,6 +28,7 @@ import java.util.{Map => JavaMap}
 import scala.collection.JavaConverters._
 import collection.Map
 import org.neo4j.cypher.internal.commands._
+import expressions.Expression
 
 trait UpdateAction extends IdentifierDependantHelper {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
@@ -46,7 +47,7 @@ trait GraphElementPropertyFunctions extends IterableSupport with IdentifierDepen
     }
   }
 
-  def deps(props: Map[String, Expression]): Map[String, CypherType] = mergeDeps(props.values.map(_.deps(AnyType())).toSeq)
+  def deps(props: Map[String, Expression]): Map[String, CypherType] = mergeDeps(props.values.map(_.identifierDependencies(AnyType())).toSeq)
 
   def propDependencies(props: Map[String, Expression]) = props.values.flatMap(_.dependencies(AnyType())).toSeq.distinct
 

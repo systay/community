@@ -19,11 +19,11 @@
  */
 package org.neo4j.cypher.internal.commands
 
+import expressions.{Expression, Null, Literal, CoalesceFunction}
 import org.scalatest.Assertions
 import collection.Map
 import org.junit.{Assert, Test}
 import org.neo4j.cypher.internal.symbols.{CypherType, Identifier, AnyType}
-
 
 class CoalesceTest extends Assertions {
   @Test def givenANonNullValueThenReturnsTheValue() {
@@ -52,11 +52,11 @@ case class BreakingExpression() extends Expression {
 
   val identifier = Identifier("breaking",AnyType())
 
-  def declareDependencies(extectedType: AnyType) = null
+  def declareDependencies(extectedType: CypherType) = null
 
   def rewrite(f: (Expression) => Expression) = null
 
   def filter(f: (Expression) => Boolean) = null
 
-  def deps(expectedType: CypherType) = Map()
+  def identifierDependencies(expectedType: CypherType) = Map()
 }

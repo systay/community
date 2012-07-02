@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.pipes
 
 import java.lang.String
 import org.neo4j.cypher.internal.symbols.SymbolTable
-import org.neo4j.cypher.internal.commands.ParameterValue
+import org.neo4j.cypher.internal.commands.expressions.ParameterValue
 import collection.mutable.Map
 
 class ParameterPipe() extends Pipe {

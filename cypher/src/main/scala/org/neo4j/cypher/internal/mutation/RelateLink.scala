@@ -25,6 +25,7 @@ import org.neo4j.cypher.internal.symbols.{CypherType, RelationshipType, NodeType
 import collection.Map
 import org.neo4j.graphdb._
 import org.neo4j.cypher.internal.commands._
+import expressions.{Entity, Literal, Expression}
 import org.neo4j.cypher.{RelatePathNotUnique, CypherTypeException}
 
 case class NamedExpectation(name: String, properties: Map[String, Expression])

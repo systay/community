@@ -20,4 +20,4 @@
 package org.neo4j.cypher.internal.symbols
 
 
-case class Identifier(name:String, typ:AnyType)
+case class Identifier(name:String, typ:CypherType)

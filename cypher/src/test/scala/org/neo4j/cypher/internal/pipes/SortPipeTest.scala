@@ -22,7 +22,8 @@ package org.neo4j.cypher.internal.pipes
 import org.junit.Test
 import org.junit.Assert._
 import org.scalatest.junit.JUnitSuite
-import org.neo4j.cypher.internal.commands.{Entity, SortItem}
+import org.neo4j.cypher.internal.commands.expressions.Entity
+import org.neo4j.cypher.internal.commands.SortItem
 import org.neo4j.cypher.internal.symbols.{Identifier, SymbolTable}
 import collection.mutable.Map
 

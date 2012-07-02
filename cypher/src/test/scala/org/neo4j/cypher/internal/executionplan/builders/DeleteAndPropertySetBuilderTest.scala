@@ -22,8 +22,8 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
 import org.junit.Test
 import org.junit.Assert._
-import org.neo4j.cypher.internal.commands.Entity
 import org.neo4j.cypher.internal.mutation.DeleteEntityAction
+import org.neo4j.cypher.internal.commands.expressions.Entity
 
 class DeleteAndPropertySetBuilderTest extends BuilderTest {
   val builder = new UpdateActionBuilder(null)

@@ -19,6 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
+import expressions.Expression
 import java.lang.Math
 import org.neo4j.cypher.CypherTypeException
 import collection.Map
@@ -29,7 +30,7 @@ abstract class MathFunction(arg: Expression) extends Expression with NumericHelp
 
   val identifier = Identifier(toString(), NumberType())
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = arg.dependencies(ScalarType())
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = arg.dependencies(ScalarType())
 
   protected def name: String
 
@@ -42,7 +43,7 @@ abstract class MathFunction(arg: Expression) extends Expression with NumericHelp
   else
     arg.filter(f)
 
-  def deps(expectedType: CypherType) = arg.deps(NumberType())
+  def identifierDependencies(expectedType: CypherType) = arg.identifierDependencies(NumberType())
 }
 
 trait NumericHelper {
@@ -73,7 +74,7 @@ case class RangeFunction(start: Expression, end: Expression, step: Expression) e
     new Range(startVal, endVal + 1, stepVal).toList
   }
 
-  def declareDependencies(extectedType: AnyType) = start.declareDependencies(NumberType()) ++
+  def declareDependencies(extectedType: CypherType) = start.declareDependencies(NumberType()) ++
     end.declareDependencies(NumberType()) ++
     step.declareDependencies(NumberType())
 
@@ -91,7 +92,7 @@ case class RangeFunction(start: Expression, end: Expression, step: Expression) e
 
   def rewrite(f: (Expression) => Expression) = f(RangeFunction(start.rewrite(f), end.rewrite(f), step.rewrite(f)))
 
-  def deps(expectedType: CypherType) = mergeDeps(Seq(start.deps(NumberType()), end.deps(NumberType()), step.deps(NumberType())))
+  def identifierDependencies(expectedType: CypherType) = mergeDeps(Seq(start.identifierDependencies(NumberType()), end.identifierDependencies(NumberType()), step.identifierDependencies(NumberType())))
 }
 
 case class SignFunction(argument: Expression) extends MathFunction(argument) {

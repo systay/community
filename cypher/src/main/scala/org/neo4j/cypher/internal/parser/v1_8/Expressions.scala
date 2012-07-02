@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.cypher.internal.commands._
+import expressions._
 
 trait Expressions extends Base with ParserPattern with Predicates {
   def expression: Parser[Expression] = term ~ rep("+" ~ term | "-" ~ term) ^^ {

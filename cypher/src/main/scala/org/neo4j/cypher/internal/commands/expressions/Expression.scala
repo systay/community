@@ -17,9 +17,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.cypher.internal.commands
+package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher._
+import internal.commands.IsIterable
 import internal.pipes.IdentifierDependant
 import internal.symbols._
 import org.neo4j.graphdb.{NotFoundException, PropertyContainer}
@@ -30,8 +31,8 @@ abstract class Expression extends (Map[String, Any] => Any) with IdentifierDepen
   def apply(m: Map[String, Any]) = m.getOrElse(identifier.name, compute(m))
 
   val identifier: Identifier
-  def declareDependencies(expectedType: AnyType): Seq[Identifier]
-  def dependencies(expectedType: AnyType): Seq[Identifier] = {
+  def declareDependencies(expectedType: CypherType): Seq[Identifier]
+  def dependencies(expectedType: CypherType): Seq[Identifier] = {
     val myType = identifier.typ
     if (!expectedType.isAssignableFrom(myType))
       throw new SyntaxException(identifier.name + " expected to be of type " + expectedType + " but it is of type " + identifier.typ)
@@ -47,24 +48,40 @@ abstract class Expression extends (Map[String, Any] => Any) with IdentifierDepen
   override def toString() = identifier.name
 }
 
+
+trait Typed {
+  def getType:CypherType
+
+  //Will return the closest class that encompasses both types
+  def mergeTypes(a: CypherType, b: CypherType): CypherType = {
+    if (a.isAssignableFrom(b)) a
+    else if (b.isAssignableFrom(a)) b
+    else mergeTypes(a.parentType, b.parentType)
+  }
+}
+
 case class CachedExpression(key:String, identifier:Identifier) extends CastableExpression {
   override def apply(m: Map[String, Any]) = m(key)
   protected def compute(v1: Map[String, Any]) = null
-  def declareDependencies(extectedType: AnyType) = Seq()
+  def declareDependencies(extectedType: CypherType) = Seq()
   def rewrite(f: (Expression) => Expression) = f(this)
   def filter(f: (Expression) => Boolean) = if(f(this)) Seq(this) else Seq()
   override def toString() = "Cached(" + super.toString() + ")"
 
-  def deps(expectedType: CypherType) = Map()
+  def getType = identifier.typ
+
+  def identifierDependencies(expectedType: CypherType) = Map()
 }
 
 case class Null() extends Expression {
   protected def compute(v1: Map[String, Any]) = null
   val identifier: Identifier = Identifier("null", ScalarType())
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = Seq()
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
   def rewrite(f: (Expression) => Expression): Expression = f(this)
   def filter(f: (Expression) => Boolean): Seq[Expression] = if(f(this)) Seq(this) else Seq()
-  def deps(expectedType: CypherType) = Map()
+  def identifierDependencies(expectedType: CypherType) = Map()
+
+  def getType = ScalarType()
 }
 
 case class Add(a: Expression, b: Expression) extends Expression {
@@ -84,14 +101,15 @@ case class Add(a: Expression, b: Expression) extends Expression {
     }
   }
 
-  def declareDependencies(extectedType: AnyType) = a.declareDependencies(extectedType) ++ b.declareDependencies(extectedType)
+  def declareDependencies(extectedType: CypherType) = a.declareDependencies(extectedType) ++ b.declareDependencies(extectedType)
   def rewrite(f: (Expression) => Expression) = f(Add(a.rewrite(f), b.rewrite(f)))
   def filter(f: (Expression) => Boolean) = if(f(this))
     Seq(this) ++ a.filter(f) ++ b.filter(f)
   else
     a.filter(f) ++ b.filter(f)
 
-  def deps(expectedType: CypherType): Map[String, CypherType] = mergeDeps(a.deps(AnyType()), b.deps(AnyType()))
+  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
+
 }
 
 case class Subtract(a: Expression, b: Expression) extends Arithmetics(a, b) {
@@ -161,13 +179,13 @@ abstract class Arithmetics(left: Expression, right: Expression) extends Expressi
   def verb: String
   def stringWithString(a: String, b: String): String
   def numberWithNumber(a: Number, b: Number): Number
-  def declareDependencies(extectedType: AnyType) = left.declareDependencies(extectedType) ++ right.declareDependencies(extectedType)
+  def declareDependencies(extectedType: CypherType) = left.declareDependencies(extectedType) ++ right.declareDependencies(extectedType)
   def filter(f: (Expression) => Boolean) = if(f(this))
     Seq(this) ++ left.filter(f) ++ right.filter(f)
   else
     left.filter(f) ++ right.filter(f)
 
-  def deps(expectedType: CypherType): Map[String, CypherType] = mergeDeps(left.deps(AnyType()), right.deps(AnyType()))
+  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
 }
 
 case class Literal(v: Any) extends Expression {
@@ -180,18 +198,18 @@ case class Literal(v: Any) extends Expression {
     case null => "null"
     case x => x.toString
   }
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = Seq()
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
   def rewrite(f: (Expression) => Expression) = f(this)
   def filter(f: (Expression) => Boolean) = if(f(this))
     Seq(this)
   else
     Seq()
 
-  def deps(expectedType: CypherType) = Map()
+  def identifierDependencies(expectedType: CypherType) = Map()
 }
 
 abstract class CastableExpression extends Expression {
-  override def dependencies(extectedType: AnyType): Seq[Identifier] = declareDependencies(extectedType)
+  override def dependencies(extectedType: CypherType): Seq[Identifier] = declareDependencies(extectedType)
 }
 
 case class Nullable(expression: Expression) extends Expression {
@@ -203,8 +221,8 @@ case class Nullable(expression: Expression) extends Expression {
     case x: EntityNotFoundException => null
   }
 
-  def declareDependencies(extectedType: AnyType) = expression.dependencies(extectedType)
-  override def dependencies(extectedType: AnyType) = expression.dependencies(extectedType)
+  def declareDependencies(extectedType: CypherType) = expression.dependencies(extectedType)
+  override def dependencies(extectedType: CypherType) = expression.dependencies(extectedType)
   def rewrite(f: (Expression) => Expression) = f(Nullable(expression.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if(f(this))
@@ -212,7 +230,7 @@ case class Nullable(expression: Expression) extends Expression {
   else
     expression.filter(f)
 
-  def deps(expectedType: CypherType) = expression.deps(expectedType)
+  def identifierDependencies(expectedType: CypherType) = expression.identifierDependencies(expectedType)
 }
 
 case class Property(entity: String, property: String) extends CastableExpression {
@@ -228,42 +246,42 @@ case class Property(entity: String, property: String) extends CastableExpression
   }
 
   val identifier: Identifier = Identifier(entity + "." + property, ScalarType())
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = Seq(Identifier(entity, MapType()))
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq(Identifier(entity, MapType()))
   def rewrite(f: (Expression) => Expression) = f(this)
   def filter(f: (Expression) => Boolean) = if(f(this))
     Seq(this)
   else
     Seq()
 
-  def deps(expectedType: CypherType): Map[String, CypherType] = Map(entity -> MapType())
+  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = Map(entity -> MapType())
 }
 
 case class Entity(entityName: String) extends CastableExpression {
   def compute(m: Map[String, Any]): Any = m.getOrElse(entityName, throw new NotFoundException("Failed to find `" + entityName + "`"))
   val identifier: Identifier = Identifier(entityName, AnyType())
   override def toString(): String = entityName
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = Seq(Identifier(entityName, extectedType))
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq(Identifier(entityName, extectedType))
   def rewrite(f: (Expression) => Expression) = f(this)
   def filter(f: (Expression) => Boolean) = if(f(this))
     Seq(this)
   else
     Seq()
 
-  def deps(expectedType: CypherType) = Map(entityName -> expectedType)
+  def identifierDependencies(expectedType: CypherType) = Map(entityName -> expectedType)
 }
 
 case class Collection(expressions:Expression*) extends CastableExpression {
   def compute(m: Map[String, Any]): Any = expressions.map(e=>e(m))
   val identifier: Identifier = Identifier(name, AnyIterableType())
   private def name = expressions.map(_.identifier.name).mkString("[", ", ", "]")
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = expressions.flatMap(_.declareDependencies(AnyType()))
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = expressions.flatMap(_.declareDependencies(AnyType()))
   def rewrite(f: (Expression) => Expression): Expression = f(Collection(expressions.map(f):_*))
   def filter(f: (Expression) => Boolean): Seq[Expression] = if(f(this))
     Seq(this) ++ expressions.flatMap(_.filter(f))
   else
     expressions.flatMap(_.filter(f))
 
-  def deps(expectedType: CypherType) = mergeDeps(expressions.map(_.deps(ScalarType())))
+  def identifierDependencies(expectedType: CypherType) = mergeDeps(expressions.map(_.identifierDependencies(ScalarType())))
 }
 
 case class ParameterExpression(parameterName: String) extends CastableExpression {
@@ -275,14 +293,14 @@ case class ParameterExpression(parameterName: String) extends CastableExpression
   override def apply(m: Map[String, Any]) = compute(m)
   val identifier: Identifier = Identifier(parameterName, AnyType())
   override def toString(): String = "{" + parameterName + "}"
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = Seq()
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
   def rewrite(f: (Expression) => Expression) = f(this)
   def filter(f: (Expression) => Boolean) = if(f(this))
     Seq(this)
   else
     Seq()
 
-  def deps(expectedType: CypherType) = Map()
+  def identifierDependencies(expectedType: CypherType) = Map()
 }
 
 case class ParameterValue(value: Any)

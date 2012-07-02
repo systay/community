@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.cypher.internal.commands
+package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
@@ -29,6 +29,7 @@ import org.neo4j.kernel.Traversal
 import org.neo4j.graphdb.{Path, DynamicRelationshipType, Node, Expander}
 import org.neo4j.cypher.internal.symbols.Identifier
 import scala.Some
+import org.neo4j.cypher.internal.commands.{Pattern, PathExtractor, ShortestPath}
 
 case class ShortestPathExpression(ast: ShortestPath) extends Expression with PathExtractor {
   val pathPattern:Seq[Pattern] = Seq(ast)
@@ -59,7 +60,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
     })
   }
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = ast.possibleStartPoints.filterNot(_.name.startsWith("  UNNAMED"))
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = ast.possibleStartPoints.filterNot(_.name.startsWith("  UNNAMED"))
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = Seq()
 
@@ -80,7 +81,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
   else
     new AllShortestPathsFOO(expander, ast.maxDepth.getOrElse(15))
 
-  def deps(expectedType: CypherType) = ast.deps(PathType())
+  def identifierDependencies(expectedType: CypherType) = ast.identifierDependencies(PathType())
 }
 
 trait FOO {

@@ -19,6 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
+import expressions.Expression
 import org.neo4j.graphdb.Direction
 import java.lang.String
 import collection.Seq
@@ -46,7 +47,7 @@ abstract class Pattern extends IdentifierDependant {
 
   def nodes:Seq[String]
   def rels:Seq[String]
-  def deps(expectedType: CypherType) = {
+  def identifierDependencies(expectedType: CypherType) = {
     val nodeDeps: Map[String, CypherType] = filtered(nodes).map(_ -> NodeType.asInstanceOf[CypherType]).toMap
     val relDeps: Map[String, CypherType] = filtered(rels).map(_ -> RelationshipType.asInstanceOf[CypherType]).toMap
     mergeDeps(nodeDeps,relDeps)
@@ -193,7 +194,7 @@ case class ShortestPath(pathName: String,
 
   lazy val possibleStartPoints: Seq[Identifier] = Seq(Identifier(start, NodeType()), Identifier(end, NodeType()))
 
-  def rewrite(f: (Expression) => Expression) = new ShortestPath(pathName,start,end,relTypes,dir,maxDepth,optional,single,relIterator,predicate.rewrite(f))
+  def rewrite(f: Expression => Expression) = new ShortestPath(pathName,start,end,relTypes,dir,maxDepth,optional,single,relIterator,predicate.rewrite(f))
 
   def rels = Seq()
 

@@ -19,10 +19,10 @@
  */
 package org.neo4j.cypher.internal.mutation
 
-import org.neo4j.cypher.internal.commands.Expression
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.graphdb.PropertyContainer
 import org.neo4j.cypher.internal.symbols.{ScalarType, MapType}
+import org.neo4j.cypher.internal.commands.expressions.Expression
 
 case class DeletePropertyAction(element: Expression, property: String)
   extends UpdateAction {
@@ -45,5 +45,5 @@ case class DeletePropertyAction(element: Expression, property: String)
 
   def rewrite(f: (Expression) => Expression): UpdateAction = DeletePropertyAction(element.rewrite(f), property: String)
 
-  def deps = element.deps(ScalarType())
+  def deps = element.identifierDependencies(ScalarType())
 }

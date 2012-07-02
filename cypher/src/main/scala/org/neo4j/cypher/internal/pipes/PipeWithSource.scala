@@ -40,7 +40,7 @@ underlying pipe meets them.
 trait IdentifierDependant extends IdentifierDependantHelper {
   /*This is a declaration of the identifiers that this particular expression expects to
   find in the symboltable to be able to run successfully.*/
-  def deps(expectedType:CypherType):Map[String, CypherType]
+  def identifierDependencies(expectedType:CypherType):Map[String, CypherType]
 }
 
 trait IdentifierDependantHelper {

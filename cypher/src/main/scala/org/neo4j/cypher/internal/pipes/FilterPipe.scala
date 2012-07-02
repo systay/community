@@ -32,5 +32,5 @@ class FilterPipe(source: Pipe, predicate: Predicate) extends PipeWithSource(sour
 
   def dependencies = predicate.dependencies
 
-  def deps = predicate.deps(AnyType())
+  def deps = predicate.identifierDependencies(AnyType())
 }

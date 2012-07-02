@@ -19,6 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
+import expressions.Expression
 import java.lang.String
 
 case class SortItem(expression: Expression, ascending: Boolean) {

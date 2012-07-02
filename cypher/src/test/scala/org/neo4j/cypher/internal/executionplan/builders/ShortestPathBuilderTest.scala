@@ -24,6 +24,7 @@ import org.neo4j.graphdb.Direction
 import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
 import org.junit.Assert._
 import org.neo4j.cypher.internal.commands._
+import expressions.{Literal, Property}
 
 class ShortestPathBuilderTest extends BuilderTest {
 

@@ -19,9 +19,9 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import org.neo4j.cypher.internal.commands.{ParameterValue, ReturnItem}
+import org.neo4j.cypher.internal.commands.ReturnItem
 import org.neo4j.cypher.internal.symbols.{Identifier, SymbolTable}
-import scala.collection.JavaConverters._
+import org.neo4j.cypher.internal.commands.expressions.ParameterValue
 
 class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe: Boolean)
   extends PipeWithSource(source) {

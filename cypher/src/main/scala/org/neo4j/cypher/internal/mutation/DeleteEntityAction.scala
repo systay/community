@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.mutation
 
-import org.neo4j.cypher.internal.commands.Expression
+import org.neo4j.cypher.internal.commands.expressions.Expression
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.cypher.CypherTypeException
 import org.neo4j.cypher.internal.symbols.{MapType, AnyType}
@@ -66,5 +66,5 @@ case class DeleteEntityAction(elementToDelete: Expression)
 
   def dependencies = elementToDelete.dependencies(AnyType())
 
-  def deps = elementToDelete.deps(MapType())
+  def deps = elementToDelete.identifierDependencies(MapType())
 }

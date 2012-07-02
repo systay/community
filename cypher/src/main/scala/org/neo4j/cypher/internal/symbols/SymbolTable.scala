@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.symbols
 
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
-import org.neo4j.cypher.internal.commands.Expression
+import org.neo4j.cypher.internal.commands.expressions.Expression
 
 
 class SymbolTable(val identifiers: Identifier*) {
@@ -37,7 +37,7 @@ class SymbolTable(val identifiers: Identifier*) {
 
   def missingExpressions(needs: Seq[Expression]): Seq[Expression] = needs.filter(id => !satisfies(Seq(id.identifier)))
 
-  def assertHas(name: String, typ: AnyType) {
+  def assertHas(name: String, typ: CypherType) {
     assertHas(Identifier(name, typ))
   }
 
@@ -53,7 +53,7 @@ class SymbolTable(val identifiers: Identifier*) {
     }
   }
 
-  def assertThat(id: Identifier): AnyType = actualIdentifier(id).typ
+  def assertThat(id: Identifier): CypherType = actualIdentifier(id).typ
 
   def remove(id: Identifier) = new SymbolTable(identifiers.filterNot(_ == id):_*)
 

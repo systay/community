@@ -19,6 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
+import expressions.{Entity, Literal, Expression}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.cypher.internal.mutation.{GraphElementPropertyFunctions, UpdateAction}
 import scala.Long

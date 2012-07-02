@@ -19,8 +19,9 @@
  */
 package org.neo4j.cypher.internal.mutation
 
-import org.neo4j.cypher.internal.commands.{IterableSupport, Expression}
-import org.neo4j.cypher.internal.symbols.{AnyType, CypherType, AnyIterableType}
+import org.neo4j.cypher.internal.commands.expressions.Expression
+import org.neo4j.cypher.internal.commands.IterableSupport
+import org.neo4j.cypher.internal.symbols.AnyIterableType
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 
 
@@ -68,7 +69,7 @@ case class ForeachAction(collection: Expression, id: String, actions: Seq[Update
   def deps = {
 
     val actionDeps = mergeDeps(actions.map(_.deps))
-    val mergedDeps = mergeDeps(collection.deps(AnyIterableType()), actionDeps)
+    val mergedDeps = mergeDeps(collection.identifierDependencies(AnyIterableType()), actionDeps)
 
     // ForEach depends on everything that the iterable and the inner update actions depends on,
     // except the identifier inserted into the foreach symbol table

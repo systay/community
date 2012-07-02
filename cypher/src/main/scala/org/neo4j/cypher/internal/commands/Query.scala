@@ -19,6 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
+import expressions.{Expression, AggregationExpression}
 import org.neo4j.cypher.internal.mutation.{RelateAction, RelateLink, UpdateAction}
 
 

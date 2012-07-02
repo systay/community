@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal.commands
 
 import collection.Seq
+import expressions.Expression
 import org.neo4j.cypher.internal.Comparer
 import java.lang.String
 import org.neo4j.cypher.internal.symbols.{CypherType, AnyType, ScalarType, Identifier}
@@ -44,7 +45,7 @@ abstract sealed class ComparablePredicate(left: Expression, right: Expression) e
   def exists(f: (Expression) => Boolean) = left.exists(f) || right.exists(f)
   def containsIsNull = false
   def filter(f: (Expression) => Boolean): Seq[Expression] = left.filter(f) ++ right.filter(f)
-  def deps(expectedType: CypherType) = mergeDeps(left.deps(AnyType()), right.deps(AnyType()))
+  def identifierDependencies(expectedType: CypherType) = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
 }
 
 case class Equals(a: Expression, b: Expression) extends Predicate with Comparer {
@@ -61,7 +62,7 @@ case class Equals(a: Expression, b: Expression) extends Predicate with Comparer 
   def rewrite(f: (Expression) => Expression) = Equals(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean): Seq[Expression] = a.filter(f) ++ b.filter(f)
 
-  def deps(expectedType: CypherType) = mergeDeps(a.deps(AnyType()), b.deps(AnyType()))
+  def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
 }
 
 case class LessThan(a: Expression, b: Expression) extends ComparablePredicate(a, b) {

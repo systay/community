@@ -24,38 +24,36 @@ import org.neo4j.cypher.CypherTypeException
 
 object AnyType {
 
-  def fromJava(obj:Any):AnyType = {
+  def fromJava(obj:Any):CypherType = {
     if(obj.isInstanceOf[String] || obj.isInstanceOf[Char])
       return StringType()
 
     if(obj.isInstanceOf[Number])
       return NumberType()
-    
+
     if(obj.isInstanceOf[Boolean])
       return BooleanType()
-    
+
     if(obj.isInstanceOf[Seq[_]] || obj.isInstanceOf[Array[_]])
       return AnyIterableType()
-    
+
     ScalarType()
   }
-
-  val instance = new AnyType()
-
-  def apply() = instance
 }
 
 trait CypherType {
-  def isAssignableFrom(other: AnyType): Boolean
+  def isAssignableFrom(other: CypherType): Boolean = this.getClass.isAssignableFrom(other.getClass)
 
   def mergeWith(other: CypherType): CypherType = {
-    if (this.isAssignableFrom(other.asInstanceOf[AnyType])) other
-    else if (other.isAssignableFrom(this.asInstanceOf[AnyType])) this
+    if (this.isAssignableFrom(other)) other
+    else if (other.isAssignableFrom(this)) this
     else throw new CypherTypeException("Failed merging " + this + " with " + other)
   }
+
+  def parentType : CypherType
 }
 
-class AnyType extends CypherType {
+case class AnyType() extends CypherType {
   override def equals(other: Any) = if (other == null)
     false
   else
@@ -64,9 +62,9 @@ class AnyType extends CypherType {
       case _ => false
     }
 
-  def isAssignableFrom(other: AnyType): Boolean = this.getClass.isAssignableFrom(other.getClass)
-
   override def toString: String = this.getClass.getSimpleName
+
+  def parentType:CypherType = this //This is the root of all
 }
 
 

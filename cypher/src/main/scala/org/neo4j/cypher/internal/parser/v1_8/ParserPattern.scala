@@ -20,8 +20,9 @@
 package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.graphdb.Direction
-import org.neo4j.cypher.internal.commands.{True, Entity, Expression}
+import org.neo4j.cypher.internal.commands.True
 import org.neo4j.helpers.ThisShouldNotHappenError
+import org.neo4j.cypher.internal.commands.expressions.{Expression, Entity}
 
 trait ParserPattern extends Base {
 

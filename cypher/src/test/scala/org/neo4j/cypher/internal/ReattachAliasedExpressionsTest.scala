@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal
 
 import commands._
+import expressions.{CountStar, Property, Entity}
 import org.scalatest.Assertions
 import org.junit.Test
 

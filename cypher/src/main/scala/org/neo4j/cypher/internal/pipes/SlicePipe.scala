@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import org.neo4j.cypher.internal.commands.Expression
+import org.neo4j.cypher.internal.commands.expressions.Expression
 import java.lang.String
 import org.neo4j.helpers.ThisShouldNotHappenError
 import collection.mutable.Map

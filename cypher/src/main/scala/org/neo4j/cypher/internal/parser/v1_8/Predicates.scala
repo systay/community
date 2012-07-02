@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.cypher.internal.commands._
+import expressions.{Property, Entity, Nullable, Expression}
 
 
 trait Predicates extends Base with ParserPattern {

@@ -23,12 +23,9 @@ import aggregation.AggregationFunction
 import collection.Seq
 import java.lang.String
 import org.neo4j.helpers.ThisShouldNotHappenError
-import org.neo4j.cypher.internal.symbols.{CypherType, AnyType, Identifier, SymbolTable}
-import org.neo4j.cypher.internal.commands.{Expression, AggregationExpression}
-import collection.mutable.Map
+import org.neo4j.cypher.internal.symbols.{AnyType, Identifier, SymbolTable}
+import org.neo4j.cypher.internal.commands.expressions.{Expression, AggregationExpression}
 import collection.immutable.{Map => ImmutableMap}
-import scala.collection
-import scala.collection
 
 // This class can be used to aggregate if the values sub graphs come in the order that they are keyed on
 class OrderedAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], aggregations: Seq[AggregationExpression]) extends PipeWithSource(source) {
@@ -51,7 +48,7 @@ class OrderedAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], 
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "EagerAggregation( keys: [" + keyExpressions.map(_.identifier.name).mkString(", ") + "], aggregates: [" + aggregations.mkString(", ") + "])"
 
-  def deps = mergeDeps(keyExpressions.map(_.deps(AnyType())) ++ aggregations.map(_.deps(AnyType())))
+  def deps = mergeDeps(keyExpressions.map(_.identifierDependencies(AnyType())) ++ aggregations.map(_.identifierDependencies(AnyType())))
 }
 
 private class OrderedAggregator(source: Traversable[ExecutionContext],

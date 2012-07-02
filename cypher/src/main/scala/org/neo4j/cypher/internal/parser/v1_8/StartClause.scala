@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.cypher.internal.commands._
+import expressions.{Literal, Expression, ParameterExpression, Entity}
 import org.neo4j.graphdb.Direction
 
 

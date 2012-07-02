@@ -22,8 +22,9 @@ package org.neo4j.cypher.internal.pipes
 import java.lang.String
 import collection.Seq
 import org.neo4j.cypher.internal.symbols.{AnyType, NodeType, Identifier, PathType}
-import org.neo4j.cypher.internal.commands.{ShortestPathExpression, ReturnItem, ShortestPath}
+import org.neo4j.cypher.internal.commands.{ReturnItem, ShortestPath}
 import org.neo4j.graphdb.Path
+import org.neo4j.cypher.internal.commands.expressions.ShortestPathExpression
 
 /**
  * Shortest pipe inserts a single shortest path between two already found nodes
@@ -70,5 +71,5 @@ class ShortestPathPipe(source: Pipe, ast: ShortestPath) extends PipeWithSource(s
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "ShortestPath(" + ast + ")"
 
-  def deps = ast.deps(AnyType())
+  def deps = ast.identifierDependencies(AnyType())
 }

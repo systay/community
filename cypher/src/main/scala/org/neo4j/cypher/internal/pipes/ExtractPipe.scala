@@ -19,10 +19,10 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import java.lang.String
 import collection.Seq
-import org.neo4j.cypher.internal.commands.{Expression, ReturnItem}
+import org.neo4j.cypher.internal.commands.ReturnItem
 import org.neo4j.cypher.internal.symbols.{AnyType, SymbolTable, Identifier}
+import org.neo4j.cypher.internal.commands.expressions.Expression
 
 //This class will extract properties and other stuff to make the maps
 //easy to work with for other pipes
@@ -42,6 +42,6 @@ class ExtractPipe(source: Pipe, val expressions: Seq[Expression]) extends PipeWi
 
   override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols.keys.mkString(",") + "] => [" + expressions.map(_.identifier.name).mkString(", ") + "])"
 
-  def deps = mergeDeps(expressions.map(_.deps(AnyType())))
+  def deps = mergeDeps(expressions.map(_.identifierDependencies(AnyType())))
 }
 

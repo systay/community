@@ -19,10 +19,10 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.scalatest.Assertions
 import org.junit.Test
 import org.junit.Assert._
 import org.neo4j.cypher.internal.commands._
+import expressions.{CountStar, Entity}
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PartiallySolvedQuery}
 
 class AggregationBuilderTest extends BuilderTest {

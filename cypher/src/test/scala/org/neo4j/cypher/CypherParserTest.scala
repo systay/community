@@ -20,6 +20,7 @@
 package org.neo4j.cypher
 
 import internal.commands._
+import expressions._
 import internal.mutation._
 import internal.parser.v1_6.ConsoleCypherParser
 import org.junit.Assert._

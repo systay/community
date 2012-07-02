@@ -19,6 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
+import expressions.{Entity, Expression}
 import org.neo4j.cypher.internal.pipes.Dependant
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
@@ -57,5 +58,5 @@ case class ReturnItem(expression: Expression, name: String, renamed: Boolean = f
 
   def rename(newName: String) = ReturnItem(expression, newName, renamed = true)
 
-  def deps = expression.deps(AnyType())
+  def deps = expression.identifierDependencies(AnyType())
 }

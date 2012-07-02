@@ -17,13 +17,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.cypher.internal.commands
+package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.{SyntaxException, IterableRequiredException}
+import org.neo4j.cypher.SyntaxException
 import scala.collection.JavaConverters._
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.graphdb.{Node, Relationship, Path}
 import collection.Map
+import org.neo4j.cypher.internal.commands.{Predicate, IterableSupport}
 
 trait Functions
 
@@ -47,7 +48,7 @@ case class ExtractFunction(iterable: Expression, id: String, expression: Express
 
   val identifier = Identifier("extract(" + id + " in " + iterable.identifier.name + " : " + expression.identifier.name + ")", new IterableType(expression.identifier.typ))
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] =
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] =
   // Extract depends on everything that the iterable and the expression depends on, except
   // the new identifier inserted into the expression context, named with id
     iterable.dependencies(AnyIterableType()) ++ expression.dependencies(AnyType()).filterNot(_.name == id)
@@ -59,8 +60,8 @@ case class ExtractFunction(iterable: Expression, id: String, expression: Express
   else
     iterable.filter(f) ++ expression.filter(f)
 
-  def deps(expectedType: CypherType) = {
-    val mergedDeps: Map[String, CypherType] = mergeDeps(iterable.deps(AnyIterableType()), expression.deps(AnyType()))
+  def identifierDependencies(expectedType: CypherType) = {
+    val mergedDeps: Map[String, CypherType] = mergeDeps(iterable.identifierDependencies(AnyIterableType()), expression.identifierDependencies(AnyType()))
 
     // Extract depends on everything that the iterable and the expression depends on, except
     // the new identifier inserted into the expression context, named with id
@@ -76,7 +77,7 @@ case class RelationshipFunction(path: Expression) extends NullInNullOutExpressio
 
   val identifier = Identifier("RELATIONSHIPS(" + path.identifier.name + ")", new IterableType(RelationshipType()))
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = path.dependencies(PathType())
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = path.dependencies(PathType())
 
   def rewrite(f: (Expression) => Expression) = f(RelationshipFunction(path.rewrite(f)))
 
@@ -85,7 +86,7 @@ case class RelationshipFunction(path: Expression) extends NullInNullOutExpressio
   else
     path.filter(f)
 
-  def deps(expectedType: CypherType) = path.deps(PathType())
+  def identifierDependencies(expectedType: CypherType) = path.identifierDependencies(PathType())
 }
 
 case class CoalesceFunction(expressions: Expression*) extends Expression {
@@ -94,7 +95,7 @@ case class CoalesceFunction(expressions: Expression*) extends Expression {
     case Some(x) => x
   }
 
-  def innerExpectedType: Option[AnyType] = None
+  def innerExpectedType: Option[CypherType] = None
 
   val argumentsString: String = expressions.map(_.identifier.name).mkString(",")
 
@@ -103,7 +104,7 @@ case class CoalesceFunction(expressions: Expression*) extends Expression {
 
   override def toString() = "coalesce(" + argumentsString + ")"
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = expressions.flatMap(_.dependencies(AnyType()))
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = expressions.flatMap(_.dependencies(AnyType()))
 
   def rewrite(f: (Expression) => Expression) = f(CoalesceFunction(expressions.map(e => e.rewrite(f)): _*))
 
@@ -112,7 +113,7 @@ case class CoalesceFunction(expressions: Expression*) extends Expression {
   else
     expressions.flatMap(_.filter(f))
 
-  def deps(expectedType: CypherType) = mergeDeps(expressions.map(_.deps(AnyType())))
+  def identifierDependencies(expectedType: CypherType) = mergeDeps(expressions.map(_.identifierDependencies(AnyType())))
 }
 
 case class RelationshipTypeFunction(relationship: Expression) extends NullInNullOutExpression(relationship) {
@@ -120,7 +121,7 @@ case class RelationshipTypeFunction(relationship: Expression) extends NullInNull
 
   lazy val identifier = Identifier("TYPE(" + relationship.identifier.name + ")", StringType())
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = relationship.dependencies(RelationshipType())
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = relationship.dependencies(RelationshipType())
 
   def rewrite(f: (Expression) => Expression) = f(RelationshipTypeFunction(relationship.rewrite(f)))
 
@@ -129,7 +130,7 @@ case class RelationshipTypeFunction(relationship: Expression) extends NullInNull
   else
     relationship.filter(f)
 
-  def deps(expectedType: CypherType) = relationship.deps(RelationshipType())
+  def identifierDependencies(expectedType: CypherType) = relationship.identifierDependencies(RelationshipType())
 }
 
 case class LengthFunction(inner: Expression) extends NullInNullOutExpression(inner) with IterableSupport {
@@ -141,7 +142,7 @@ case class LengthFunction(inner: Expression) extends NullInNullOutExpression(inn
 
   val identifier = Identifier("LENGTH(" + inner.identifier.name + ")", IntegerType())
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = inner.dependencies(AnyIterableType()).toList
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = inner.dependencies(AnyIterableType()).toList
 
   def rewrite(f: (Expression) => Expression) = f(LengthFunction(inner.rewrite(f)))
 
@@ -150,7 +151,7 @@ case class LengthFunction(inner: Expression) extends NullInNullOutExpression(inn
   else
     inner.filter(f)
 
-  def deps(expectedType: CypherType) = inner.deps(AnyIterableType())
+  def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(AnyIterableType())
 }
 
 case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) {
@@ -162,7 +163,7 @@ case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) 
 
   val identifier = Identifier("ID(" + inner.identifier.name + ")", LongType())
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = inner.dependencies(MapType())
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = inner.dependencies(MapType())
 
   def rewrite(f: (Expression) => Expression) = f(IdFunction(inner.rewrite(f)))
 
@@ -171,7 +172,7 @@ case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) 
   else
     inner.filter(f)
 
-  def deps(expectedType: CypherType) = inner.deps(MapType())
+  def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(MapType())
 }
 
 case class HeadFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
@@ -182,11 +183,11 @@ case class HeadFunction(collection: Expression) extends NullInNullOutExpression(
     case _ => ScalarType()
   }
 
-  override def dependencies(extectedType: AnyType): Seq[Identifier] = declareDependencies(extectedType)
+  override def dependencies(extectedType: CypherType): Seq[Identifier] = declareDependencies(extectedType)
 
   val identifier = Identifier("head(" + collection.identifier.name + ")", myType)
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = collection.dependencies(AnyIterableType())
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = collection.dependencies(AnyIterableType())
 
   def rewrite(f: (Expression) => Expression) = f(HeadFunction(collection.rewrite(f)))
 
@@ -195,7 +196,7 @@ case class HeadFunction(collection: Expression) extends NullInNullOutExpression(
   else
     collection.filter(f)
 
-  def deps(expectedType: CypherType) = null
+  def identifierDependencies(expectedType: CypherType) = null
 }
 
 case class LastFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
@@ -203,7 +204,7 @@ case class LastFunction(collection: Expression) extends NullInNullOutExpression(
 
   val identifier = Identifier("last(" + collection.identifier.name + ")", ScalarType())
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = collection.dependencies(AnyIterableType())
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = collection.dependencies(AnyIterableType())
 
   def rewrite(f: (Expression) => Expression) = f(LastFunction(collection.rewrite(f)))
 
@@ -212,7 +213,7 @@ case class LastFunction(collection: Expression) extends NullInNullOutExpression(
   else
     collection.filter(f)
 
-  def deps(expectedType: CypherType) = collection.deps(AnyIterableType())
+  def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
 }
 
 case class TailFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
@@ -220,7 +221,7 @@ case class TailFunction(collection: Expression) extends NullInNullOutExpression(
 
   val identifier = Identifier("tail(" + collection.identifier.name + ")", collection.identifier.typ)
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = collection.dependencies(AnyIterableType())
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = collection.dependencies(AnyIterableType())
 
   def rewrite(f: (Expression) => Expression) = f(TailFunction(collection.rewrite(f)))
 
@@ -229,7 +230,7 @@ case class TailFunction(collection: Expression) extends NullInNullOutExpression(
   else
     collection.filter(f)
 
-  def deps(expectedType: CypherType) = collection.deps(AnyIterableType())
+  def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
 }
 
 case class NodesFunction(path: Expression) extends NullInNullOutExpression(path) {
@@ -240,7 +241,7 @@ case class NodesFunction(path: Expression) extends NullInNullOutExpression(path)
 
   val identifier = Identifier("NODES(" + path.identifier.name + ")", new IterableType(NodeType()))
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = path.dependencies(PathType())
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = path.dependencies(PathType())
 
   def rewrite(f: (Expression) => Expression) = f(NodesFunction(path.rewrite(f)))
 
@@ -249,7 +250,7 @@ case class NodesFunction(path: Expression) extends NullInNullOutExpression(path)
   else
     path.filter(f)
 
-  def deps(expectedType: CypherType) = path.deps(AnyIterableType())
+  def identifierDependencies(expectedType: CypherType) = path.identifierDependencies(AnyIterableType())
 }
 
 case class FilterFunction(collection: Expression, id: String, predicate: Predicate)
@@ -260,7 +261,7 @@ case class FilterFunction(collection: Expression, id: String, predicate: Predica
 
   val identifier = Identifier("filter(%s in %s : %s)".format(id, collection.identifier.name, predicate), collection.identifier.typ)
 
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = (collection.dependencies(AnyIterableType()) ++ predicate.dependencies).filterNot(_.name == id)
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = (collection.dependencies(AnyIterableType()) ++ predicate.dependencies).filterNot(_.name == id)
 
   def rewrite(f: (Expression) => Expression) = f(FilterFunction(collection.rewrite(f), id, predicate.rewrite(f)))
 
@@ -269,8 +270,8 @@ case class FilterFunction(collection: Expression, id: String, predicate: Predica
   else
     collection.filter(f)
 
-  def deps(expectedType: CypherType) = {
-    val mergedDeps: Map[String, CypherType] = mergeDeps(collection.deps(AnyIterableType()), predicate.deps(AnyType()))
+  def identifierDependencies(expectedType: CypherType) = {
+    val mergedDeps: Map[String, CypherType] = mergeDeps(collection.identifierDependencies(AnyIterableType()), predicate.identifierDependencies(AnyType()))
 
     // Filter depends on everything that the iterable and the predicate depends on, except
     // the new identifier inserted into the predicate symbol table, named with id

@@ -23,6 +23,7 @@ import org.scalatest.Assertions
 import org.neo4j.cypher.GraphDatabaseTestBase
 import org.neo4j.graphdb.{Direction, Node, Path}
 import org.neo4j.cypher.internal.commands._
+import expressions.{Literal, Property, Entity, RelationshipFunction}
 import org.junit.{Ignore, Test}
 import collection.mutable.Map
 

@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal.commands
 
 import collection.Seq
+import expressions.Expression
 import org.neo4j.cypher.internal.symbols.{AnyType, CypherType, Identifier, AnyIterableType}
 import collection.Map
 import java.lang.{Iterable => JavaIterable}
@@ -53,8 +54,8 @@ abstract class InIterable(collection: Expression, id: String, predicate: Predica
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = collection.filter(f) ++ predicate.filter(f)
 
-  def deps(expectedType: CypherType) = {
-    val mergedDeps = mergeDeps(collection.deps(AnyIterableType()), predicate.deps(AnyType()))
+  def identifierDependencies(expectedType: CypherType) = {
+    val mergedDeps = mergeDeps(collection.identifierDependencies(AnyIterableType()), predicate.identifierDependencies(AnyType()))
 
     // Filter depends on everything that the iterable and the predicate depends on, except
     // the new identifier inserted into the predicate symbol table, named with id

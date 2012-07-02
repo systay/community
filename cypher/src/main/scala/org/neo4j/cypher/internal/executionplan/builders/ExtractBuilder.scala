@@ -20,8 +20,8 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.ExtractPipe
-import org.neo4j.cypher.internal.commands.{CachedExpression, Expression}
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.commands.expressions.{CachedExpression, Expression}
 
 class ExtractBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {

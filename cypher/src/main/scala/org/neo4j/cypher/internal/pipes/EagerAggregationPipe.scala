@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.pipes
 
 import aggregation.AggregationFunction
 import org.neo4j.cypher.internal.symbols.{AnyType, Identifier, SymbolTable}
-import org.neo4j.cypher.internal.commands.{Expression, AggregationExpression}
+import org.neo4j.cypher.internal.commands.expressions.{Expression, AggregationExpression}
 import collection.mutable.{Map => MutableMap}
 
 // Eager aggregation means that this pipe will eagerly load the whole resulting sub graphs before starting
@@ -83,5 +83,5 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], ag
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "EagerAggregation( keys: [" + keyExpressions.map(_.identifier.name).mkString(", ") + "], aggregates: [" + aggregations.mkString(", ") + "])"
 
-  def deps = mergeDeps(keyExpressions.map(_.deps(AnyType())) ++ aggregations.map(_.deps(AnyType())))
+  def deps = mergeDeps(keyExpressions.map(_.identifierDependencies(AnyType())) ++ aggregations.map(_.identifierDependencies(AnyType())))
 }

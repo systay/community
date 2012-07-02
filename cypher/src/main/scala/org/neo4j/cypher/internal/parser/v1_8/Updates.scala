@@ -21,6 +21,7 @@ package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.cypher.internal.mutation._
 import org.neo4j.cypher.internal.commands._
+import expressions.{Property, Entity}
 import org.neo4j.cypher.SyntaxException
 
 trait Updates extends Base with Expressions with StartClause {

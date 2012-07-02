@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.pipes.aggregation
 
-import org.neo4j.cypher.internal.commands.{Entity, Expression}
+import org.neo4j.cypher.internal.commands.expressions.{Entity, Expression}
 
 
 abstract class AggregateTest {

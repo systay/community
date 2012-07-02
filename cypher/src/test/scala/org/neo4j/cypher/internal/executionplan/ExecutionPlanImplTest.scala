@@ -22,11 +22,12 @@ package org.neo4j.cypher.internal.executionplan
 import collection.Seq
 import org.junit.Test
 import org.junit.Assert._
-import org.neo4j.cypher.internal.commands.{Entity, ReturnItem, NodeById, Query}
+import org.neo4j.cypher.internal.commands.{ReturnItem, NodeById, Query}
 import org.neo4j.graphdb.GraphDatabaseService
 import org.scalatest.Assertions
 import org.neo4j.cypher.InternalException
 import actors.threadpool.{ExecutionException, TimeUnit, Executors}
+import org.neo4j.cypher.internal.commands.expressions.Entity
 
 class ExecutionPlanImplTest extends Assertions with Timed {
   @Test def should_not_go_into_never_ending_loop() {

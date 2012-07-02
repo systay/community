@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.cypher.internal.commands
+package org.neo4j.cypher.internal.commands.expressions
 
 import collection.Seq
 import org.neo4j.cypher.internal.pipes.aggregation._
@@ -34,7 +34,7 @@ abstract class AggregationExpression extends Expression {
 
   def name: String
 
-  def typ: AnyType
+  def typ: CypherType
 
   def createAggregationFunction: AggregationFunction
 }
@@ -44,7 +44,7 @@ case class CountStar() extends AggregationExpression {
 
   def typ = LongType()
 
-  def declareDependencies(extectedType: AnyType) = Seq()
+  def declareDependencies(extectedType: CypherType) = Seq()
 
   def rewrite(f: (Expression) => Expression) = f(CountStar())
 
@@ -56,15 +56,15 @@ case class CountStar() extends AggregationExpression {
     Seq()
 
   override def toString() = "count(*)"
-  def deps(expectedType: CypherType) = Map()
+  def identifierDependencies(expectedType: CypherType) = Map()
 }
 
 abstract class AggregationWithInnerExpression(inner:Expression) extends AggregationExpression {
   if(inner.containsAggregate)
     throw new SyntaxException("Can't use aggregate functions inside of aggregate functions.")
   
-  def declareDependencies(extectedType: AnyType): Seq[Identifier] = inner.dependencies(expectedInnerType)
-  def expectedInnerType: AnyType
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = inner.dependencies(expectedInnerType)
+  def expectedInnerType: CypherType
   
   override val identifier = Identifier("%s(%s)".format(name, inner.identifier.name), typ)
 
@@ -73,7 +73,7 @@ abstract class AggregationWithInnerExpression(inner:Expression) extends Aggregat
   else
     inner.filter(f)
 
-  def deps(expectedType: CypherType) = inner.deps(ScalarType())
+  def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(ScalarType())
 }
 
 case class Distinct(innerAggregator: AggregationExpression, expression: Expression) extends AggregationWithInnerExpression(expression) {
@@ -81,20 +81,20 @@ case class Distinct(innerAggregator: AggregationExpression, expression: Expressi
 
   override val identifier = Identifier("%s(distinct %s)".format(innerAggregator.name, expression.identifier.name), innerAggregator.identifier.typ)
 
-  def expectedInnerType: AnyType = AnyType()
+  def expectedInnerType = AnyType()
 
   def name = "distinct"
 
   def createAggregationFunction = new DistinctFunction(expression, innerAggregator.createAggregationFunction)
 
-  override def declareDependencies(extectedType: AnyType): Seq[Identifier] = innerAggregator.dependencies(extectedType) ++ expression.dependencies(AnyType())
+  override def declareDependencies(extectedType: CypherType): Seq[Identifier] = innerAggregator.dependencies(extectedType) ++ expression.dependencies(AnyType())
 
   def rewrite(f: (Expression) => Expression) = innerAggregator.rewrite(f) match {
     case inner: AggregationExpression => f(Distinct(inner, expression.rewrite(f)))
     case _ => f(Distinct(innerAggregator, expression.rewrite(f)))
   }
 
-  override def deps(expectedType: CypherType) = mergeDeps(innerAggregator.deps(AnyType()), expression.deps(AnyType()))
+  override def identifierDependencies(expectedType: CypherType) = mergeDeps(innerAggregator.identifierDependencies(AnyType()), expression.identifierDependencies(AnyType()))
 }
 
 case class Count(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
@@ -104,7 +104,7 @@ case class Count(anInner: Expression) extends AggregationWithInnerExpression(anI
 
   def createAggregationFunction = new CountFunction(anInner)
 
-  def expectedInnerType: AnyType = AnyType()
+  def expectedInnerType = AnyType()
 
   def rewrite(f: (Expression) => Expression) = f(Count(anInner.rewrite(f)))
 }
@@ -116,7 +116,7 @@ case class Sum(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def createAggregationFunction = new SumFunction(anInner)
 
-  def expectedInnerType: AnyType = NumberType()
+  def expectedInnerType = NumberType()
 
   def rewrite(f: (Expression) => Expression) = f(Sum(anInner.rewrite(f)))
 }
@@ -128,7 +128,7 @@ case class Min(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def createAggregationFunction = new MinFunction(anInner)
 
-  def expectedInnerType: AnyType = NumberType()
+  def expectedInnerType = NumberType()
 
   def rewrite(f: (Expression) => Expression) = f(Min(anInner.rewrite(f)))
 }
@@ -140,7 +140,7 @@ case class Max(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def createAggregationFunction = new MaxFunction(anInner)
 
-  def expectedInnerType: AnyType = NumberType()
+  def expectedInnerType = NumberType()
 
   def rewrite(f: (Expression) => Expression) = f(Max(anInner.rewrite(f)))
 }
@@ -152,7 +152,7 @@ case class Avg(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def createAggregationFunction = new AvgFunction(anInner)
 
-  def expectedInnerType: AnyType = NumberType()
+  def expectedInnerType = NumberType()
 
   def rewrite(f: (Expression) => Expression) = f(Avg(anInner.rewrite(f)))
 }
@@ -164,7 +164,7 @@ case class Collect(anInner: Expression) extends AggregationWithInnerExpression(a
 
   def createAggregationFunction = new CollectFunction(anInner)
 
-  def expectedInnerType: AnyType = AnyType()
+  def expectedInnerType = AnyType()
 
   def rewrite(f: (Expression) => Expression) = f(Collect(anInner.rewrite(f)))
 }

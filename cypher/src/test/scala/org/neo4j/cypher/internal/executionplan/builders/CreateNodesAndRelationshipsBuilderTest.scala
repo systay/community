@@ -26,6 +26,7 @@ import org.hamcrest.core.IsInstanceOf.instanceOf
 import org.hamcrest.core.IsNot.not
 import org.neo4j.cypher.internal.pipes.{TransactionStartPipe, ExecuteUpdateCommandsPipe}
 import org.neo4j.cypher.internal.commands._
+import expressions.{HeadFunction, Entity}
 
 class CreateNodesAndRelationshipsBuilderTest extends BuilderTest {
 

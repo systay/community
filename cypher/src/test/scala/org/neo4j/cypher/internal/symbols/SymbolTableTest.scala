@@ -68,6 +68,6 @@ class SymbolTableTest extends JUnitSuite {
     assert(getPercolatedIdentifier(NodeType(), NodeType()) === NodeType())
   }
 
-  private def getPercolatedIdentifier(scopeType: AnyType, symbolType: AnyType): AnyType = new SymbolTable(Identifier("x", scopeType)).actualIdentifier(Identifier("x", symbolType)).typ
+  private def getPercolatedIdentifier(scopeType: CypherType, symbolType: CypherType): CypherType = new SymbolTable(Identifier("x", scopeType)).actualIdentifier(Identifier("x", symbolType)).typ
 
 }

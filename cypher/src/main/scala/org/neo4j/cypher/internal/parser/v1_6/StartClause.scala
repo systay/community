@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal.parser.v1_6
 
 import org.neo4j.cypher.internal.commands._
+import expressions.{Literal, Expression}
 
 
 trait StartClause extends Base {

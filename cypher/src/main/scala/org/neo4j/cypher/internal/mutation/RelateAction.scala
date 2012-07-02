@@ -22,9 +22,10 @@ package org.neo4j.cypher.internal.mutation
 import org.neo4j.cypher.internal.symbols.Identifier
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.helpers.ThisShouldNotHappenError
-import org.neo4j.cypher.internal.commands.{StartItem, Expression}
+import org.neo4j.cypher.internal.commands.expressions.Expression
 import org.neo4j.cypher.RelatePathNotUnique
 import org.neo4j.graphdb.{Lock, PropertyContainer}
+import org.neo4j.cypher.internal.commands.StartItem
 
 case class RelateAction(links: RelateLink*) extends UpdateAction {
   def dependencies: Seq[Identifier] = links.flatMap(_.dependencies)
