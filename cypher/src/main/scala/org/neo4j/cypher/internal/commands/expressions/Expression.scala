@@ -20,10 +20,8 @@
 package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher._
-import internal.commands.IsIterable
 import internal.pipes.IdentifierDependant
 import internal.symbols._
-import org.neo4j.graphdb.{NotFoundException, PropertyContainer}
 import collection.Map
 
 abstract class Expression extends (Map[String, Any] => Any) with IdentifierDependant {
@@ -73,85 +71,6 @@ case class CachedExpression(key:String, identifier:Identifier) extends CastableE
   def identifierDependencies(expectedType: CypherType) = Map()
 }
 
-case class Null() extends Expression {
-  protected def compute(v1: Map[String, Any]) = null
-  val identifier: Identifier = Identifier("null", ScalarType())
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
-  def rewrite(f: (Expression) => Expression): Expression = f(this)
-  def filter(f: (Expression) => Boolean): Seq[Expression] = if(f(this)) Seq(this) else Seq()
-  def identifierDependencies(expectedType: CypherType) = Map()
-
-  def getType = ScalarType()
-}
-
-case class Add(a: Expression, b: Expression) extends Expression {
-  val identifier = Identifier(a.identifier.name + " + " + b.identifier.name, ScalarType())
-
-  def compute(m: Map[String, Any]) = {
-    val aVal = a(m)
-    val bVal = b(m)
-
-    (aVal, bVal) match {
-      case (x: Number, y: Number) => x.doubleValue() + y.doubleValue()
-      case (x: String, y: String) => x + y
-      case (IsIterable(x), IsIterable(y)) => x ++ y
-      case (IsIterable(x), y) => x ++ Seq(y)
-      case (x, IsIterable(y)) => Seq(x) ++ y
-      case _ => throw new CypherTypeException("Don't know how to add `" + aVal.toString + "` and `" + bVal.toString + "`")
-    }
-  }
-
-  def declareDependencies(extectedType: CypherType) = a.declareDependencies(extectedType) ++ b.declareDependencies(extectedType)
-  def rewrite(f: (Expression) => Expression) = f(Add(a.rewrite(f), b.rewrite(f)))
-  def filter(f: (Expression) => Boolean) = if(f(this))
-    Seq(this) ++ a.filter(f) ++ b.filter(f)
-  else
-    a.filter(f) ++ b.filter(f)
-
-  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
-
-}
-
-case class Subtract(a: Expression, b: Expression) extends Arithmetics(a, b) {
-  def operand = "-"
-  def verb = "subtract"
-  def stringWithString(a: String, b: String) = throwTypeError(a, b)
-  def numberWithNumber(a: Number, b: Number) = a.doubleValue() - b.doubleValue()
-  def rewrite(f: (Expression) => Expression) = f(Subtract(a.rewrite(f), b.rewrite(f)))
-}
-
-case class Modulo(a: Expression, b: Expression) extends Arithmetics(a, b) {
-  def operand = "%"
-  def verb = "modulo"
-  def stringWithString(a: String, b: String) = throwTypeError(a, b)
-  def numberWithNumber(a: Number, b: Number) = a.doubleValue() % b.doubleValue()
-  def rewrite(f: (Expression) => Expression) = f(Modulo(a.rewrite(f), b.rewrite(f)))
-}
-
-case class Pow(a: Expression, b: Expression) extends Arithmetics(a, b) {
-  def operand = "^"
-  def verb = "power"
-  def stringWithString(a: String, b: String) = throwTypeError(a, b)
-  def numberWithNumber(a: Number, b: Number) = math.pow(a.doubleValue(), b.doubleValue())
-  def rewrite(f: (Expression) => Expression) = f(Pow(a.rewrite(f), b.rewrite(f)))
-}
-
-case class Multiply(a: Expression, b: Expression) extends Arithmetics(a, b) {
-  def operand = "*"
-  def verb = "multiply"
-  def stringWithString(a: String, b: String) = throwTypeError(a, b)
-  def numberWithNumber(a: Number, b: Number) = a.doubleValue() * b.doubleValue()
-  def rewrite(f: (Expression) => Expression) = f(Multiply(a.rewrite(f), b.rewrite(f)))
-}
-
-case class Divide(a: Expression, b: Expression) extends Arithmetics(a, b) {
-  def operand = "/"
-  def verb = "divide"
-  def stringWithString(a: String, b: String) = throwTypeError(a, b)
-  def numberWithNumber(a: Number, b: Number) = a.doubleValue() / b.doubleValue()
-  def rewrite(f: (Expression) => Expression) = f(Divide(a.rewrite(f), b.rewrite(f)))
-}
-
 abstract class Arithmetics(left: Expression, right: Expression) extends Expression {
   val identifier = Identifier("%s %s %s".format(left.identifier.name, operand, right.identifier.name), NumberType())
   def operand: String
@@ -188,119 +107,6 @@ abstract class Arithmetics(left: Expression, right: Expression) extends Expressi
   def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
 }
 
-case class Literal(v: Any) extends Expression {
-  def compute(m: Map[String, Any]) = v
-
-  override def apply(m: Map[String, Any]): Any = compute(m)
-
-  val identifier = Identifier(name, AnyType.fromJava(v))
-  private def name = v match {
-    case null => "null"
-    case x => x.toString
-  }
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
-  def rewrite(f: (Expression) => Expression) = f(this)
-  def filter(f: (Expression) => Boolean) = if(f(this))
-    Seq(this)
-  else
-    Seq()
-
-  def identifierDependencies(expectedType: CypherType) = Map()
-}
-
 abstract class CastableExpression extends Expression {
   override def dependencies(extectedType: CypherType): Seq[Identifier] = declareDependencies(extectedType)
 }
-
-case class Nullable(expression: Expression) extends Expression {
-  val identifier = Identifier(expression.identifier.name + "?", expression.identifier.typ)
-
-  def compute(m: Map[String, Any]) = try {
-    expression.apply(m)
-  } catch {
-    case x: EntityNotFoundException => null
-  }
-
-  def declareDependencies(extectedType: CypherType) = expression.dependencies(extectedType)
-  override def dependencies(extectedType: CypherType) = expression.dependencies(extectedType)
-  def rewrite(f: (Expression) => Expression) = f(Nullable(expression.rewrite(f)))
-
-  def filter(f: (Expression) => Boolean) = if(f(this))
-    Seq(this) ++ expression.filter(f)
-  else
-    expression.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = expression.identifierDependencies(expectedType)
-}
-
-case class Property(entity: String, property: String) extends CastableExpression {
-  def compute(m: Map[String, Any]): Any = {
-    m(entity).asInstanceOf[PropertyContainer] match {
-      case null => null
-      case propertyContainer => try {
-        propertyContainer.getProperty(property)
-      } catch {
-        case x: NotFoundException => throw new EntityNotFoundException("The property '%s' does not exist on %s".format(property, propertyContainer), x)
-      }
-    }
-  }
-
-  val identifier: Identifier = Identifier(entity + "." + property, ScalarType())
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq(Identifier(entity, MapType()))
-  def rewrite(f: (Expression) => Expression) = f(this)
-  def filter(f: (Expression) => Boolean) = if(f(this))
-    Seq(this)
-  else
-    Seq()
-
-  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = Map(entity -> MapType())
-}
-
-case class Entity(entityName: String) extends CastableExpression {
-  def compute(m: Map[String, Any]): Any = m.getOrElse(entityName, throw new NotFoundException("Failed to find `" + entityName + "`"))
-  val identifier: Identifier = Identifier(entityName, AnyType())
-  override def toString(): String = entityName
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq(Identifier(entityName, extectedType))
-  def rewrite(f: (Expression) => Expression) = f(this)
-  def filter(f: (Expression) => Boolean) = if(f(this))
-    Seq(this)
-  else
-    Seq()
-
-  def identifierDependencies(expectedType: CypherType) = Map(entityName -> expectedType)
-}
-
-case class Collection(expressions:Expression*) extends CastableExpression {
-  def compute(m: Map[String, Any]): Any = expressions.map(e=>e(m))
-  val identifier: Identifier = Identifier(name, AnyIterableType())
-  private def name = expressions.map(_.identifier.name).mkString("[", ", ", "]")
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = expressions.flatMap(_.declareDependencies(AnyType()))
-  def rewrite(f: (Expression) => Expression): Expression = f(Collection(expressions.map(f):_*))
-  def filter(f: (Expression) => Boolean): Seq[Expression] = if(f(this))
-    Seq(this) ++ expressions.flatMap(_.filter(f))
-  else
-    expressions.flatMap(_.filter(f))
-
-  def identifierDependencies(expectedType: CypherType) = mergeDeps(expressions.map(_.identifierDependencies(ScalarType())))
-}
-
-case class ParameterExpression(parameterName: String) extends CastableExpression {
-  def compute(m: Map[String, Any]): Any = m.getOrElse("-=PARAMETER=-" + parameterName + "-=PARAMETER=-", throw new ParameterNotFoundException("Expected a parameter named " + parameterName)) match {
-    case ParameterValue(x) => x
-    case _ => throw new ParameterNotFoundException("Expected a parameter named " + parameterName)
-  }
-
-  override def apply(m: Map[String, Any]) = compute(m)
-  val identifier: Identifier = Identifier(parameterName, AnyType())
-  override def toString(): String = "{" + parameterName + "}"
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
-  def rewrite(f: (Expression) => Expression) = f(this)
-  def filter(f: (Expression) => Boolean) = if(f(this))
-    Seq(this)
-  else
-    Seq()
-
-  def identifierDependencies(expectedType: CypherType) = Map()
-}
-
-case class ParameterValue(value: Any)
