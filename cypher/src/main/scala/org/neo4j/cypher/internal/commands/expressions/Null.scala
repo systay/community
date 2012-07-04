@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{CypherType, ScalarType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, ScalarType, Identifier}
 import collection.Map
 
 case class Null() extends Expression {
@@ -35,5 +35,5 @@ case class Null() extends Expression {
 
   def identifierDependencies(expectedType: CypherType) = Map()
 
-  def getType = ScalarType()
+  def getType(symbols: SymbolTable2): CypherType = ScalarType()
 }

@@ -88,6 +88,10 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
   def rewrite(f: (Expression) => Expression): UpdateAction = CreateNodeStartItem(key, rewrite(props, f))
 
   def deps = deps(props)
+
+  def checkTypes(symbols: SymbolTable2) {
+    checkTypes(props, symbols)
+  }
 }
 
 case class CreateRelationshipStartItem(key: String, from: (Expression, Map[String, Expression]), to: (Expression, Map[String, Expression]), typ: String, props: Map[String, Expression])
@@ -132,6 +136,13 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
 
     mergeDeps(Seq(fromDeps, toDeps, relDeps))
   }
+
+  def checkTypes(symbols: SymbolTable2) {
+    checkTypes(from._2, symbols)
+    checkTypes(to._2, symbols)
+    checkTypes(props, symbols)
+  }
+
 }
 
 trait Mutator extends StartItem {

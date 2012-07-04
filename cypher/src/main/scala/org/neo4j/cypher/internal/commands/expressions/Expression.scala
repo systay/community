@@ -24,7 +24,9 @@ import internal.pipes.IdentifierDependant
 import internal.symbols._
 import collection.Map
 
-abstract class Expression extends (Map[String, Any] => Any) with IdentifierDependant {
+abstract class Expression extends (Map[String, Any] => Any)
+with IdentifierDependant
+with Typed {
   protected def compute(v1: Map[String, Any]) : Any
   def apply(m: Map[String, Any]) = m.getOrElse(identifier.name, compute(m))
 
@@ -44,18 +46,38 @@ abstract class Expression extends (Map[String, Any] => Any) with IdentifierDepen
   def containsAggregate = exists(_.isInstanceOf[AggregationExpression])
 
   override def toString() = identifier.name
+
+  def getType(symbols: SymbolTable2): CypherType
+
+
+  /*
+  When you don't care what type this expression has, you just want to make sure
+  it gets a chance to run it's internal typechecks use this method
+   */
+  def checkTypes(symbols:SymbolTable2) {
+    evaluateType(AnyType(), symbols)
+  }
+
+  def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2): T = {
+    val t = getType(symbols)
+
+    if (!expectedType.isAssignableFrom(t)) {
+      throw new CypherTypeException("expected: %s but got %s".format(expectedType, t))
+    }
+
+    t.asInstanceOf[T]
+  }
 }
 
-
+/*
+Typed is the trait all classes that have a return type, or have dependencies on an expressions' type.
+ */
 trait Typed {
-  def getType:CypherType
+  def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2): T
+}
 
-  //Will return the closest class that encompasses both types
-  def mergeTypes(a: CypherType, b: CypherType): CypherType = {
-    if (a.isAssignableFrom(b)) a
-    else if (b.isAssignableFrom(a)) b
-    else mergeTypes(a.parentType, b.parentType)
-  }
+trait HasTypedExpressions {
+  def checkTypes(symbols:SymbolTable2)
 }
 
 case class CachedExpression(key:String, identifier:Identifier) extends CastableExpression {
@@ -66,12 +88,13 @@ case class CachedExpression(key:String, identifier:Identifier) extends CastableE
   def filter(f: (Expression) => Boolean) = if(f(this)) Seq(this) else Seq()
   override def toString() = "Cached(" + super.toString() + ")"
 
-  def getType = identifier.typ
-
   def identifierDependencies(expectedType: CypherType) = Map()
+
+  def getType(symbols: SymbolTable2) = identifier.typ
 }
 
-abstract class Arithmetics(left: Expression, right: Expression) extends Expression {
+abstract class Arithmetics(left: Expression, right: Expression)
+  extends Expression {
   val identifier = Identifier("%s %s %s".format(left.identifier.name, operand, right.identifier.name), NumberType())
   def operand: String
   def throwTypeError(bVal: Any, aVal: Any): Nothing = {
@@ -105,6 +128,24 @@ abstract class Arithmetics(left: Expression, right: Expression) extends Expressi
     left.filter(f) ++ right.filter(f)
 
   def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
+
+  def getType(symbols: SymbolTable2): CypherType = {
+    left.evaluateType(NumberType(), symbols)
+    right.evaluateType(NumberType(), symbols)
+    NumberType()
+  }
+}
+
+trait ExpressionWInnerExpression extends Expression {
+  def inner:Expression
+  def myType:CypherType
+  def expectedInnerType:CypherType
+
+  def getType(symbols: SymbolTable2): CypherType = {
+    inner.evaluateType(expectedInnerType, symbols)
+
+    myType
+  }
 }
 
 abstract class CastableExpression extends Expression {

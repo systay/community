@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.mutation
 
-import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, Identifier}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.cypher.internal.commands.expressions.Expression
@@ -142,6 +142,8 @@ case class RelateAction(links: RelateLink*) extends UpdateAction {
   def rewrite(f: (Expression) => Expression): UpdateAction = RelateAction(links.map(_.rewrite(f)): _*)
 
   def deps = mergeDeps(links.map(_.deps))
+
+  def checkTypes(symbols: SymbolTable2) {links.foreach(l=>l.checkTypes(symbols))}
 }
 
 sealed abstract class RelateResult

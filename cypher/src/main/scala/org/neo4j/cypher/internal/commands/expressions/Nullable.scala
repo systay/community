@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{CypherType, Identifier}
+import org.neo4j.cypher.internal.symbols.{AnyType, SymbolTable2, CypherType, Identifier}
 import org.neo4j.cypher.EntityNotFoundException
 import collection.Map
 
@@ -44,4 +44,6 @@ case class Nullable(expression: Expression) extends Expression {
     expression.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = expression.identifierDependencies(expectedType)
+
+  def getType(symbols: SymbolTable2): CypherType = expression.evaluateType(AnyType(), symbols)
 }

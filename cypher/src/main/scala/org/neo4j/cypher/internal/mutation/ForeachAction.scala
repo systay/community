@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.mutation
 
 import org.neo4j.cypher.internal.commands.expressions.Expression
 import org.neo4j.cypher.internal.commands.IterableSupport
-import org.neo4j.cypher.internal.symbols.AnyIterableType
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyIterableType}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 
 
@@ -76,4 +76,11 @@ case class ForeachAction(collection: Expression, id: String, actions: Seq[Update
     mergedDeps.filterKeys(_ != id)
   }
 
+  def checkTypes(symbols: SymbolTable2) {
+    val t = collection.evaluateType(AnyIterableType(), symbols).iteratedType
+
+    val innerSymbols: SymbolTable2 = symbols.add(id, t)
+
+    actions.foreach(_.checkTypes(innerSymbols))
+  }
 }

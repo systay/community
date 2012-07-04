@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.symbols
 import java.lang.String
 import org.neo4j.cypher.CypherTypeException
 
-object AnyType {
+object CypherType {
 
   def fromJava(obj:Any):CypherType = {
     if(obj.isInstanceOf[String] || obj.isInstanceOf[Char])
@@ -37,7 +37,7 @@ object AnyType {
     if(obj.isInstanceOf[Seq[_]] || obj.isInstanceOf[Array[_]])
       return AnyIterableType()
 
-    ScalarType()
+    AnyType()
   }
 }
 
@@ -51,6 +51,8 @@ trait CypherType {
   }
 
   def parentType : CypherType
+
+  val isIterable: Boolean = false
 }
 
 case class AnyType() extends CypherType {

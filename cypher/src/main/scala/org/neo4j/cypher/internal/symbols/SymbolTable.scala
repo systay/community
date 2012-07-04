@@ -119,3 +119,13 @@ class SymbolTable(val identifiers: Identifier*) {
     case _ => false
   }
 }
+
+class SymbolTable2(identifiers: Map[String, CypherType]) {
+  def add(key: String, typ: CypherType): SymbolTable2 = new SymbolTable2(identifiers + (key -> typ))
+
+  def evaluateType[T <: CypherType](name:String, expectedType: T):T = identifiers.get(name) match {
+    case Some(typ) if (expectedType.isAssignableFrom(typ)) => typ.asInstanceOf[T]
+    case Some(typ) => throw new CypherTypeException("Expected identifier `%s` to be of type %s, but it is of type %s.".format(name, expectedType, typ))
+    case None => throw new CypherTypeException("Need an identifier named `%s` but no such found")
+  }
+}

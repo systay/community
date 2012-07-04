@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{CypherType, LongType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, LongType}
 import org.neo4j.cypher.internal.pipes.aggregation.CountStarFunction
 
 case class CountStar() extends AggregationExpression {
@@ -41,4 +41,6 @@ case class CountStar() extends AggregationExpression {
   override def toString() = "count(*)"
 
   def identifierDependencies(expectedType: CypherType) = Map()
+
+  def getType(symbols: SymbolTable2): CypherType = LongType()
 }

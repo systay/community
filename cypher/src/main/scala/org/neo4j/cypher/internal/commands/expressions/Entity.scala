@@ -20,10 +20,12 @@
 package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.graphdb.NotFoundException
-import org.neo4j.cypher.internal.symbols.{CypherType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
+import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.helpers.ThisShouldNotHappenError
 
-case class Entity(entityName: String) extends CastableExpression {
+case class Entity(entityName: String) extends CastableExpression with Typed {
   def compute(m: Map[String, Any]): Any = m.getOrElse(entityName, throw new NotFoundException("Failed to find `" + entityName + "`"))
 
   val identifier: Identifier = Identifier(entityName, AnyType())
@@ -40,4 +42,9 @@ case class Entity(entityName: String) extends CastableExpression {
     Seq()
 
   def identifierDependencies(expectedType: CypherType) = Map(entityName -> expectedType)
+
+  def getType(symbols: SymbolTable2) =
+    throw new ThisShouldNotHappenError("Andres", "This class should override evaluateType, and this method should never be run")
+
+  override def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2) = symbols.evaluateType(entityName, expectedType)
 }

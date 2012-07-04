@@ -21,8 +21,9 @@ package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.graphdb.{NotFoundException, PropertyContainer}
 import org.neo4j.cypher.EntityNotFoundException
-import org.neo4j.cypher.internal.symbols.{MapType, CypherType, ScalarType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
+import org.neo4j.cypher.internal.symbols.Identifier
 
 case class Property(entity: String, property: String) extends CastableExpression {
   def compute(m: Map[String, Any]): Any = {
@@ -48,4 +49,6 @@ case class Property(entity: String, property: String) extends CastableExpression
     Seq()
 
   def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = Map(entity -> MapType())
+
+  def getType(symbols: SymbolTable2) = AnyType()
 }

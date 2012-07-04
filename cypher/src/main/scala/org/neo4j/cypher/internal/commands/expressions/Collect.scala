@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{AnyType, IterableType}
+import org.neo4j.cypher.internal.symbols.{CypherType, SymbolTable2, AnyType, IterableType}
 import org.neo4j.cypher.internal.pipes.aggregation.CollectFunction
 
 case class Collect(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
@@ -32,4 +32,6 @@ case class Collect(anInner: Expression) extends AggregationWithInnerExpression(a
   def expectedInnerType = AnyType()
 
   def rewrite(f: (Expression) => Expression) = f(Collect(anInner.rewrite(f)))
+
+  def getType(symbols: SymbolTable2) = new IterableType(anInner.evaluateType(AnyType(), symbols))
 }

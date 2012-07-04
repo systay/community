@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.mutation
 
-import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.graphdb.PropertyContainer
 import org.neo4j.cypher.internal.commands.expressions.{Expression, Property}
@@ -51,4 +51,8 @@ case class PropertySetAction(prop: Property, e: Expression)
   def rewrite(f: (Expression) => Expression): UpdateAction = PropertySetAction(prop, e.rewrite(f))
 
   def deps = mergeDeps(prop.identifierDependencies(AnyType()), e.identifierDependencies(AnyType()))
+
+  def checkTypes(symbols: SymbolTable2) {
+    e.evaluateType(AnyType(), symbols)
+  }
 }

@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.Expression
+import expressions.{HasTypedExpressions, Expression}
 import org.neo4j.graphdb.Direction
 import java.lang.String
 import collection.Seq
@@ -29,7 +29,7 @@ import scala.Some
 import org.neo4j.cypher.internal.pipes.IdentifierDependant
 
 
-abstract class Pattern extends IdentifierDependant {
+abstract class Pattern extends IdentifierDependant with HasTypedExpressions {
   def optional: Boolean
   def predicate: Predicate
   def possibleStartPoints: Seq[Identifier]
@@ -54,6 +54,7 @@ abstract class Pattern extends IdentifierDependant {
   }
 
   def dependencies: Seq[Identifier]= null
+
 }
 
 object RelatedTo {
@@ -90,6 +91,10 @@ case class RelatedTo(left: String, right: String, relName: String, relTypes: Seq
   def nodes = Seq(left,right)
 
   def rels = Seq(relName)
+
+  def checkTypes(symbols: SymbolTable2) {
+    predicate.checkTypes(symbols)
+  }
 }
 
 abstract class PathPattern extends Pattern {
@@ -162,6 +167,10 @@ case class VarLengthRelatedTo(pathName: String,
   def nodes = Seq(start,end)
 
   def rels = Seq()
+
+  def checkTypes(symbols: SymbolTable2) {
+    predicate.checkTypes(symbols)
+  }
 }
 
 case class ShortestPath(pathName: String,
@@ -199,4 +208,8 @@ case class ShortestPath(pathName: String,
   def rels = Seq()
 
   def nodes = Seq(start,end)
+
+  def checkTypes(symbols: SymbolTable2) {
+    predicate.checkTypes(symbols)
+  }
 }

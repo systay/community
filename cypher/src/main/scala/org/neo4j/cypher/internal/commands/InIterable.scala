@@ -21,12 +21,13 @@ package org.neo4j.cypher.internal.commands
 
 import collection.Seq
 import expressions.Expression
-import org.neo4j.cypher.internal.symbols.{AnyType, CypherType, Identifier, AnyIterableType}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import java.lang.{Iterable => JavaIterable}
 import java.util.{Map => JavaMap}
-
 import collection.JavaConverters._
+import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.cypher.internal.symbols.Identifier
 
 abstract class InIterable(collection: Expression, id: String, predicate: Predicate) extends Predicate with IterableSupport {
   def seqMethod[U](f: Seq[U]): ((U) => Boolean) => Boolean
@@ -62,6 +63,10 @@ abstract class InIterable(collection: Expression, id: String, predicate: Predica
     mergedDeps.filterKeys(_ != id)
   }
 
+  def checkTypes(symbols: SymbolTable2) {
+    val innerType = collection.evaluateType(AnyIterableType(), symbols).iteratedType
+    predicate.checkTypes(symbols.add(id, innerType))
+  }
 }
 
 case class AllInIterable(iterable: Expression, symbolName: String, inner: Predicate) extends InIterable(iterable, symbolName, inner) {

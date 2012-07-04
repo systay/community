@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{CypherType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType, Identifier}
 import collection.Map
 
 case class Literal(v: Any) extends Expression {
@@ -27,7 +27,7 @@ case class Literal(v: Any) extends Expression {
 
   override def apply(m: Map[String, Any]): Any = compute(m)
 
-  val identifier = Identifier(name, AnyType.fromJava(v))
+  val identifier = Identifier(name, CypherType.fromJava(v))
 
   private def name = v match {
     case null => "null"
@@ -44,4 +44,6 @@ case class Literal(v: Any) extends Expression {
     Seq()
 
   def identifierDependencies(expectedType: CypherType) = Map()
+
+  def getType(symbols: SymbolTable2): CypherType = CypherType.fromJava(v)
 }

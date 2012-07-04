@@ -34,4 +34,6 @@ class IterableType(val iteratedType: CypherType) extends AnyType {
     case AnyType() => AnyType()
     case _         => new IterableType(iteratedType.parentType)
   }
+
+  override val isIterable = true
 }

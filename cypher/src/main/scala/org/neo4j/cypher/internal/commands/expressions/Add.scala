@@ -19,10 +19,13 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{AnyType, CypherType, ScalarType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.commands.IsIterable
 import org.neo4j.cypher.CypherTypeException
 import collection.Map
+import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.commands.expressions.Add
 
 case class Add(a: Expression, b: Expression) extends Expression {
   val identifier = Identifier(a.identifier.name + " + " + b.identifier.name, ScalarType())
@@ -52,4 +55,20 @@ case class Add(a: Expression, b: Expression) extends Expression {
 
   def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
 
+  def getType(symbols: SymbolTable2): CypherType = {
+    val aT = a.evaluateType(AnyType(), symbols)
+    val bT = a.evaluateType(AnyType(), symbols)
+
+    (aT.isIterable, bT.isIterable) match {
+      case (true,false) => mergeWithCollection(collection = aT, singleElement = bT)
+      case (false,true) => mergeWithCollection(collection = bT, singleElement = aT)
+      case _ => aT.mergeWith(bT)
+    }
+  }
+
+  private def mergeWithCollection(collection: AnyType, singleElement: AnyType):CypherType= {
+    val iterableType = collection.asInstanceOf[IterableType]
+    val mergedInnerType = iterableType.iteratedType.mergeWith(singleElement)
+    new IterableType(mergedInnerType)
+  }
 }

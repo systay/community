@@ -44,6 +44,10 @@ abstract class MathFunction(arg: Expression) extends Expression with NumericHelp
     arg.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = arg.identifierDependencies(NumberType())
+
+  def getType(symbols: SymbolTable2) = {
+    arg.evaluateType(NumberType(), symbols)
+  }
 }
 
 trait NumericHelper {
@@ -93,6 +97,13 @@ case class RangeFunction(start: Expression, end: Expression, step: Expression) e
   def rewrite(f: (Expression) => Expression) = f(RangeFunction(start.rewrite(f), end.rewrite(f), step.rewrite(f)))
 
   def identifierDependencies(expectedType: CypherType) = mergeDeps(Seq(start.identifierDependencies(NumberType()), end.identifierDependencies(NumberType()), step.identifierDependencies(NumberType())))
+
+  def getType(symbols: SymbolTable2): CypherType = {
+    start.evaluateType(NumberType(), symbols)
+    end.evaluateType(NumberType(), symbols)
+    step.evaluateType(NumberType(), symbols)
+    new IterableType(NumberType())
+  }
 }
 
 case class SignFunction(argument: Expression) extends MathFunction(argument) {

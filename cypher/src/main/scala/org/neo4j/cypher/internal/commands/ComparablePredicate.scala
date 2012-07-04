@@ -23,8 +23,15 @@ import collection.Seq
 import expressions.Expression
 import org.neo4j.cypher.internal.Comparer
 import java.lang.String
-import org.neo4j.cypher.internal.symbols.{CypherType, AnyType, ScalarType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
+import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.cypher.internal.commands.GreaterThan
+import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.commands.GreaterThanOrEqual
+import org.neo4j.cypher.internal.commands.Equals
+import org.neo4j.cypher.internal.commands.LessThanOrEqual
+import org.neo4j.cypher.internal.commands.LessThan
 
 abstract sealed class ComparablePredicate(left: Expression, right: Expression) extends Predicate with Comparer {
   def compare(comparisonResult: Int): Boolean
@@ -46,6 +53,11 @@ abstract sealed class ComparablePredicate(left: Expression, right: Expression) e
   def containsIsNull = false
   def filter(f: (Expression) => Boolean): Seq[Expression] = left.filter(f) ++ right.filter(f)
   def identifierDependencies(expectedType: CypherType) = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
+
+  def checkTypes(symbols: SymbolTable2) {
+    left.evaluateType(AnyType(), symbols)
+    right.evaluateType(AnyType(), symbols)
+  }
 }
 
 case class Equals(a: Expression, b: Expression) extends Predicate with Comparer {
@@ -63,6 +75,10 @@ case class Equals(a: Expression, b: Expression) extends Predicate with Comparer 
   def filter(f: (Expression) => Boolean): Seq[Expression] = a.filter(f) ++ b.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
+
+  def checkTypes(symbols: SymbolTable2) {
+    a.evaluateType(AnyType(), symbols)
+  }
 }
 
 case class LessThan(a: Expression, b: Expression) extends ComparablePredicate(a, b) {

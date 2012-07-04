@@ -28,9 +28,9 @@ import java.util.{Map => JavaMap}
 import scala.collection.JavaConverters._
 import collection.Map
 import org.neo4j.cypher.internal.commands._
-import expressions.Expression
+import expressions.{HasTypedExpressions, Expression}
 
-trait UpdateAction extends IdentifierDependantHelper {
+trait UpdateAction extends IdentifierDependantHelper with HasTypedExpressions {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
   def dependencies:Seq[Identifier]
   def identifier:Seq[Identifier]
@@ -45,6 +45,10 @@ trait GraphElementPropertyFunctions extends IterableSupport with IdentifierDepen
       case ("*", expression) => setAllMapKeyValues(expression, context, pc, state)
       case (key, expression) => setSingleValue(expression, context, pc, key, state)
     }
+  }
+
+  def checkTypes(props: Map[String, Expression], symbols:SymbolTable2) {
+    props.values.foreach(_.evaluateType(AnyType(), symbols))
   }
 
   def deps(props: Map[String, Expression]): Map[String, CypherType] = mergeDeps(props.values.map(_.identifierDependencies(AnyType())).toSeq)

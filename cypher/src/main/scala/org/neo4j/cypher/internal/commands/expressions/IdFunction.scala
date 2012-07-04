@@ -20,14 +20,17 @@
 package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.graphdb.{Relationship, Node}
-import org.neo4j.cypher.internal.symbols.{MapType, CypherType, LongType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
+import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.commands.expressions.IdFunction
+import org.neo4j.cypher.CypherTypeException
 
 case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) {
-
   def compute(value: Any, m: Map[String, Any]) = value match {
     case node: Node        => node.getId
     case rel: Relationship => rel.getId
+    case x => throw new CypherTypeException("Expected `%s` to be a node or relationship, but it was ``".format(inner, x.getClass.getSimpleName))
   }
 
   val identifier = Identifier("ID(" + inner.identifier.name + ")", LongType())
@@ -42,4 +45,6 @@ case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) 
     inner.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(MapType())
+
+  def getType(symbols: SymbolTable2): CypherType = null
 }

@@ -40,4 +40,16 @@ case class Collection(expressions: Expression*) extends CastableExpression {
     expressions.flatMap(_.filter(f))
 
   def identifierDependencies(expectedType: CypherType) = mergeDeps(expressions.map(_.identifierDependencies(ScalarType())))
+
+  def getType(symbols: SymbolTable2): CypherType = {
+    expressions.map(_.evaluateType(AnyType(), symbols)) match {
+
+      case Seq() => AnyIterableType()
+
+      case types =>
+        val innerType = types.foldLeft(AnyType().asInstanceOf[CypherType])(_ mergeWith _)
+        new IterableType(  innerType )
+    }
+
+  }
 }

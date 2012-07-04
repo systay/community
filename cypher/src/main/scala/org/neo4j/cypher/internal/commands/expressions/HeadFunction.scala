@@ -45,4 +45,6 @@ case class HeadFunction(collection: Expression) extends NullInNullOutExpression(
     collection.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = null
+
+  def getType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols).iteratedType
 }

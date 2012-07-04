@@ -82,6 +82,11 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
     new AllShortestPathsFOO(expander, ast.maxDepth.getOrElse(15))
 
   def identifierDependencies(expectedType: CypherType) = ast.identifierDependencies(PathType())
+
+  def getType(symbols: SymbolTable2) = {
+    ast.checkTypes(symbols)
+    PathType()
+  }
 }
 
 trait FOO {

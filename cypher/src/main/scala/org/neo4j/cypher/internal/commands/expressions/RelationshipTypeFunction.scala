@@ -20,8 +20,10 @@
 package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.graphdb.Relationship
-import org.neo4j.cypher.internal.symbols.{RelationshipType, CypherType, StringType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
+import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.commands.expressions.RelationshipTypeFunction
 
 case class RelationshipTypeFunction(relationship: Expression) extends NullInNullOutExpression(relationship) {
   def compute(value: Any, m: Map[String, Any]) = value.asInstanceOf[Relationship].getType.name()
@@ -38,4 +40,9 @@ case class RelationshipTypeFunction(relationship: Expression) extends NullInNull
     relationship.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = relationship.identifierDependencies(RelationshipType())
+
+  def getType(symbols: SymbolTable2) = {
+    relationship.evaluateType(RelationshipType(), symbols)
+    RelationshipType()
+  }
 }

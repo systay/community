@@ -22,6 +22,9 @@ package org.neo4j.cypher.internal.symbols
 import org.scalatest.junit.JUnitSuite
 import org.junit.Test
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
+import org.scalatest.Assertions
+import org.neo4j.cypher.internal.commands.expressions.{Expression, Add}
+import collection.Map
 
 class SymbolTableTest extends JUnitSuite {
   @Test def givenSymbolTableWithIdentifierWhenAskForExistingThenReturnIdentifier() {
@@ -70,4 +73,95 @@ class SymbolTableTest extends JUnitSuite {
 
   private def getPercolatedIdentifier(scopeType: CypherType, symbolType: CypherType): CypherType = new SymbolTable(Identifier("x", scopeType)).actualIdentifier(Identifier("x", symbolType)).typ
 
+}
+
+class SymbolTable2Test extends Assertions {
+  @Test def anytype_is_ok() {
+    //given
+    val s = createSymbols("p" -> PathType())
+
+    //then
+    assert(s.evaluateType("p", AnyType()) === PathType())
+  }
+
+  @Test def missing_identifier() {
+    //given
+    val s = createSymbols()
+
+    //then
+    intercept[CypherTypeException](s.evaluateType("p", AnyType()))
+  }
+
+  @Test def identifier_with_wrong_type() {
+    //given
+    val symbolTable = createSymbols("x" -> StringType())
+
+    //then
+    intercept[CypherTypeException](symbolTable.evaluateType("x", NumberType()))
+  }
+
+  @Test def identifier_with_type_not_specific_enough() {
+    //given
+    val symbolTable = createSymbols("x" -> MapType())
+
+    //then
+    intercept[CypherTypeException](symbolTable.evaluateType("x", RelationshipType()))
+  }
+
+  @Test def adding_string_with_string_gives_string_type() {
+    //given
+    val symbolTable = createSymbols()
+    val exp = new Add(new FakeExpression(StringType()), new FakeExpression(StringType()))
+
+    //when
+    val returnType = exp.evaluateType(AnyType(), symbolTable)
+
+    //then
+    assert(returnType === StringType())
+  }
+
+  @Test def adding_number_with_number_gives_number_type() {
+    //given
+    val symbolTable = createSymbols()
+    val exp = new Add(new FakeExpression(NumberType()), new FakeExpression(NumberType()))
+
+    //when
+    val returnType = exp.evaluateType(AnyType(), symbolTable)
+
+    //then
+    assert(returnType === NumberType())
+  }
+
+  @Test def adding_to_string_collection() {
+    //given
+    val symbolTable = createSymbols()
+    val exp = new Add(new FakeExpression(new IterableType(StringType())), new FakeExpression(StringType()))
+
+    //when
+    val returnType = exp.evaluateType(AnyType(), symbolTable)
+
+    //then
+    assert(returnType === new IterableType(StringType()))
+  }
+
+
+  def createSymbols(elems: (String, CypherType)*): SymbolTable2 = {
+    new SymbolTable2(elems.toMap)
+  }
+}
+
+class FakeExpression(typ: CypherType) extends Expression {
+  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = null
+
+  protected def compute(v1: Map[String, Any]): Any = null
+
+  val identifier: Identifier = Identifier("fake", typ)
+
+  def declareDependencies(expectedType: CypherType): Seq[Identifier] = null
+
+  def rewrite(f: (Expression) => Expression): Expression = null
+
+  def filter(f: (Expression) => Boolean): Seq[Expression] = null
+
+  def getType(symbols: SymbolTable2) = typ
 }

@@ -21,10 +21,15 @@ package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher.internal.commands.IterableSupport
 import org.neo4j.graphdb.Path
-import org.neo4j.cypher.internal.symbols.{AnyIterableType, CypherType, IntegerType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
+import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.commands.expressions.LengthFunction
 
-case class LengthFunction(inner: Expression) extends NullInNullOutExpression(inner) with IterableSupport {
+case class LengthFunction(inner: Expression)
+  extends NullInNullOutExpression(inner)
+  with IterableSupport
+with ExpressionWInnerExpression {
   def compute(value: Any, m: Map[String, Any]) = value match {
     case path: Path => path.length()
     case s: String  => s.length()
@@ -43,4 +48,7 @@ case class LengthFunction(inner: Expression) extends NullInNullOutExpression(inn
     inner.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(AnyIterableType())
+
+  val myType = LongType()
+  val expectedInnerType = AnyIterableType()
 }

@@ -20,8 +20,10 @@
 package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher.internal.commands.{IterableSupport, Predicate}
-import org.neo4j.cypher.internal.symbols.{AnyType, AnyIterableType, CypherType, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
+import org.neo4j.cypher.internal.commands.expressions.FilterFunction
+import org.neo4j.cypher.internal.symbols.Identifier
 
 case class FilterFunction(collection: Expression, id: String, predicate: Predicate)
   extends NullInNullOutExpression(collection)
@@ -45,5 +47,13 @@ case class FilterFunction(collection: Expression, id: String, predicate: Predica
     // Filter depends on everything that the iterable and the predicate depends on, except
     // the new identifier inserted into the predicate symbol table, named with id
     mergedDeps.filterKeys(_ != id)
+  }
+
+  def getType(symbols: SymbolTable2): CypherType = {
+    val t = collection.evaluateType(AnyIterableType(), symbols)
+
+    predicate.checkTypes(symbols.add(id, t.iteratedType))
+
+    t
   }
 }

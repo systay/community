@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{CypherType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType, Identifier}
 import org.neo4j.cypher.ParameterNotFoundException
 import collection.Map
 
@@ -49,6 +49,8 @@ case class ParameterExpression(parameterName: String) extends CastableExpression
     Seq()
 
   def identifierDependencies(expectedType: CypherType) = Map()
+
+  def getType(symbols: SymbolTable2) = AnyType()
 }
 
 case class ParameterValue(value: Any)

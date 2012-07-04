@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{CypherType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType, Identifier}
 import org.neo4j.cypher.internal.pipes.aggregation.DistinctFunction
 
 case class Distinct(innerAggregator: AggregationExpression, expression: Expression) extends AggregationWithInnerExpression(expression) {
@@ -39,6 +39,8 @@ case class Distinct(innerAggregator: AggregationExpression, expression: Expressi
     case inner: AggregationExpression => f(Distinct(inner, expression.rewrite(f)))
     case _                            => f(Distinct(innerAggregator, expression.rewrite(f)))
   }
+
+  def getType(symbols: SymbolTable2): CypherType = innerAggregator.getType(symbols)
 
   override def identifierDependencies(expectedType: CypherType) = mergeDeps(innerAggregator.identifierDependencies(AnyType()), expression.identifierDependencies(AnyType()))
 }

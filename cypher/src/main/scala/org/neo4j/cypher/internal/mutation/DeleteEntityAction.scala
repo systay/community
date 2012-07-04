@@ -22,10 +22,11 @@ package org.neo4j.cypher.internal.mutation
 import org.neo4j.cypher.internal.commands.expressions.Expression
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.cypher.CypherTypeException
-import org.neo4j.cypher.internal.symbols.{MapType, AnyType}
+import org.neo4j.cypher.internal.symbols._
 import collection.JavaConverters._
-import org.neo4j.graphdb._
 import org.neo4j.kernel.impl.core.NodeManager
+import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.graphdb.{PropertyContainer, Path, Relationship, Node}
 
 case class DeleteEntityAction(elementToDelete: Expression)
   extends UpdateAction {
@@ -67,4 +68,18 @@ case class DeleteEntityAction(elementToDelete: Expression)
   def dependencies = elementToDelete.dependencies(AnyType())
 
   def deps = elementToDelete.identifierDependencies(MapType())
+
+  def checkTypes(symbols: SymbolTable2) {
+    val elementType = elementToDelete.evaluateType(AnyType(), symbols)
+
+    checkTypes(elementType)
+  }
+
+  private def checkTypes(t:CypherType) {
+    t match {
+      case x:NodeType =>
+      case x:RelationshipType =>
+      case x:IterableType => checkTypes(x.iteratedType)
+    }
+  }
 }

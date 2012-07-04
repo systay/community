@@ -20,7 +20,9 @@
 package org.neo4j.cypher.internal.commands.expressions
 import collection.Map
 import org.neo4j.cypher.internal.commands.IterableSupport
-import org.neo4j.cypher.internal.symbols.{AnyIterableType, CypherType, ScalarType, Identifier}
+import org.neo4j.cypher.internal.symbols._
+import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.commands.expressions.LastFunction
 
 case class LastFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
   def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).last
@@ -37,4 +39,6 @@ case class LastFunction(collection: Expression) extends NullInNullOutExpression(
     collection.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
+
+  def getType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols).iteratedType
 }

@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.{Literal, Property, Expression}
+import expressions.{HasTypedExpressions, Literal, Property, Expression}
 import java.lang.String
 import collection.Seq
 import scala.collection.JavaConverters._
@@ -30,7 +30,7 @@ import org.neo4j.helpers.ThisShouldNotHappenError
 import collection.Map
 import org.neo4j.cypher.SyntaxException
 
-abstract class Predicate extends Dependant with IdentifierDependant {
+abstract class Predicate extends Dependant with IdentifierDependant with HasTypedExpressions {
   def ++(other: Predicate): Predicate = And(this, other)
   def isMatch(m: Map[String, Any]): Boolean
 
@@ -68,6 +68,10 @@ case class NullablePredicate(inner: Predicate, exp: Seq[(Expression, Boolean)]) 
   def filter(f: (Expression) => Boolean) = exp.flatMap { case (e,_) => e.filter(f)  }
 
   def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(AnyType())
+
+  def checkTypes(symbols: SymbolTable2) {
+    inner.checkTypes(symbols)
+  }
 }
 
 
@@ -81,6 +85,11 @@ case class And(a: Predicate, b: Predicate) extends Predicate {
   def rewrite(f: (Expression) => Expression) = And(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ b.filter(f)
   def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
+
+  def checkTypes(symbols: SymbolTable2) {
+    a.checkTypes(symbols)
+    b.checkTypes(symbols)
+  }
 }
 
 case class Or(a: Predicate, b: Predicate) extends Predicate with Dependant {
@@ -93,6 +102,11 @@ case class Or(a: Predicate, b: Predicate) extends Predicate with Dependant {
   def rewrite(f: (Expression) => Expression) = Or(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ b.filter(f)
   def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
+
+  def checkTypes(symbols: SymbolTable2) {
+    a.checkTypes(symbols)
+    b.checkTypes(symbols)
+  }
 }
 
 case class Not(a: Predicate) extends Predicate {
@@ -105,6 +119,9 @@ case class Not(a: Predicate) extends Predicate {
   def rewrite(f: (Expression) => Expression) = Not(a.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f)
   def identifierDependencies(expectedType: CypherType) = a.identifierDependencies(AnyType())
+  def checkTypes(symbols: SymbolTable2) {
+    a.checkTypes(symbols)
+  }
 }
 
 case class HasRelationshipTo(from: Expression, to: Expression, dir: Direction, relType: Seq[String]) extends Predicate {
@@ -132,6 +149,11 @@ case class HasRelationshipTo(from: Expression, to: Expression, dir: Direction, r
   def rewrite(f: (Expression) => Expression) = HasRelationshipTo(from.rewrite(f), to.rewrite(f), dir, relType)
   def filter(f: (Expression) => Boolean) = from.filter(f) ++ to.filter(f)
   def identifierDependencies(expectedType: CypherType) = mergeDeps(from.identifierDependencies(NodeType()), to.identifierDependencies(NodeType()))
+
+  def checkTypes(symbols: SymbolTable2) {
+    from.checkTypes(symbols)
+    to.checkTypes(symbols)
+  }
 }
 
 case class HasRelationship(from: Expression, dir: Direction, relType: Seq[String]) extends Predicate {
@@ -156,6 +178,9 @@ case class HasRelationship(from: Expression, dir: Direction, relType: Seq[String
   def filter(f: (Expression) => Boolean) = from.filter(f)
   def rewrite(f: (Expression) => Expression) = HasRelationship(from.rewrite(f), dir, relType)
   def identifierDependencies(expectedType: CypherType) = from.identifierDependencies(AnyType())
+  def checkTypes(symbols: SymbolTable2) {
+    from.checkTypes(symbols)
+  }
 }
 
 case class IsNull(expression: Expression) extends Predicate {
@@ -168,6 +193,9 @@ case class IsNull(expression: Expression) extends Predicate {
   def rewrite(f: (Expression) => Expression) = IsNull(expression.rewrite(f))
   def filter(f: (Expression) => Boolean) = expression.filter(f)
   def identifierDependencies(expectedType: CypherType) = expression.identifierDependencies(AnyType())
+  def checkTypes(symbols: SymbolTable2) {
+    expression.checkTypes(symbols)
+  }
 }
 
 case class True() extends Predicate {
@@ -180,6 +208,7 @@ case class True() extends Predicate {
   def rewrite(f: (Expression) => Expression) = True()
   def filter(f: (Expression) => Boolean) = Seq()
   def identifierDependencies(expectedType: CypherType) = Map()
+  def checkTypes(symbols: SymbolTable2) {}
 }
 
 case class Has(property: Property) extends Predicate {
@@ -201,6 +230,9 @@ case class Has(property: Property) extends Predicate {
   }
   def filter(f: (Expression) => Boolean) = property.filter(f)
   def identifierDependencies(expectedType: CypherType) = property.identifierDependencies(AnyType())
+  def checkTypes(symbols: SymbolTable2) {
+    property.checkTypes(symbols)
+  }
 }
 
 case class LiteralRegularExpression(a: Expression, regex: Literal) extends Predicate {
@@ -217,6 +249,11 @@ case class LiteralRegularExpression(a: Expression, regex: Literal) extends Predi
   }
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ regex.filter(f)
   def identifierDependencies(expectedType: CypherType) = a.identifierDependencies(StringType())
+
+  def checkTypes(symbols: SymbolTable2) {
+    a.checkTypes(symbols)
+    regex.checkTypes(symbols)
+  }
 }
 
 case class RegularExpression(a: Expression, regex: Expression) extends Predicate {
@@ -238,6 +275,11 @@ case class RegularExpression(a: Expression, regex: Expression) extends Predicate
   }
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ regex.filter(f)
   def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(StringType()), regex.identifierDependencies(StringType()))
+
+  def checkTypes(symbols: SymbolTable2) {
+    a.checkTypes(symbols)
+    regex.checkTypes(symbols)
+  }
 }
 
 case class NonEmpty(inner:Expression) extends Predicate with IterableSupport {
@@ -261,4 +303,8 @@ case class NonEmpty(inner:Expression) extends Predicate with IterableSupport {
   def rewrite(f: (Expression) => Expression) = NonEmpty(inner.rewrite(f))
   def filter(f: (Expression) => Boolean) = inner.filter(f)
   def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(AnyIterableType())
+
+  def checkTypes(symbols: SymbolTable2) {
+    inner.checkTypes(symbols)
+  }
 }
