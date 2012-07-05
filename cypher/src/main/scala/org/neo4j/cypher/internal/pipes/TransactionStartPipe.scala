@@ -36,4 +36,6 @@ class TransactionStartPipe(source: Pipe, graph: GraphDatabaseService) extends Pi
   def dependencies = Seq()
 
   def deps = Map()
+
+  def symbols2 = source.symbols2
 }

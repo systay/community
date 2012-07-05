@@ -32,7 +32,7 @@ import org.neo4j.cypher.internal.pipes.IdentifierDependant
 abstract class Pattern extends IdentifierDependant with HasTypedExpressions {
   def optional: Boolean
   def predicate: Predicate
-  def possibleStartPoints: Seq[Identifier]
+  def possibleStartPoints: Seq[(String,CypherType)]
   def relTypes:Seq[String]
 
   protected def node(name: String) = if (name.startsWith("  UNNAMED")) "()" else name
@@ -72,7 +72,7 @@ case class RelatedTo(left: String, right: String, relName: String, relTypes: Seq
     if (info == "") "" else "[" + info + "]"
   }
 
-  val possibleStartPoints: Seq[Identifier] = Seq(Identifier(left, NodeType()), Identifier(right, NodeType()), Identifier(relName, RelationshipType()))
+  val possibleStartPoints: Seq[(String, MapType)] = Seq(left-> NodeType(), right-> NodeType(), relName->RelationshipType())
 
   def rewrite(f: (Expression) => Expression) = new RelatedTo(left,right,relName,relTypes,direction,optional,predicate.rewrite(f))
   override def equals(p1: Any): Boolean = p1 match {
@@ -146,7 +146,7 @@ case class VarLengthRelatedTo(pathName: String,
   }
 
   def rewrite(f: (Expression) => Expression) = new VarLengthRelatedTo(pathName,start,end, minHops,maxHops,relTypes,direction,relIterator,optional,predicate.rewrite(f))
-  lazy val possibleStartPoints: Seq[Identifier] = Seq(Identifier(start, NodeType()), Identifier(end, NodeType()), Identifier(pathName, PathType()))
+  lazy val possibleStartPoints: Seq[(String, AnyType)] = Seq(start -> NodeType(), end -> NodeType(), pathName -> PathType())
 
   override def equals(p1: Any): Boolean = p1 match {
     case null => false
@@ -201,7 +201,7 @@ case class ShortestPath(pathName: String,
     info + "]"
   }
 
-  lazy val possibleStartPoints: Seq[Identifier] = Seq(Identifier(start, NodeType()), Identifier(end, NodeType()))
+  lazy val possibleStartPoints: Seq[(String, NodeType)] = Seq(start-> NodeType(), end-> NodeType())
 
   def rewrite(f: Expression => Expression) = new ShortestPath(pathName,start,end,relTypes,dir,maxDepth,optional,single,relIterator,predicate.rewrite(f))
 

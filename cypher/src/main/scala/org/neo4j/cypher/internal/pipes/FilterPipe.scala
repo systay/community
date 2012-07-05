@@ -25,6 +25,7 @@ import org.neo4j.cypher.internal.symbols.AnyType
 
 class FilterPipe(source: Pipe, predicate: Predicate) extends PipeWithSource(source) {
   val symbols = source.symbols
+  val symbols2 = source.symbols2
 
   def createResults(state: QueryState) = source.createResults(state).filter(ctx => predicate.isMatch(ctx))
 

@@ -68,6 +68,7 @@ class ShortestPathPipe(source: Pipe, ast: ShortestPath) extends PipeWithSource(s
   def dependencies: Seq[Identifier] = Seq(Identifier(startName, NodeType()), Identifier(endName, NodeType()))
 
   val symbols = source.symbols.add(Identifier(pathName, PathType()))
+  val symbols2 = source.symbols2.add(pathName, PathType())
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "ShortestPath(" + ast + ")"
 

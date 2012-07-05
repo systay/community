@@ -23,7 +23,6 @@ import org.neo4j.graphdb.Relationship
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.cypher.internal.symbols.Identifier
-import org.neo4j.cypher.internal.commands.expressions.RelationshipTypeFunction
 
 case class RelationshipTypeFunction(relationship: Expression) extends NullInNullOutExpression(relationship) {
   def compute(value: Any, m: Map[String, Any]) = value.asInstanceOf[Relationship].getType.name()

@@ -64,7 +64,7 @@ class MatchBuilder extends PlanBuilder with PatternGraphBuilder {
     case Unsolved(x: ShortestPath) => false
     case Unsolved(x: Pattern) => {
 
-      val resolvedStartPoints = start.map(si => x.possibleStartPoints.find(_.name == si.token.identifierName) match {
+      val resolvedStartPoints = start.map(si => x.possibleStartPoints.find(_._1 == si.token.identifierName) match {
         case Some(_) => si.solved
         case None => true
       }).foldLeft(true)(_ && _)

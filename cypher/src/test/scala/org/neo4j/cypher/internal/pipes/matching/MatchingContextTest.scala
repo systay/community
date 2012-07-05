@@ -23,11 +23,20 @@ import org.scalatest.Assertions
 import org.neo4j.cypher.GraphDatabaseTestBase
 import org.neo4j.graphdb.{Node, Direction}
 import org.neo4j.cypher.internal.commands._
+import expressions.Entity
+import expressions.Literal
+import expressions.Property
+import expressions.RelationshipFunction
 import expressions.{Entity, RelationshipFunction, Literal, Property}
 import org.junit.{Before, Test}
-import org.neo4j.cypher.internal.symbols.{NodeType, RelationshipType, Identifier, SymbolTable}
+import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.cypher.internal.executionplan.builders.PatternGraphBuilder
+import org.neo4j.cypher.internal.commands.True
+import org.neo4j.cypher.internal.symbols.Identifier
+import scala.Some
+import org.neo4j.cypher.internal.commands.Equals
+import org.neo4j.cypher.internal.commands.AllInIterable
 
 class MatchingContextTest extends GraphDatabaseTestBase with Assertions with PatternGraphBuilder {
   var a: Node = null
@@ -524,11 +533,15 @@ class MatchingContextTest extends GraphDatabaseTestBase with Assertions with Pat
 
   private def createMatchingContextWith(patterns: Seq[Pattern], nodes: Seq[String], rels: Seq[String], predicates:Seq[Predicate]=Seq[Predicate]()): MatchingContext = {
     val nodeIdentifiers = nodes.map(x => Identifier(x, NodeType()))
+    val nodeIdentifiers2 = nodes.map(_ -> NodeType())
     val relIdentifiers = rels.map(x => Identifier(x, RelationshipType()))
+    val relIdentifiers2 = rels.map(_ ->RelationshipType())
 
     val identifiers = nodeIdentifiers++relIdentifiers
+    val identifiers2 = (nodeIdentifiers2++relIdentifiers2).toMap
     val symbols = new SymbolTable(identifiers:_*)
-    new MatchingContext(symbols, predicates, buildPatternGraph(symbols, patterns))
+    val symbols2 = new SymbolTable2(identifiers2)
+    new MatchingContext(symbols, symbols2, predicates, buildPatternGraph(symbols, patterns))
   }
 
   private def createMatchingContextWithRels(patterns: Seq[Pattern], rels: Seq[String], predicates: Seq[Predicate] = Seq[Predicate]()): MatchingContext =

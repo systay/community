@@ -34,6 +34,7 @@ trait UpdateAction extends IdentifierDependantHelper with HasTypedExpressions {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
   def dependencies:Seq[Identifier]
   def identifier:Seq[Identifier]
+  def identifier2:Seq[(String,CypherType)]
   def rewrite(f: Expression => Expression):UpdateAction
   def filter(f: Expression => Boolean): Seq[Expression]
   def deps:Map[String,CypherType]

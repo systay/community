@@ -21,7 +21,6 @@ package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.pipes.aggregation.CountFunction
-import org.neo4j.cypher.internal.commands.expressions.Count
 
 case class Count(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
   def typ = IntegerType()

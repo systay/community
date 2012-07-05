@@ -21,11 +21,7 @@ package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
-import scala.Some
-import org.neo4j.cypher.internal.commands.expressions.CoalesceFunction
 import org.neo4j.cypher.internal.symbols.Identifier
-import scala.Some
-import org.neo4j.cypher.internal.commands.expressions.CoalesceFunction
 
 case class CoalesceFunction(expressions: Expression*) extends Expression {
   def compute(m: Map[String, Any]): Any = expressions.toStream.map(expression => expression(m)).find(value => value != null) match {

@@ -25,19 +25,19 @@ import org.neo4j.cypher.internal.symbols._
 import collection.Map
 
 abstract class ReturnColumn extends Dependant {
-  def expressions(symbols: SymbolTable): Seq[Expression]
+  def expressions(symbols: SymbolTable2): Seq[Expression]
 
   def name: String
   def deps:Map[String,CypherType]
 }
 
 case class AllIdentifiers() extends ReturnColumn {
-  def expressions(symbols: SymbolTable) = symbols.identifiers.flatMap {
-    case Identifier(name, _) if name.startsWith("  UNNAMED") => None
-    case Identifier(name, typ) if MapType().isAssignableFrom(typ) => Some(Entity(name))
-    case Identifier(name, typ) if PathType().isAssignableFrom(typ) => Some(Entity(name))
-    case _ => None
-  }
+  def expressions(symbols: SymbolTable2) = symbols.identifiers.flatMap {
+    case (name, _) if name.startsWith("  UNNAMED")       => None
+    case (name, typ) if MapType().isAssignableFrom(typ)  => Some(Entity(name))
+    case (name, typ) if PathType().isAssignableFrom(typ) => Some(Entity(name))
+    case _                                               => None
+  }.toSeq
 
   def name = "*"
 
@@ -45,8 +45,10 @@ case class AllIdentifiers() extends ReturnColumn {
   def deps:Map[String,CypherType]=Map()
 }
 
-case class ReturnItem(expression: Expression, name: String, renamed: Boolean = false) extends ReturnColumn {
-  def expressions(symbols: SymbolTable) = Seq(expression)
+case class ReturnItem(expression: Expression, name: String, renamed: Boolean = false)
+  extends ReturnColumn {
+
+  def expressions(symbols: SymbolTable2) = Seq(expression)
 
   val dependencies = expression.dependencies(AnyType())
 

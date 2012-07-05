@@ -23,9 +23,8 @@ import aggregation.AggregationFunction
 import collection.Seq
 import java.lang.String
 import org.neo4j.helpers.ThisShouldNotHappenError
-import org.neo4j.cypher.internal.symbols.{AnyType, Identifier, SymbolTable}
-import org.neo4j.cypher.internal.commands.expressions.{Expression, AggregationExpression}
-import collection.immutable.{Map => ImmutableMap}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, Identifier, SymbolTable}
+import org.neo4j.cypher.internal.commands.expressions.{Entity, Expression, AggregationExpression}
 
 // This class can be used to aggregate if the values sub graphs come in the order that they are keyed on
 class OrderedAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], aggregations: Seq[AggregationExpression]) extends PipeWithSource(source) {
@@ -34,16 +33,16 @@ class OrderedAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], 
     throw new ThisShouldNotHappenError("Andres Taylor", "The ordered aggregation pipe should never be used without aggregation keys")
 
   val symbols: SymbolTable = createSymbols()
+  val symbols2: SymbolTable2 = source.symbols2.filter(id => keyExpressions.contains(Entity(id)))
 
   def dependencies: Seq[Identifier] = keyExpressions.flatMap(_.dependencies(AnyType())) ++ aggregations.flatMap(_.dependencies(AnyType()))
 
-  def createSymbols() = {
+  private def createSymbols() = {
     val keySymbols = source.symbols.filter(keyExpressions.map(_.identifier.name): _*)
     val aggregateIdentifiers = aggregations.map(_.identifier)
 
     keySymbols.add(aggregateIdentifiers: _*)
   }
-
   def createResults(state: QueryState): Traversable[ExecutionContext] = new OrderedAggregator(source.createResults(state), keyExpressions, aggregations)
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "EagerAggregation( keys: [" + keyExpressions.map(_.identifier.name).mkString(", ") + "], aggregates: [" + aggregations.mkString(", ") + "])"

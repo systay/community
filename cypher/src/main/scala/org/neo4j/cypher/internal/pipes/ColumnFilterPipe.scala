@@ -20,13 +20,17 @@
 package org.neo4j.cypher.internal.pipes
 
 import org.neo4j.cypher.internal.commands.ReturnItem
-import org.neo4j.cypher.internal.symbols.{Identifier, SymbolTable}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, Identifier, SymbolTable}
 import org.neo4j.cypher.internal.commands.expressions.ParameterValue
 
 class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe: Boolean)
   extends PipeWithSource(source) {
   val returnItemNames = returnItems.map(_.columnName)
   val symbols = new SymbolTable(identifiers: _*)
+  val symbols2 = new SymbolTable2(identifiers2.toMap)
+
+  private lazy val identifiers2: Seq[(String, AnyType)] = returnItems.
+    map( ri => ri.name->ri.expression.evaluateType(AnyType(), source.symbols2))
 
   private lazy val identifiers = source.symbols.identifiers.flatMap {
     // Yay! My first monad!

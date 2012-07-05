@@ -120,8 +120,11 @@ class SymbolTable(val identifiers: Identifier*) {
   }
 }
 
-class SymbolTable2(identifiers: Map[String, CypherType]) {
+class SymbolTable2(val identifiers: Map[String, CypherType]) {
+  def this()=this(Map())
   def add(key: String, typ: CypherType): SymbolTable2 = new SymbolTable2(identifiers + (key -> typ))
+  def add(value: Map[String, CypherType]):SymbolTable2 = new SymbolTable2(identifiers ++ value)
+  def filter(f:String=>Boolean): SymbolTable2 = new SymbolTable2(identifiers.filterKeys(f))
 
   def evaluateType[T <: CypherType](name:String, expectedType: T):T = identifiers.get(name) match {
     case Some(typ) if (expectedType.isAssignableFrom(typ)) => typ.asInstanceOf[T]

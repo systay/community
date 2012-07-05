@@ -25,7 +25,6 @@ import org.neo4j.cypher.CypherTypeException
 import collection.Map
 import org.neo4j.cypher.internal.symbols.AnyType
 import org.neo4j.cypher.internal.symbols.Identifier
-import org.neo4j.cypher.internal.commands.expressions.Add
 
 case class Add(a: Expression, b: Expression) extends Expression {
   val identifier = Identifier(a.identifier.name + " + " + b.identifier.name, ScalarType())

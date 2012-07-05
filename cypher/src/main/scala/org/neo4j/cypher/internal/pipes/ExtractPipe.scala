@@ -32,6 +32,7 @@ class ExtractPipe(source: Pipe, val expressions: Seq[Expression]) extends PipeWi
   def getSymbolType(item: ReturnItem): Identifier = item.identifier
 
   val symbols: SymbolTable = source.symbols.add(expressions.map(_.identifier):_*)
+  val symbols2: SymbolTable = source.symbols.add(expressions.map(_.identifier):_*)
 
   def createResults(state: QueryState) = {
     source.createResults(state).map(row => {

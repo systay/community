@@ -26,12 +26,7 @@ import java.lang.String
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.cypher.internal.symbols.AnyType
-import org.neo4j.cypher.internal.commands.GreaterThan
 import org.neo4j.cypher.internal.symbols.Identifier
-import org.neo4j.cypher.internal.commands.GreaterThanOrEqual
-import org.neo4j.cypher.internal.commands.Equals
-import org.neo4j.cypher.internal.commands.LessThanOrEqual
-import org.neo4j.cypher.internal.commands.LessThan
 
 abstract sealed class ComparablePredicate(left: Expression, right: Expression) extends Predicate with Comparer {
   def compare(comparisonResult: Int): Boolean

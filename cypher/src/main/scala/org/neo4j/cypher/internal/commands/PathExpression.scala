@@ -30,8 +30,11 @@ import org.neo4j.cypher.internal.symbols.Identifier
 
 case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with PathExtractor with PatternGraphBuilder {
   val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
-  val matchingContext = new MatchingContext(symbols, Seq(), buildPatternGraph(symbols, pathPattern))
-  val interestingPoints = pathPattern.flatMap(_.possibleStartPoints.map(_.name)).distinct
+  val identifiers: Seq[(String, CypherType)] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p => p._1.startsWith("  UNNAMED")))
+
+  val symbols2 = new SymbolTable2(identifiers.toMap)
+  val matchingContext = new MatchingContext(symbols, symbols2, Seq(), buildPatternGraph(symbols, pathPattern))
+  val interestingPoints = pathPattern.flatMap(_.possibleStartPoints.map(_._1)).distinct
 
   def compute(m: Map[String, Any]): Any = {
     val returnNull = declareDependencies(AnyType()).map(_.name).exists(key => m.get(key) match {
@@ -52,7 +55,10 @@ case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with Pat
     matches.map(getPath)
   }
 
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(_.name.startsWith("  UNNAMED")))
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p=> p._1.startsWith("  UNNAMED"))).
+  map {
+    case (id,typ) => Identifier(id,typ)
+  }
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = Seq()
 

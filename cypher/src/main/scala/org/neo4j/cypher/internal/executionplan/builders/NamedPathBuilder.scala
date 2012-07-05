@@ -22,6 +22,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.neo4j.cypher.internal.commands.NamedPath
 import org.neo4j.cypher.internal.pipes.{NamedPathPipe, Pipe}
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.symbols.Identifier
 
 class NamedPathBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
@@ -41,7 +42,7 @@ class NamedPathBuilder extends PlanBuilder {
 
   private def yesOrNo(q: QueryToken[_], p: Pipe) = q match {
     case Unsolved(np: NamedPath) => {
-      p.symbols.satisfies(np.pathPattern.flatMap(_.possibleStartPoints))
+      p.symbols.satisfies(np.pathPattern.flatMap(_.possibleStartPoints.map { case (i,c) => Identifier(i,c)}))
     }
     case _ => false
   }

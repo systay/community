@@ -39,6 +39,7 @@ class PatternRelationship(key: String,
   extends PatternElement(key) {
 
   def identifiers : Seq[Identifier] = Seq(Identifier(startNode.key, NodeType()), Identifier(endNode.key, NodeType()), Identifier(key, RelationshipType()))
+  def identifiers2: Map[String, CypherType] = Map(startNode.key -> NodeType(), endNode.key -> NodeType(), key -> RelationshipType())
 
   def getOtherNode(node: PatternNode) = if (startNode == node) endNode else startNode
 

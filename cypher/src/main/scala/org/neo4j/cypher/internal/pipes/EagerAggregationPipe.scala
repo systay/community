@@ -20,8 +20,8 @@
 package org.neo4j.cypher.internal.pipes
 
 import aggregation.AggregationFunction
-import org.neo4j.cypher.internal.symbols.{AnyType, Identifier, SymbolTable}
-import org.neo4j.cypher.internal.commands.expressions.{Expression, AggregationExpression}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, Identifier, SymbolTable}
+import org.neo4j.cypher.internal.commands.expressions.{Entity, Expression, AggregationExpression}
 import collection.mutable.{Map => MutableMap}
 
 // Eager aggregation means that this pipe will eagerly load the whole resulting sub graphs before starting
@@ -30,16 +30,26 @@ import collection.mutable.{Map => MutableMap}
 class EagerAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], aggregations: Seq[AggregationExpression])
   extends PipeWithSource(source) {
   val symbols: SymbolTable = createSymbols()
+  val symbols2: SymbolTable2 = createSymbols2()
 
   def dependencies: Seq[Identifier] = keyExpressions.flatMap(_.dependencies(AnyType())) ++
                                       aggregations.flatMap(_.dependencies(AnyType()))
 
-  def createSymbols() = {
-    val map = keyExpressions.map(_.identifier.name)
-    val keySymbols = source.symbols.filter(map: _*)
-    val aggregatedColumns = aggregations.map(_.identifier)
+  private def createSymbols() = {
+    val map: Seq[String] = keyExpressions.map(_.identifier.name)
+    val keySymbols: SymbolTable = source.symbols.filter(map: _*)
+    val aggregatedColumns: Seq[Identifier] = aggregations.map(_.identifier)
 
     keySymbols.add(aggregatedColumns: _*)
+  }
+
+  private def createSymbols2() = {
+    val keyIdentifiers = keyExpressions.flatMap {
+      case id:Entity => Some(id.entityName->id.evaluateType(AnyType(), source.symbols2))
+      case _ => None
+    }.toMap
+
+    new SymbolTable2(keyIdentifiers)
   }
 
   def createResults(state: QueryState): Traversable[ExecutionContext] = {

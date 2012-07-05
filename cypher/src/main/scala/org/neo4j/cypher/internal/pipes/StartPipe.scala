@@ -32,7 +32,7 @@ abstract class StartPipe[T <: PropertyContainer](inner: Pipe, name: String, crea
   def identifierType: CypherType
 
   val symbols = inner.symbols.add(Identifier(name, identifierType))
-
+  val symbols2 = inner.symbols2.add(name, identifierType)
 
   def createResults(state: QueryState): Traversable[ExecutionContext] = {
     val map = inner.createResults(state).flatMap(ctx => {

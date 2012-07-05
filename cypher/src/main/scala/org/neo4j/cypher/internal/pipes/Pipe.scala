@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.pipes
 
 import java.lang.String
-import org.neo4j.cypher.internal.symbols.SymbolTable
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, SymbolTable}
 import collection.Iterator
 import org.neo4j.cypher.internal.mutation.UpdateAction
 import org.neo4j.graphdb.{GraphDatabaseService, Transaction}
@@ -39,6 +39,7 @@ trait Pipe {
   def createResults(state: QueryState): Traversable[ExecutionContext]
 
   def symbols: SymbolTable
+  def symbols2: SymbolTable2
 
   def executionPlan(): String
 }
@@ -47,6 +48,7 @@ class NullPipe extends Pipe {
   def createResults(state: QueryState) = Seq(ExecutionContext.empty)
 
   def symbols: SymbolTable = new SymbolTable()
+  def symbols2: SymbolTable2 = new SymbolTable2()
 
   def executionPlan(): String = ""
 }

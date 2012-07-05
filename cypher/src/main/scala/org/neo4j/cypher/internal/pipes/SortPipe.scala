@@ -27,7 +27,7 @@ import collection.mutable.Map
 
 class SortPipe(source: Pipe, sortDescription: List[SortItem]) extends Pipe with Comparer {
   val symbols = source.symbols
-
+  def symbols2 = source.symbols2
   assertDependenciesAreMet()
 
   def createResults(state:QueryState) = source.createResults(state).toList.sortWith((a, b) => compareBy(a, b, sortDescription))
