@@ -45,6 +45,7 @@ case class PropertySetAction(prop: Property, e: Expression)
   }
 
   def identifier = Seq.empty
+  def identifier2 = Seq.empty
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = prop.filter(f) ++ e.filter(f)
 

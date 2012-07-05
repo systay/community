@@ -45,9 +45,7 @@ abstract class MathFunction(arg: Expression) extends Expression with NumericHelp
 
   def identifierDependencies(expectedType: CypherType) = arg.identifierDependencies(NumberType())
 
-  def getType(symbols: SymbolTable2) = {
-    arg.evaluateType(NumberType(), symbols)
-  }
+  def calculateType(symbols: SymbolTable2) = arg.evaluateType(NumberType(), symbols)
 }
 
 trait NumericHelper {
@@ -98,7 +96,7 @@ case class RangeFunction(start: Expression, end: Expression, step: Expression) e
 
   def identifierDependencies(expectedType: CypherType) = mergeDeps(Seq(start.identifierDependencies(NumberType()), end.identifierDependencies(NumberType()), step.identifierDependencies(NumberType())))
 
-  def getType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable2): CypherType = {
     start.evaluateType(NumberType(), symbols)
     end.evaluateType(NumberType(), symbols)
     step.evaluateType(NumberType(), symbols)

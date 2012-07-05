@@ -40,6 +40,7 @@ case class DeletePropertyAction(element: Expression, property: String)
   def dependencies = element.dependencies(MapType())
 
   def identifier = Seq.empty
+  def identifier2 = Seq.empty
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = element.filter(f)
 

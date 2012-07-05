@@ -50,5 +50,5 @@ case class Property(entity: String, property: String) extends CastableExpression
 
   def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = Map(entity -> MapType())
 
-  def getType(symbols: SymbolTable2) = AnyType()
+  def calculateType(symbols: SymbolTable2) = AnyType()
 }

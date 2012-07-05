@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.mutation
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, Identifier}
+import org.neo4j.cypher.internal.symbols.{CypherType, SymbolTable2, Identifier}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.cypher.internal.commands.expressions.Expression
@@ -76,7 +76,6 @@ case class RelateAction(links: RelateLink*) extends UpdateAction {
     } else {                                                            // let's build one
       throw new ThisShouldNotHappenError("Andres", "There was something in that result list I don't know how to handle.")
     }
-
   }
 
   private def traverseNextStep(nextSteps: Seq[(String, PropertyContainer)], oldContext: ExecutionContext): ExecutionContext = {
@@ -138,6 +137,7 @@ case class RelateAction(links: RelateLink*) extends UpdateAction {
   def filter(f: (Expression) => Boolean): Seq[Expression] = links.flatMap(_.filter(f)).distinct
 
   def identifier: Seq[Identifier] = links.flatMap(_.identifier).distinct
+  def identifier2: Seq[(String,CypherType)] = links.flatMap(_.identifier2).distinct
 
   def rewrite(f: (Expression) => Expression): UpdateAction = RelateAction(links.map(_.rewrite(f)): _*)
 

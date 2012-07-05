@@ -25,7 +25,7 @@ import org.scalatest.junit.JUnitSuite
 import org.neo4j.cypher.internal.commands.expressions.Entity
 import org.neo4j.cypher.internal.commands.SortItem
 import org.neo4j.cypher.internal.symbols.{Identifier, SymbolTable}
-import collection.mutable.Map
+import collection.mutable.{Map=>MutableMap}
 
 class SortPipeTest extends JUnitSuite {
   @Test def emptyInIsEmptyOut() {
@@ -36,67 +36,63 @@ class SortPipeTest extends JUnitSuite {
   }
 
   @Test def simpleSortingIsSupported() {
-    val source = new FakePipe(List(Map("x" -> "B"), Map("x" -> "A")))
+    val list:Seq[MutableMap[String, Any]] = List(MutableMap("x" -> "B"), MutableMap("x" -> "A"))
+    val source = new FakePipe(list)
     val sortPipe = new SortPipe(source, List(SortItem(Entity("x"), true)))
 
-    assertEquals(List(Map("x" -> "A"), Map("x" -> "B")), sortPipe.createResults(QueryState()).toList)
+    assertEquals(List(MutableMap("x" -> "A"), MutableMap("x" -> "B")), sortPipe.createResults(QueryState()).toList)
   }
 
   @Test def sortByTwoColumns() {
     val source = new FakePipe(List(
-      Map("x" -> "B", "y" -> 20),
-      Map("x" -> "A", "y" -> 100),
-      Map("x" -> "B", "y" -> 10)))
+      MutableMap("x" -> "B", "y" -> 20),
+      MutableMap("x" -> "A", "y" -> 100),
+      MutableMap("x" -> "B", "y" -> 10)))
 
     val sortPipe = new SortPipe(source, List(
       SortItem(Entity("x"), true),
       SortItem(Entity("y"), true)))
 
     assertEquals(List(
-      Map("x" -> "A", "y" -> 100),
-      Map("x" -> "B", "y" -> 10),
-      Map("x" -> "B", "y" -> 20)), sortPipe.createResults(QueryState()).toList)
+      MutableMap("x" -> "A", "y" -> 100),
+      MutableMap("x" -> "B", "y" -> 10),
+      MutableMap("x" -> "B", "y" -> 20)), sortPipe.createResults(QueryState()).toList)
   }
 
   @Test def sortByTwoColumnsWithOneDescending() {
     val source = new FakePipe(List(
-      Map("x" -> "B", "y" -> 20),
-      Map("x" -> "A", "y" -> 100),
-      Map("x" -> "B", "y" -> 10)))
+      MutableMap("x" -> "B", "y" -> 20),
+      MutableMap("x" -> "A", "y" -> 100),
+      MutableMap("x" -> "B", "y" -> 10)))
 
     val sortPipe = new SortPipe(source, List(
       SortItem(Entity("x"), true),
       SortItem(Entity("y"), false)))
 
     assertEquals(List(
-      Map("x" -> "A", "y" -> 100),
-      Map("x" -> "B", "y" -> 20),
-      Map("x" -> "B", "y" -> 10)), sortPipe.createResults(QueryState()).toList)
+      MutableMap("x" -> "A", "y" -> 100),
+      MutableMap("x" -> "B", "y" -> 20),
+      MutableMap("x" -> "B", "y" -> 10)), sortPipe.createResults(QueryState()).toList)
   }
 
   @Test def shouldHandleSortingWithNullValues() {
-    val source = new FakePipe(List(
-      Map("y" -> 1),
-      Map("y" -> null),
-      Map("y" -> 2)))
+    val list: Seq[MutableMap[String, Any]] = List(
+      MutableMap("y" -> 1),
+      MutableMap("y" -> null),
+      MutableMap("y" -> 2))
+    val source = new FakePipe(list)
 
     val sortPipe = new SortPipe(source, List(SortItem(Entity("y"), true)))
 
     assertEquals(List(
-      Map("y" -> 1),
-      Map("y" -> 2),
-      Map("y" -> null)), sortPipe.createResults(QueryState()).toList)
+      MutableMap("y" -> 1),
+      MutableMap("y" -> 2),
+      MutableMap("y" -> null)), sortPipe.createResults(QueryState()).toList)
   }
 
 }
 
-class FakePipe(data: Seq[Map[String, Any]], val symbols: SymbolTable) extends Pipe {
-  def this(data: Seq[Map[String, Any]]) = this(data, new FakeSymbolTable())
 
-  def createResults(state: QueryState): Traversable[ExecutionContext] = data.map(m => ExecutionContext(m))
-
-  def executionPlan(): String = "FAKE"
-}
 
 class FakeSymbolTable extends SymbolTable() {
   override def assertHas(expected: Identifier) {}

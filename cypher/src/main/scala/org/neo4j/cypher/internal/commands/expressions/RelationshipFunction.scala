@@ -44,7 +44,7 @@ case class RelationshipFunction(path: Expression) extends NullInNullOutExpressio
 
   def identifierDependencies(expectedType: CypherType) = path.identifierDependencies(PathType())
 
-  def getType(symbols: SymbolTable2) = {
+  def calculateType(symbols: SymbolTable2) = {
     path.evaluateType(PathType(), symbols)
     new IterableType(RelationshipType())
   }

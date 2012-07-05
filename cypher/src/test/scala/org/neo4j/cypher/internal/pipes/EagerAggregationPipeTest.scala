@@ -28,14 +28,14 @@ import expressions._
 import org.scalatest.junit.JUnitSuite
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.cypher.internal.symbols._
-import collection.mutable.Map
+import collection.mutable.{Map=>MutableMap}
 import java.lang.{Iterable => JIterable}
 
 class EagerAggregationPipeTest extends JUnitSuite {
   @Test def shouldReturnColumnsFromReturnItems() {
     val source = new FakePipe(List(), createSymbolTableFor("name"))
 
-    val returnItems = List(Entity("name"))
+    val returnItems = createReturnItemsFor("name")
     val grouping = List(CountStar())
     val aggregationPipe = new EagerAggregationPipe(source, returnItems, grouping)
 
@@ -44,10 +44,13 @@ class EagerAggregationPipeTest extends JUnitSuite {
       aggregationPipe.symbols.identifiers)
   }
 
+
+  private def createReturnItemsFor(names:String*): Map[String, Entity] = names.map(x => x->Entity(x)).toMap
+
   @Test(expected = classOf[SyntaxException]) def shouldThrowSemanticException() {
     val source = new FakePipe(List(), createSymbolTableFor("extractReturnItems"))
 
-    val returnItems = List(Entity("name"))
+    val returnItems = createReturnItemsFor("name")
     val grouping = List(Count(Entity("none-existing-identifier")))
     new EagerAggregationPipe(source, returnItems, grouping)
   }
@@ -59,7 +62,7 @@ class EagerAggregationPipeTest extends JUnitSuite {
       Map("name" -> "Michael", "age" -> 36),
       Map("name" -> "Michael", "age" -> 31)), createSymbolTableFor("name"))
 
-    val returnItems = List(Entity("name"))
+    val returnItems = createReturnItemsFor("name")
     val grouping = List(CountStar())
     val aggregationPipe = new EagerAggregationPipe(source, returnItems, grouping)
 
@@ -72,7 +75,7 @@ class EagerAggregationPipeTest extends JUnitSuite {
   @Test def shouldReturnZeroForEmptyInput() {
     val source = new FakePipe(List(), createSymbolTableFor("name"))
 
-    val returnItems = List()
+    val returnItems = createReturnItemsFor()
     val grouping = List(CountStar(), Avg(Property("name", "age")), Collect(Property("name", "age")), Count(Property("name", "age")), Max(Property("name", "age")), Min(Property("name", "age")), Sum(Property("name", "age")))
     val aggregationPipe = new EagerAggregationPipe(source, returnItems, grouping)
 
@@ -87,14 +90,14 @@ class EagerAggregationPipeTest extends JUnitSuite {
       Map("name" -> "Michael", "age" -> 36),
       Map("name" -> "Michael", "age" -> 31)), createSymbolTableFor("name"))
 
-    val returnItems = List()
+    val returnItems = createReturnItemsFor()
     val grouping = List(Count(Entity("name")))
     val aggregationPipe = new EagerAggregationPipe(source, returnItems, grouping)
 
     assertEquals(List(Map("count(name)" -> 3)), aggregationPipe.createResults(QueryState()).toList)
   }
 
-  private def createSymbolTableFor(name: String) = new SymbolTable(Identifier(name, NodeType()))
+  private def createSymbolTableFor(name: String) = name->NodeType()
 
-  private def getResults(p: Pipe): JIterable[Map[String, Any]] = p.createResults(QueryState()).map(_.m).toIterable.asJava
+  private def getResults(p: Pipe): JIterable[Map[String, Any]] = p.createResults(QueryState()).map(_.m.toMap).toIterable.asJava
 }

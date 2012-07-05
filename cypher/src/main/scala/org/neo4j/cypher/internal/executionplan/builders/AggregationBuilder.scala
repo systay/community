@@ -19,38 +19,29 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.neo4j.cypher.internal.pipes.{ExtractPipe, EagerAggregationPipe}
+import org.neo4j.cypher.internal.pipes.{Pipe, ExtractPipe, EagerAggregationPipe}
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
 import org.neo4j.cypher.internal.commands.expressions.{CachedExpression, AggregationExpression, Expression}
 
 class AggregationBuilder extends PlanBuilder with ExpressionExtractor {
   def apply(plan: ExecutionPlanInProgress) = {
-
     val (keyExpressionsToExtract, _) = getExpressions(plan)
 
     val newPlan = ExtractBuilder.extractIfNecessary(plan, keyExpressionsToExtract)
 
-    val (
-      keyExpressions: Seq[Expression],
-      aggregationExpressions: Seq[AggregationExpression]
-      ) = getExpressions(newPlan)
+    val x = getExpressions(newPlan)
+    val namedKeyExpressions: Map[String, Expression] = x._1
+    val aggregationExpressions: Seq[AggregationExpression] = x._2
 
-    val pipe = new EagerAggregationPipe(newPlan.pipe, keyExpressions, aggregationExpressions)
+    val pipe = new EagerAggregationPipe(newPlan.pipe, namedKeyExpressions, aggregationExpressions)
 
     val query = newPlan.query
 
-    val notKeyAndNotAggregate = query.returns.flatMap(_.token.expressions(pipe.symbols)).filterNot(keyExpressions.contains)
+    val allReturnExpressions = query.returns.flatMap(_.token.expressions(pipe.symbols2))
 
-    val resultPipe = if (notKeyAndNotAggregate.isEmpty) {
-      pipe
-    } else {
+    val notKeyAndNotAggregate = allReturnExpressions.filterNot(namedKeyExpressions.values.toSeq.contains)
 
-      val rewritten = notKeyAndNotAggregate.map(e => {
-        e.rewrite(removeAggregates)
-      })
-
-      new ExtractPipe(pipe, rewritten)
-    }
+    val resultPipe = extractAggregatedValues(notKeyAndNotAggregate, pipe)
 
     val resultQ = query.copy(
       aggregation = query.aggregation.map(_.solve),
@@ -59,6 +50,17 @@ class AggregationBuilder extends PlanBuilder with ExpressionExtractor {
     ).rewrite(removeAggregates)
 
     newPlan.copy(query = resultQ, pipe = resultPipe)
+  }
+
+
+  def extractAggregatedValues(notKeyAndNotAggregate: Seq[(String, Expression)], pipe: EagerAggregationPipe): Pipe = if (notKeyAndNotAggregate.isEmpty) pipe
+  else {
+
+    val rewritten: Map[String, Expression] = notKeyAndNotAggregate.map {
+      case (name,expression) => name -> expression.rewrite(removeAggregates)
+    }.toMap
+
+    new ExtractPipe(pipe, rewritten)
   }
 
   private def removeAggregates(e: Expression) = e match {
@@ -79,14 +81,14 @@ class AggregationBuilder extends PlanBuilder with ExpressionExtractor {
 }
 
 trait ExpressionExtractor {
-  def getExpressions(plan: ExecutionPlanInProgress): (Seq[Expression], Seq[AggregationExpression]) = {
-    val keys = plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols)).filterNot(_.containsAggregate)
-    val returnAggregates = plan.query.aggregation.map(_.token)
+  def getExpressions(plan: ExecutionPlanInProgress): (Map[String, Expression], Seq[AggregationExpression]) = {
+    val keys = plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols2)).filterNot(tuple => tuple._2.containsAggregate)
 
-    val eventualSortAggregation = plan.query.sort.filter(_.token.expression.isInstanceOf[AggregationExpression]).map(_.token.expression.asInstanceOf[AggregationExpression])
+    val returnAggregates: Seq[AggregationExpression] = plan.query.aggregation.map(_.token)
+    val sortAggregates: Seq[AggregationExpression] = plan.query.sort.filter(_.token.expression.isInstanceOf[AggregationExpression]).map(_.token.expression.asInstanceOf[AggregationExpression])
 
-    val aggregates = eventualSortAggregation ++ returnAggregates.map(_.asInstanceOf[AggregationExpression])
+    val aggregates: Seq[AggregationExpression] = sortAggregates ++ returnAggregates
 
-    (keys, aggregates)
+    (keys.toMap, aggregates)
   }
 }

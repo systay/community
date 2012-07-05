@@ -198,7 +198,7 @@ class ErrorMessagesTest extends ExecutionEngineHelper with Assertions with Strin
 
   private def expectError[T <: CypherException](query: String, expectedError: String)(implicit manifest: Manifest[T]): T = {
     val error = intercept[T](engine.execute(query).toList)
-
+    engine.execute(query).toList
     val s = """
 Wrong error message produced: %s
 Expected: %s

@@ -50,7 +50,7 @@ case class ParameterExpression(parameterName: String) extends CastableExpression
 
   def identifierDependencies(expectedType: CypherType) = Map()
 
-  def getType(symbols: SymbolTable2) = AnyType()
+  def calculateType(symbols: SymbolTable2) = AnyType()
 }
 
 case class ParameterValue(value: Any)

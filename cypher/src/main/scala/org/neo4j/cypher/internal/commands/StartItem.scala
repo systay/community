@@ -82,6 +82,7 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
   def dependencies = propDependencies(props)
 
   def identifier = Seq(Identifier(key, NodeType()))
+  def identifier2 = Seq(key -> NodeType())
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = props.values.flatMap(_.filter(f)).toSeq
 
@@ -128,6 +129,7 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
   }
 
   def identifier = Seq(Identifier(key, RelationshipType()))
+  def identifier2 = Seq(key-> RelationshipType())
 
   def deps = {
     val fromDeps = deps(from._2)

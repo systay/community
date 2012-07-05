@@ -65,6 +65,7 @@ case class ForeachAction(collection: Expression, id: String, actions: Seq[Update
   def rewrite(f: (Expression) => Expression) = ForeachAction(f(collection), id, actions.map(_.rewrite(f)))
 
   def identifier = Seq.empty
+  def identifier2 = Seq.empty
 
   def deps = {
 

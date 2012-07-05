@@ -144,6 +144,15 @@ class SymbolTable2Test extends Assertions {
     assert(returnType === new IterableType(StringType()))
   }
 
+  @Test def covariance() {
+    //given
+    val actual = new IterableType(NodeType())
+    val expected = new IterableType(MapType())
+
+    //then
+    assert(expected.isAssignableFrom(actual))
+  }
+
 
   def createSymbols(elems: (String, CypherType)*): SymbolTable2 = {
     new SymbolTable2(elems.toMap)
@@ -163,5 +172,5 @@ class FakeExpression(typ: CypherType) extends Expression {
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = null
 
-  def getType(symbols: SymbolTable2) = typ
+  def calculateType(symbols: SymbolTable2) = typ
 }

@@ -60,5 +60,5 @@ case class BreakingExpression() extends Expression {
 
   def identifierDependencies(expectedType: CypherType) = Map()
 
-  def getType(symbols: SymbolTable2): CypherType = AnyType()
+  def calculateType(symbols: SymbolTable2): CypherType = AnyType()
 }

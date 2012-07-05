@@ -45,5 +45,5 @@ case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) 
 
   def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(MapType())
 
-  def getType(symbols: SymbolTable2): CypherType = null
+  def calculateType(symbols: SymbolTable2): CypherType = LongType()
 }

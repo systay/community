@@ -27,16 +27,17 @@ import collection.mutable.{Map => MutableMap}
 // Eager aggregation means that this pipe will eagerly load the whole resulting sub graphs before starting
 // to emit aggregated results.
 // Cypher is lazy until it has to - this pipe makes stops the lazyness
-class EagerAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], aggregations: Seq[AggregationExpression])
+class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Expression], aggregations: Seq[AggregationExpression])
   extends PipeWithSource(source) {
+  def oldKeyExpressions = keyExpressions.values.toSeq
   val symbols: SymbolTable = createSymbols()
   val symbols2: SymbolTable2 = createSymbols2()
 
-  def dependencies: Seq[Identifier] = keyExpressions.flatMap(_.dependencies(AnyType())) ++
+  def dependencies: Seq[Identifier] = oldKeyExpressions.flatMap(_.dependencies(AnyType())) ++
                                       aggregations.flatMap(_.dependencies(AnyType()))
 
   private def createSymbols() = {
-    val map: Seq[String] = keyExpressions.map(_.identifier.name)
+    val map: Seq[String] = oldKeyExpressions.map(_.identifier.name)
     val keySymbols: SymbolTable = source.symbols.filter(map: _*)
     val aggregatedColumns: Seq[Identifier] = aggregations.map(_.identifier)
 
@@ -55,7 +56,7 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], ag
   def createResults(state: QueryState): Traversable[ExecutionContext] = {
     // This is the temporary storage used while the aggregation is going on
     val result = MutableMap[NiceHasher, (ExecutionContext,Seq[AggregationFunction])]()
-    val keyNames = keyExpressions.map(_.identifier.name)
+    val keyNames = oldKeyExpressions.map(_.identifier.name)
     val aggregationNames = aggregations.map(_.identifier.name)
 
     source.createResults(state).foreach(ctx => {
@@ -91,7 +92,7 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Seq[Expression], ag
     Traversable(ExecutionContext(newMap))
   }
 
-  override def executionPlan(): String = source.executionPlan() + "\r\n" + "EagerAggregation( keys: [" + keyExpressions.map(_.identifier.name).mkString(", ") + "], aggregates: [" + aggregations.mkString(", ") + "])"
+  override def executionPlan(): String = source.executionPlan() + "\r\n" + "EagerAggregation( keys: [" + oldKeyExpressions.map(_.identifier.name).mkString(", ") + "], aggregates: [" + aggregations.mkString(", ") + "])"
 
-  def deps = mergeDeps(keyExpressions.map(_.identifierDependencies(AnyType())) ++ aggregations.map(_.identifierDependencies(AnyType())))
+  def deps = mergeDeps(oldKeyExpressions.map(_.identifierDependencies(AnyType())) ++ aggregations.map(_.identifierDependencies(AnyType())))
 }

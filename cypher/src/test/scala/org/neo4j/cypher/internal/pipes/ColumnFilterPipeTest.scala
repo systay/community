@@ -23,7 +23,7 @@ import org.junit.Assert
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 import org.neo4j.cypher.internal.commands.ReturnItem
-import org.neo4j.cypher.internal.symbols.{Identifier, NodeType, SymbolTable}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, Identifier, NodeType, SymbolTable}
 import collection.mutable.Map
 import org.neo4j.cypher.internal.commands.expressions.Entity
 
@@ -31,12 +31,11 @@ class ColumnFilterPipeTest extends JUnitSuite {
   @Test def shouldReturnColumnsFromReturnItems() {
     val col = "extractReturnItems"
     val returnItems = List(ReturnItem(Entity(col), col))
-    val colIdentifier = Identifier(col, NodeType())
-    val source = new FakePipe(List(Map("x" -> "x", col -> "bar")), new SymbolTable(colIdentifier))
+    val source = new FakePipe(List(Map("x" -> "x", col -> "bar")), col -> NodeType())
 
     val columnPipe = new ColumnFilterPipe(source, returnItems, true)
 
-    Assert.assertEquals(Seq(colIdentifier), columnPipe.symbols.identifiers)
+    Assert.assertEquals(Seq(col -> NodeType()), columnPipe.symbols.identifiers)
     Assert.assertEquals(List(Map(col -> "bar")), columnPipe.createResults(QueryState()).toList)
   }
 }

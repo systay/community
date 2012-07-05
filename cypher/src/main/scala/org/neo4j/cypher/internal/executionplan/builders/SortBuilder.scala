@@ -21,12 +21,13 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.SortPipe
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.commands.expressions.Expression
 
 class SortBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
-    val sortExpressionsToExtract = plan.query.sort.map(_.token).map(_.expression)
+    val sortExpressionsToExtract: Seq[(String, Expression)] = plan.query.sort.map(token => token.token.expression.toString -> token.token.expression)
 
-    val newPlan = ExtractBuilder.extractIfNecessary(plan, sortExpressionsToExtract)
+    val newPlan = ExtractBuilder.extractIfNecessary(plan, sortExpressionsToExtract.toMap)
 
     val q = newPlan.query
     val sortItems = q.sort.map(_.token)

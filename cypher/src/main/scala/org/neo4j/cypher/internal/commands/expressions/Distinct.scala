@@ -40,7 +40,7 @@ case class Distinct(innerAggregator: AggregationExpression, expression: Expressi
     case _                            => f(Distinct(innerAggregator, expression.rewrite(f)))
   }
 
-  def getType(symbols: SymbolTable2): CypherType = innerAggregator.getType(symbols)
+  def calculateType(symbols: SymbolTable2): CypherType = innerAggregator.getType(symbols)
 
   override def identifierDependencies(expectedType: CypherType) = mergeDeps(innerAggregator.identifierDependencies(AnyType()), expression.identifierDependencies(AnyType()))
 }

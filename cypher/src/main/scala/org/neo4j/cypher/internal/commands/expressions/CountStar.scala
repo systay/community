@@ -42,5 +42,5 @@ case class CountStar() extends AggregationExpression {
 
   def identifierDependencies(expectedType: CypherType) = Map()
 
-  def getType(symbols: SymbolTable2): CypherType = LongType()
+  def calculateType(symbols: SymbolTable2): CypherType = LongType()
 }

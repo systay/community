@@ -21,28 +21,34 @@ package org.neo4j.cypher.internal.pipes
 
 import collection.Seq
 import org.neo4j.cypher.internal.commands.ReturnItem
-import org.neo4j.cypher.internal.symbols.{AnyType, SymbolTable, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, SymbolTable, Identifier}
 import org.neo4j.cypher.internal.commands.expressions.Expression
 
 //This class will extract properties and other stuff to make the maps
 //easy to work with for other pipes
-class ExtractPipe(source: Pipe, val expressions: Seq[Expression]) extends PipeWithSource(source) {
-  def dependencies = expressions.flatMap(_.dependencies(AnyType()))
+class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extends PipeWithSource(source) {
+  def dependencies = expressions.values.flatMap(_.dependencies(AnyType())).toSeq
 
   def getSymbolType(item: ReturnItem): Identifier = item.identifier
 
-  val symbols: SymbolTable = source.symbols.add(expressions.map(_.identifier):_*)
-  val symbols2: SymbolTable = source.symbols.add(expressions.map(_.identifier):_*)
+  val symbols: SymbolTable = source.symbols.add(expressions.values.toSeq.map(_.identifier):_*)
+
+  val symbols2: SymbolTable2 = source.symbols2.add(expressions.map {
+    case (name, expression) => name -> expression.evaluateType(AnyType(), source.symbols2)
+  })
 
   def createResults(state: QueryState) = {
-    source.createResults(state).map(row => {
-      expressions.foreach( exp => row += exp.identifier.name -> exp(row) )
-      row
+    source.createResults(state).map(subgraph => {
+      expressions.foreach {
+        case (name, expression) => subgraph += name -> expression(subgraph)
+      }
+
+      subgraph
     })
   }
 
-  override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols.keys.mkString(",") + "] => [" + expressions.map(_.identifier.name).mkString(", ") + "])"
+  override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols.keys.mkString(",") + "] => [" + expressions.keys.mkString(", ") + "])"
 
-  def deps = mergeDeps(expressions.map(_.identifierDependencies(AnyType())))
+  def deps = null//mergeDeps(expressions.map(_.identifierDependencies(AnyType())))
 }
 

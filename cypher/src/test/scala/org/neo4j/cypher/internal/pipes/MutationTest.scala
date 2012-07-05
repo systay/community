@@ -143,5 +143,5 @@ case class InjectValue(value:Any, identifier:Identifier) extends Expression {
 
   def identifierDependencies(expectedType: CypherType) = mutable.Map()
 
-  def getType(symbols: SymbolTable2): CypherType = identifier.typ
+  def calculateType(symbols: SymbolTable2): CypherType = identifier.typ
 }

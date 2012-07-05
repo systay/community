@@ -40,7 +40,7 @@ case class RelationshipTypeFunction(relationship: Expression) extends NullInNull
 
   def identifierDependencies(expectedType: CypherType) = relationship.identifierDependencies(RelationshipType())
 
-  def getType(symbols: SymbolTable2) = {
+  def calculateType(symbols: SymbolTable2) = {
     relationship.evaluateType(RelationshipType(), symbols)
     RelationshipType()
   }

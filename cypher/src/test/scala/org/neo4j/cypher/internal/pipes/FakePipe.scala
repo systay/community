@@ -17,33 +17,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.cypher.internal.commands.expressions
+package org.neo4j.cypher.internal.pipes
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, Identifier, SymbolTable, CypherType}
 import collection.Map
 
-case class Literal(v: Any) extends Expression {
-  def compute(m: Map[String, Any]) = v
+class FakePipe(data: Seq[Map[String, Any]], identifiers: (String, CypherType)*) extends Pipe {
+  val symbols: SymbolTable = new SymbolTable(identifiers.map {
+    case (name, typ) => Identifier(name, typ)
+  }: _*)
+  val symbols2: SymbolTable2 = new SymbolTable2(identifiers.toMap)
 
-  override def apply(m: Map[String, Any]): Any = compute(m)
+  def createResults(state: QueryState): Traversable[ExecutionContext] = data.map(m => ExecutionContext(collection.mutable.Map(m.toSeq: _*)))
 
-  val identifier = Identifier(name, CypherType.fromJava(v))
-
-  private def name = v match {
-    case null => "null"
-    case x    => x.toString
-  }
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
-
-  def rewrite(f: (Expression) => Expression) = f(this)
-
-  def filter(f: (Expression) => Boolean) = if (f(this))
-    Seq(this)
-  else
-    Seq()
-
-  def identifierDependencies(expectedType: CypherType) = Map()
-
-  def calculateType(symbols: SymbolTable2): CypherType = CypherType.fromJava(v)
+  def executionPlan(): String = "FAKE"
 }

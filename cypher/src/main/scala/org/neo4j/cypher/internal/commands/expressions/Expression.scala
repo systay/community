@@ -47,19 +47,10 @@ with Typed {
 
   override def toString() = identifier.name
 
-  def getType(symbols: SymbolTable2): CypherType
-
-
-  /*
-  When you don't care what type this expression has, you just want to make sure
-  it gets a chance to run it's internal typechecks use this method
-   */
-  def checkTypes(symbols:SymbolTable2) {
-    evaluateType(AnyType(), symbols)
-  }
+  protected def calculateType(symbols: SymbolTable2): CypherType
 
   def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2): T = {
-    val t = getType(symbols)
+    val t = calculateType(symbols)
 
     if (!expectedType.isAssignableFrom(t)) {
       throw new CypherTypeException("expected: %s but got %s".format(expectedType, t))
@@ -73,7 +64,23 @@ with Typed {
 Typed is the trait all classes that have a return type, or have dependencies on an expressions' type.
  */
 trait Typed {
+  /*
+  Checks if internal type dependencies are met, checks if the expected type is valid,
+  and returns the actual type of the expression
+   */
   def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2): T
+
+  /*
+  Checks if internal type dependencies are met
+   */
+  def checkTypes(symbols: SymbolTable2) {
+    evaluateType(AnyType(), symbols)
+  }
+
+  /*
+ Checks if internal type dependencies are met and returns the actual type of the expression
+  */
+  def getType(symbols: SymbolTable2):CypherType = evaluateType(AnyType(), symbols)
 }
 
 trait HasTypedExpressions {
@@ -90,7 +97,7 @@ case class CachedExpression(key:String, identifier:Identifier) extends CastableE
 
   def identifierDependencies(expectedType: CypherType) = Map()
 
-  def getType(symbols: SymbolTable2) = identifier.typ
+  def calculateType(symbols: SymbolTable2) = identifier.typ
 }
 
 abstract class Arithmetics(left: Expression, right: Expression)
@@ -129,7 +136,7 @@ abstract class Arithmetics(left: Expression, right: Expression)
 
   def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
 
-  def getType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable2): CypherType = {
     left.evaluateType(NumberType(), symbols)
     right.evaluateType(NumberType(), symbols)
     NumberType()
@@ -141,7 +148,7 @@ trait ExpressionWInnerExpression extends Expression {
   def myType:CypherType
   def expectedInnerType:CypherType
 
-  def getType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable2): CypherType = {
     inner.evaluateType(expectedInnerType, symbols)
 
     myType

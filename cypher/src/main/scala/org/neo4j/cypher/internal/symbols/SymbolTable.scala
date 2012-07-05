@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.symbols
 
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
 import org.neo4j.cypher.internal.commands.expressions.Expression
-
+import collection.Map
 
 class SymbolTable(val identifiers: Identifier*) {
   assertNoDuplicatesExist()
@@ -128,7 +128,10 @@ class SymbolTable2(val identifiers: Map[String, CypherType]) {
 
   def evaluateType[T <: CypherType](name:String, expectedType: T):T = identifiers.get(name) match {
     case Some(typ) if (expectedType.isAssignableFrom(typ)) => typ.asInstanceOf[T]
-    case Some(typ) => throw new CypherTypeException("Expected identifier `%s` to be of type %s, but it is of type %s.".format(name, expectedType, typ))
-    case None => throw new CypherTypeException("Need an identifier named `%s` but no such found")
+    case Some(typ) => throw new CypherTypeException(
+      """Expected identifier `%s` to be of type:
+%s, but it is of type:
+%s.""".format(name, expectedType, typ))
+    case None => throw new CypherTypeException("Need an identifier named `%s` but no such found".format(name))
   }
 }

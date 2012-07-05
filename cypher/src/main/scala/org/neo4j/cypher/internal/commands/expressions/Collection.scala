@@ -41,7 +41,7 @@ case class Collection(expressions: Expression*) extends CastableExpression {
 
   def identifierDependencies(expectedType: CypherType) = mergeDeps(expressions.map(_.identifierDependencies(ScalarType())))
 
-  def getType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable2): CypherType = {
     expressions.map(_.evaluateType(AnyType(), symbols)) match {
 
       case Seq() => AnyIterableType()

@@ -39,5 +39,5 @@ case class LastFunction(collection: Expression) extends NullInNullOutExpression(
 
   def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
 
-  def getType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols).iteratedType
+  def calculateType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols).iteratedType
 }

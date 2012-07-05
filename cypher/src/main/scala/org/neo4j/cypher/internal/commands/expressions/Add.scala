@@ -54,7 +54,7 @@ case class Add(a: Expression, b: Expression) extends Expression {
 
   def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
 
-  def getType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable2): CypherType = {
     val aT = a.evaluateType(AnyType(), symbols)
     val bT = a.evaluateType(AnyType(), symbols)
 

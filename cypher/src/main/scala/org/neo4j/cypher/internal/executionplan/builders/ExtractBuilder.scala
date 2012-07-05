@@ -25,7 +25,10 @@ import org.neo4j.cypher.internal.commands.expressions.{CachedExpression, Express
 
 class ExtractBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
-    val expressions = plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols)).distinct
+
+    val expressions: Map[String, Expression] =
+      plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols2)).toMap
+
     ExtractBuilder.extractIfNecessary(plan, expressions)
   }
 
@@ -39,8 +42,8 @@ class ExtractBuilder extends PlanBuilder {
 
 object ExtractBuilder {
 
-  def extractIfNecessary(plan: ExecutionPlanInProgress, expressions: Seq[Expression]): (ExecutionPlanInProgress) = {
-    val missing = plan.pipe.symbols.missingExpressions(expressions)
+  def extractIfNecessary(plan: ExecutionPlanInProgress, expressions: Map[String, Expression]): (ExecutionPlanInProgress) = {
+    val missing = plan.pipe.symbols.missingExpressions(expressions.values.toSeq)
     val query = plan.query
     val pipe = plan.pipe
 

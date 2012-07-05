@@ -35,5 +35,5 @@ case class Null() extends Expression {
 
   def identifierDependencies(expectedType: CypherType) = Map()
 
-  def getType(symbols: SymbolTable2): CypherType = ScalarType()
+  def calculateType(symbols: SymbolTable2): CypherType = ScalarType()
 }

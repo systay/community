@@ -48,7 +48,7 @@ case class FilterFunction(collection: Expression, id: String, predicate: Predica
     mergedDeps.filterKeys(_ != id)
   }
 
-  def getType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable2): CypherType = {
     val t = collection.evaluateType(AnyIterableType(), symbols)
 
     predicate.checkTypes(symbols.add(id, t.iteratedType))

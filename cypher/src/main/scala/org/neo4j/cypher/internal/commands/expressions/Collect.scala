@@ -33,5 +33,5 @@ case class Collect(anInner: Expression) extends AggregationWithInnerExpression(a
 
   def rewrite(f: (Expression) => Expression) = f(Collect(anInner.rewrite(f)))
 
-  def getType(symbols: SymbolTable2) = new IterableType(anInner.evaluateType(AnyType(), symbols))
+  def calculateType(symbols: SymbolTable2) = new IterableType(anInner.evaluateType(AnyType(), symbols))
 }

@@ -38,5 +38,5 @@ case class TailFunction(collection: Expression) extends NullInNullOutExpression(
 
   def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
 
-  def getType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols)
+  def calculateType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols)
 }

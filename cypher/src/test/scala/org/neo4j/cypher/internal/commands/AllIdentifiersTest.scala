@@ -28,20 +28,24 @@ class AllIdentifiersTest extends Assertions {
   val x = AllIdentifiers()
 
   @Test def nodes() {
-    val symbols = new SymbolTable(Identifier("n", NodeType()))
+    val symbols = getSymbols("n" -> NodeType())
 
     assert(x.expressions(symbols) === Seq(Entity("n")))
   }
 
   @Test def relationships() {
-    val symbols = new SymbolTable(Identifier("r", RelationshipType()))
+    val symbols = getSymbols("r" -> RelationshipType())
 
     assert(x.expressions(symbols) === Seq(Entity("r")))
   }
 
   @Test def paths() {
-    val symbols = new SymbolTable(Identifier("p", PathType()))
+    val symbols = getSymbols("p" -> PathType())
 
     assert(x.expressions(symbols) === Seq(Entity("p")))
+  }
+
+  private def getSymbols(k: (String, CypherType)*): SymbolTable2 = {
+    new SymbolTable2(k.toMap)
   }
 }

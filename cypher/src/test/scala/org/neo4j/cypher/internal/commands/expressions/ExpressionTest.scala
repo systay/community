@@ -113,5 +113,5 @@ class TestExpression extends Expression {
   find in the symboltable to be able to run successfully.*/
   def identifierDependencies(expectedType: CypherType) = Map()
 
-  def getType(symbols: SymbolTable2): CypherType = null
+  def calculateType(symbols: SymbolTable2): CypherType = null
 }

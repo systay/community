@@ -33,5 +33,5 @@ case class Max(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def rewrite(f: (Expression) => Expression) = f(Max(anInner.rewrite(f)))
 
-  def getType(symbols: SymbolTable2): CypherType = anInner.evaluateType(AnyIterableType(), symbols).iteratedType
+  def calculateType(symbols: SymbolTable2): CypherType = anInner.evaluateType(AnyIterableType(), symbols).iteratedType
 }

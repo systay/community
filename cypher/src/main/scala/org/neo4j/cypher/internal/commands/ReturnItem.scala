@@ -22,22 +22,17 @@ package org.neo4j.cypher.internal.commands
 import expressions.{Entity, Expression}
 import org.neo4j.cypher.internal.pipes.Dependant
 import org.neo4j.cypher.internal.symbols._
-import collection.Map
+import collection.{immutable, Map}
 
 abstract class ReturnColumn extends Dependant {
-  def expressions(symbols: SymbolTable2): Seq[Expression]
+  def expressions(symbols: SymbolTable2): Map[String,Expression]
 
   def name: String
   def deps:Map[String,CypherType]
 }
 
 case class AllIdentifiers() extends ReturnColumn {
-  def expressions(symbols: SymbolTable2) = symbols.identifiers.flatMap {
-    case (name, _) if name.startsWith("  UNNAMED")       => None
-    case (name, typ) if MapType().isAssignableFrom(typ)  => Some(Entity(name))
-    case (name, typ) if PathType().isAssignableFrom(typ) => Some(Entity(name))
-    case _                                               => None
-  }.toSeq
+  def expressions(symbols: SymbolTable2): Map[String, Expression] = symbols.identifiers.map(_._1 -> Entity(name))
 
   def name = "*"
 
@@ -48,7 +43,7 @@ case class AllIdentifiers() extends ReturnColumn {
 case class ReturnItem(expression: Expression, name: String, renamed: Boolean = false)
   extends ReturnColumn {
 
-  def expressions(symbols: SymbolTable2) = Seq(expression)
+  def expressions(symbols: SymbolTable2) = Map(name -> expression)
 
   val dependencies = expression.dependencies(AnyType())
 

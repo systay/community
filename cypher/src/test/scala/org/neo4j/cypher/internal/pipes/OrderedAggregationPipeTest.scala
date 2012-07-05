@@ -35,7 +35,7 @@ import java.lang.{Iterable=>JIterable}
 
 class OrderedAggregationPipeTest extends JUnitSuite with Assertions {
   @Test def shouldReturnColumnsFromReturnItems() {
-    val source = new FakePipe(List(), createSymbolTableFor("name"))
+    val source = new FakePipe(List(), createSymbolTableFor("name"):_*)
 
     val returnItems = List(Entity("name"))
     val grouping = List(CountStar())
@@ -47,7 +47,7 @@ class OrderedAggregationPipeTest extends JUnitSuite with Assertions {
   }
 
   @Test def shouldThrowSemanticException() {
-    val source = new FakePipe(List(), createSymbolTableFor("extractReturnItems"))
+    val source = new FakePipe(List(), createSymbolTableFor("extractReturnItems"):_*)
 
     val returnItems = List(Entity("name"))
     val grouping = List(Count(Entity("none-existing-identifier")))
@@ -60,7 +60,7 @@ class OrderedAggregationPipeTest extends JUnitSuite with Assertions {
       Map("name" -> "Michael", "age" -> 36),
       Map("name" -> "Michael", "age" -> 31),
       Map("name" -> "Peter", "age" -> 38)
-    ), createSymbolTableFor("name"))
+    ), createSymbolTableFor("name"):_*)
 
     val returnItems = List(Entity("name"))
     val grouping = List(CountStar())
@@ -78,7 +78,8 @@ class OrderedAggregationPipeTest extends JUnitSuite with Assertions {
     val source = new FakePipe(List(
       Map("name" -> "Andres", "age" -> 36),
       Map("name" -> "Michael", "age" -> null),
-      Map("name" -> "Peter", "age" -> 38)), createSymbolTableFor("name", "age"))
+      Map("name" -> "Peter", "age" -> 38)),
+      createSymbolTableFor("name", "age"):_*)
 
     val returnItems = List(Entity("name"))
     val grouping = List(Count(Entity("age")))
@@ -91,13 +92,14 @@ class OrderedAggregationPipeTest extends JUnitSuite with Assertions {
   }
 
   @Test def shouldThrowOnEmptyKeyList() {
-    val source = new FakePipe(List(), createSymbolTableFor("name"))
+    val source = new FakePipe(List(),
+      createSymbolTableFor("name"):_*)
 
     val returnItems = List()
     val grouping = List(Count(Entity("name")))
     intercept[ThisShouldNotHappenError](new OrderedAggregationPipe(source, returnItems, grouping))
   }
 
-  private def createSymbolTableFor(names: String*) = new SymbolTable(names.map(Identifier(_, NodeType())): _*)
+  private def createSymbolTableFor(names: String*) = names.map(_ -> NodeType())
 
 }

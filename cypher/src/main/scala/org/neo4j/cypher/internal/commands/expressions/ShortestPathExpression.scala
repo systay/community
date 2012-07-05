@@ -60,7 +60,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
     })
   }
 
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = ast.possibleStartPoints.filterNot(_.name.startsWith("  UNNAMED"))
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] = ast.possibleStartPoints.filterNot(id => id._1.startsWith("  UNNAMED")).map{case(i,c)=>Identifier(i,c)}
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = Seq()
 
@@ -83,7 +83,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
 
   def identifierDependencies(expectedType: CypherType) = ast.identifierDependencies(PathType())
 
-  def getType(symbols: SymbolTable2) = {
+  def calculateType(symbols: SymbolTable2) = {
     ast.checkTypes(symbols)
     PathType()
   }

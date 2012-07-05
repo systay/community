@@ -45,5 +45,5 @@ case class Nullable(expression: Expression) extends Expression {
 
   def identifierDependencies(expectedType: CypherType) = expression.identifierDependencies(expectedType)
 
-  def getType(symbols: SymbolTable2): CypherType = expression.evaluateType(AnyType(), symbols)
+  def calculateType(symbols: SymbolTable2): CypherType = expression.evaluateType(AnyType(), symbols)
 }

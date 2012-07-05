@@ -21,8 +21,10 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.ColumnFilterPipe
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
-import org.neo4j.cypher.internal.symbols.SymbolTable
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, SymbolTable}
 import org.neo4j.cypher.internal.commands.{AllIdentifiers, ReturnItem, ReturnColumn}
+import collection.Map
+import org.neo4j.cypher.internal.commands.expressions.Expression
 
 class ColumnFilterBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
@@ -36,7 +38,7 @@ class ColumnFilterBuilder extends PlanBuilder {
       plan.copy(query = resultQ)
     } else {
 
-      val returnItems = getReturnItems(q.returns, p.symbols)
+      val returnItems = getReturnItems(q.returns, p.symbols2)
       val filterPipe = new ColumnFilterPipe(p, returnItems, isLastPipe)
 
       val resultPipe = if (filterPipe.symbols != p.symbols || isLastPipe) {
@@ -62,11 +64,10 @@ class ColumnFilterBuilder extends PlanBuilder {
 
   def priority = PlanBuilder.ColumnFilter
 
-  private def getReturnItems(q: Seq[QueryToken[ReturnColumn]], symbols: SymbolTable): Seq[ReturnItem] = q.map(_.token).flatMap {
-    case x: ReturnItem => Seq(x)
-    case x: AllIdentifiers =>
-      val expressions = x.expressions(symbols)
-      val map = expressions.map(e => ReturnItem(e, e.identifier.name))
-      map
+  private def getReturnItems(q: Seq[QueryToken[ReturnColumn]], symbols: SymbolTable2): Seq[ReturnItem] = q.map(_.token).flatMap {
+    case x: ReturnItem     => Seq(x)
+    case x: AllIdentifiers => x.expressions(symbols).map {
+      case (n, e) => ReturnItem(e, n)
+    }
   }
 }

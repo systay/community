@@ -33,5 +33,5 @@ case class Avg(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def rewrite(f: (Expression) => Expression) = f(Avg(anInner.rewrite(f)))
 
-  def getType(symbols: SymbolTable2): CypherType = NumberType()
+  def calculateType(symbols: SymbolTable2): CypherType = NumberType()
 }

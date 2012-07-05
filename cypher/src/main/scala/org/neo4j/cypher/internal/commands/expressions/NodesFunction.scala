@@ -45,8 +45,8 @@ case class NodesFunction(path: Expression) extends NullInNullOutExpression(path)
 
   def identifierDependencies(expectedType: CypherType) = path.identifierDependencies(AnyIterableType())
 
-  def getType(symbols: SymbolTable2) = {
-    path.evaluateType(new IterableType(NodeType()), symbols)
+  def calculateType(symbols: SymbolTable2) = {
+    path.evaluateType(new IterableType(MapType()), symbols)
     new IterableType(NodeType())
   }
 }

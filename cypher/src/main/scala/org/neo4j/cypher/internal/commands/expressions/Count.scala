@@ -33,5 +33,5 @@ case class Count(anInner: Expression) extends AggregationWithInnerExpression(anI
 
   def rewrite(f: (Expression) => Expression) = f(Count(anInner.rewrite(f)))
 
-  def getType(symbols: SymbolTable2): CypherType = LongType()
+  def calculateType(symbols: SymbolTable2): CypherType = LongType()
 }
