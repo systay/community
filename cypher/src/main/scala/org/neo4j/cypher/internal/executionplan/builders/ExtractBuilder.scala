@@ -41,7 +41,6 @@ class ExtractBuilder extends PlanBuilder {
 }
 
 object ExtractBuilder {
-
   def extractIfNecessary(plan: ExecutionPlanInProgress, expressions: Map[String, Expression]): (ExecutionPlanInProgress) = {
     val missing = plan.pipe.symbols.missingExpressions(expressions.values.toSeq)
     val query = plan.query

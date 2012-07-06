@@ -19,15 +19,20 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import collection.Seq
-import org.neo4j.cypher.internal.commands.ReturnItem
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, SymbolTable, Identifier}
+import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.commands.expressions.Expression
+import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.cypher.internal.commands.ReturnItem
+import org.neo4j.cypher.internal.symbols.Identifier
 
 //This class will extract properties and other stuff to make the maps
 //easy to work with for other pipes
 class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extends PipeWithSource(source) {
-  def dependencies = expressions.values.flatMap(_.dependencies(AnyType())).toSeq
+  def dependencies = {
+    val seq: Seq[Identifier] = expressions.values.flatMap(_.dependencies(AnyType())).toSeq
+    println(seq)
+    seq
+  }
 
   def getSymbolType(item: ReturnItem): Identifier = item.identifier
 
@@ -49,6 +54,9 @@ class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extend
 
   override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols.keys.mkString(",") + "] => [" + expressions.keys.mkString(", ") + "])"
 
-  def deps = null//mergeDeps(expressions.map(_.identifierDependencies(AnyType())))
+  def deps = {
+    val map  = expressions.map(_._2.identifierDependencies(AnyType())).toSeq
+    mergeDeps(map)
+  }
 }
 

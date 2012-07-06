@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.commands
 import expressions.{Entity, Expression}
 import org.neo4j.cypher.internal.pipes.Dependant
 import org.neo4j.cypher.internal.symbols._
-import collection.{immutable, Map}
+import collection.Map
 
 abstract class ReturnColumn extends Dependant {
   def expressions(symbols: SymbolTable2): Map[String,Expression]
@@ -32,7 +32,7 @@ abstract class ReturnColumn extends Dependant {
 }
 
 case class AllIdentifiers() extends ReturnColumn {
-  def expressions(symbols: SymbolTable2): Map[String, Expression] = symbols.identifiers.map(_._1 -> Entity(name))
+  def expressions(symbols: SymbolTable2): Map[String, Expression] = symbols.identifiers.keys.map(n => n -> Entity(n)).toMap
 
   def name = "*"
 

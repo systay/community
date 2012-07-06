@@ -28,9 +28,6 @@ abstract class PipeWithSource(val source: Pipe) extends Pipe with Dependant with
 
   def deps:Map[String, CypherType]
 }
-
-
-
 /*
 Classes that have dependencies on identifiers and their types
 

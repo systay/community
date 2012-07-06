@@ -39,7 +39,8 @@ class AggregationBuilder extends PlanBuilder with ExpressionExtractor {
 
     val allReturnExpressions = query.returns.flatMap(_.token.expressions(pipe.symbols2))
 
-    val notKeyAndNotAggregate = allReturnExpressions.filterNot(namedKeyExpressions.values.toSeq.contains)
+    val keyExpressions: Seq[Expression] = namedKeyExpressions.values.toSeq
+    val notKeyAndNotAggregate = allReturnExpressions.filterNot( (i: (String, Expression)) => keyExpressions.contains(i._2))
 
     val resultPipe = extractAggregatedValues(notKeyAndNotAggregate, pipe)
 
