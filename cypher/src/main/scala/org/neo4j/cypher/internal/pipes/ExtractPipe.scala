@@ -42,15 +42,13 @@ class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extend
     case (name, expression) => name -> expression.evaluateType(AnyType(), source.symbols2)
   })
 
-  def createResults(state: QueryState) = {
-    source.createResults(state).map(subgraph => {
-      expressions.foreach {
-        case (name, expression) => subgraph += name -> expression(subgraph)
-      }
-
-      subgraph
-    })
-  }
+  def createResults(state: QueryState) = source.createResults(state).map(subgraph => {
+    expressions.foreach {
+      case (name, expression) =>
+        subgraph += name -> expression(subgraph)
+    }
+    subgraph
+  })
 
   override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols.keys.mkString(",") + "] => [" + expressions.keys.mkString(", ") + "])"
 

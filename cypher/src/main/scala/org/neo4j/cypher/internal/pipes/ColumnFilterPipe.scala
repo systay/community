@@ -44,11 +44,10 @@ class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe:
       val newMap = MutableMaps.create(ctx.size)
 
       ctx.foreach {
-        case (k, p) => if (p.isInstanceOf[ParameterValue] && !lastPipe) {
-          newMap.put(k, p)
-        } else {
-          returnItems.foreach( ri => if (ri.expression.identifier.name == k) { newMap.put(ri.columnName, p) } )
-        }
+        // TODO: Parameters should really be in the state and not in the execution context
+        case (k, p: ParameterValue) if !lastPipe     => newMap.put(k, p)
+        case (k, p) if (returnItemNames.contains(k)) => newMap.put(k, p)
+        case _                                       =>
       }
 
       ctx.newFrom( newMap )
