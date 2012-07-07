@@ -20,71 +20,81 @@
 package org.neo4j.cypher.internal.pipes
 
 import aggregation.AggregationFunction
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, Identifier, SymbolTable}
-import org.neo4j.cypher.internal.commands.expressions.{Entity, Expression, AggregationExpression}
+import org.neo4j.cypher.internal.symbols._
+import org.neo4j.cypher.internal.commands.expressions.{Expression, AggregationExpression}
 import collection.mutable.{Map => MutableMap}
+import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.cypher.internal.symbols.Identifier
 
 // Eager aggregation means that this pipe will eagerly load the whole resulting sub graphs before starting
 // to emit aggregated results.
-// Cypher is lazy until it has to - this pipe makes stops the lazyness
-class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Expression], aggregations: Seq[AggregationExpression])
+// Cypher is lazy until it can't - this pipe will eagerly load the full match
+class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Expression], aggregations: Map[String, AggregationExpression])
   extends PipeWithSource(source) {
   def oldKeyExpressions = keyExpressions.values.toSeq
+
   val symbols: SymbolTable = createSymbols()
   val symbols2: SymbolTable2 = createSymbols2()
 
   def dependencies: Seq[Identifier] = oldKeyExpressions.flatMap(_.dependencies(AnyType())) ++
-                                      aggregations.flatMap(_.dependencies(AnyType()))
+                                      aggregations.flatMap(_._2.dependencies(AnyType()))
 
   private def createSymbols() = {
     val map: Seq[String] = oldKeyExpressions.map(_.identifier.name)
     val keySymbols: SymbolTable = source.symbols.filter(map: _*)
-    val aggregatedColumns: Seq[Identifier] = aggregations.map(_.identifier)
+    val aggregatedColumns: Seq[Identifier] = aggregations.map(_._2.identifier).toSeq
 
     keySymbols.add(aggregatedColumns: _*)
   }
 
   private def createSymbols2() = {
-    val keyIdentifiers = keyExpressions.flatMap {
-      case id:Entity => Some(id.entityName->id.evaluateType(AnyType(), source.symbols2))
-      case _ => None
-    }.toMap
+    val typeExtractor: ((String, Expression)) => (String, CypherType) = {
+      case (id, exp) => id -> exp.evaluateType(AnyType(), source.symbols2)
+    }
 
-    new SymbolTable2(keyIdentifiers)
+    val keyIdentifiers = keyExpressions.map(typeExtractor)
+    val aggrIdentifiers = aggregations.map(typeExtractor)
+
+    new SymbolTable2(keyIdentifiers ++ aggrIdentifiers)
   }
 
   def createResults(state: QueryState): Traversable[ExecutionContext] = {
     // This is the temporary storage used while the aggregation is going on
-    val result = MutableMap[NiceHasher, (ExecutionContext,Seq[AggregationFunction])]()
-    val keyNames = oldKeyExpressions.map(_.identifier.name)
-    val aggregationNames = aggregations.map(_.identifier.name)
+    val result = MutableMap[NiceHasher, (ExecutionContext, Seq[AggregationFunction])]()
+    val keyNames: Seq[String] = keyExpressions.map(_._1).toSeq
+    val aggregationNames: Seq[String] = aggregations.map(_._1).toSeq
 
     source.createResults(state).foreach(ctx => {
       val groupValues: NiceHasher = new NiceHasher(keyNames.map(ctx(_)))
-      val (_,functions) = result.getOrElseUpdate(groupValues, (ctx, aggregations.map(_.createAggregationFunction)))
+      val (_, functions) = result.getOrElseUpdate(groupValues, (ctx, aggregations.map(_._2.createAggregationFunction).toSeq))
       functions.foreach(func => func(ctx))
     })
 
-    if (result.isEmpty && keyNames.isEmpty) {
+    val resultContext = if (result.isEmpty && keyNames.isEmpty) {
       createEmptyResult(aggregationNames)
     } else result.map {
-      case (key, (ctx,aggregator)) =>
-        val newMap = MutableMaps.create
-
-        //add key values
-        keyNames.zip(key.original).foreach( newMap += _)
-
-        //add aggregated values
-        aggregationNames.zip(aggregator.map(_.result)).foreach( newMap += _ )
-
-        ctx.newFrom(newMap)
+      case (key, (ctx, aggregator)) => createResults(keyNames, key, aggregationNames, aggregator, ctx)
     }
+
+    resultContext
   }
 
 
+  def createResults(keyNames: scala.Seq[String], key: NiceHasher, aggregationNames: scala.Seq[String], aggregator: scala.Seq[AggregationFunction], ctx: ExecutionContext): ExecutionContext = {
+    val newMap = MutableMaps.create
+
+    //add key values
+    (keyNames zip key.original).foreach(newMap += _)
+
+    //add aggregated values
+    (aggregationNames zip aggregator.map(_.result)).foreach(newMap += _)
+
+    ctx.newFrom(newMap)
+  }
+
   private def createEmptyResult(aggregationNames: Seq[String]): Traversable[ExecutionContext] = {
     val newMap = MutableMaps.create
-    val aggregationNamesAndFunctions = aggregationNames zip aggregations.map(_.createAggregationFunction.result)
+    val aggregationNamesAndFunctions = aggregationNames zip aggregations.map(_._2.createAggregationFunction.result)
     aggregationNamesAndFunctions.toMap
       .foreach {
       case (name, zeroValue) => newMap += name -> zeroValue
@@ -94,5 +104,5 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Express
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "EagerAggregation( keys: [" + oldKeyExpressions.map(_.identifier.name).mkString(", ") + "], aggregates: [" + aggregations.mkString(", ") + "])"
 
-  def deps = mergeDeps(oldKeyExpressions.map(_.identifierDependencies(AnyType())) ++ aggregations.map(_.identifierDependencies(AnyType())))
+  def deps = mergeDeps(oldKeyExpressions.map(_.identifierDependencies(AnyType())) ++ aggregations.map(_._2.identifierDependencies(AnyType())))
 }

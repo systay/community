@@ -32,7 +32,10 @@ abstract class ReturnColumn extends Dependant {
 }
 
 case class AllIdentifiers() extends ReturnColumn {
-  def expressions(symbols: SymbolTable2): Map[String, Expression] = symbols.identifiers.keys.map(n => n -> Entity(n)).toMap
+  def expressions(symbols: SymbolTable2): Map[String, Expression] =
+    symbols.identifiers.keys.
+      filterNot(_.startsWith("  UNNAMED")).
+      map(n => n -> Entity(n)).toMap
 
   def name = "*"
 

@@ -24,9 +24,7 @@ case class Multiply(a: Expression, b: Expression) extends Arithmetics(a, b) {
 
   def verb = "multiply"
 
-  def stringWithString(a: String, b: String) = throwTypeError(a, b)
-
-  def numberWithNumber(a: Number, b: Number) = a.doubleValue() * b.doubleValue()
+  def calc(a: Number, b: Number) = a.doubleValue() * b.doubleValue()
 
   def rewrite(f: (Expression) => Expression) = f(Multiply(a.rewrite(f), b.rewrite(f)))
 }

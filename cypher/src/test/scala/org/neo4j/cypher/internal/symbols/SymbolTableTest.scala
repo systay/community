@@ -105,7 +105,7 @@ class SymbolTable2Test extends Assertions {
     val symbolTable = createSymbols("x" -> MapType())
 
     //then
-    intercept[CypherTypeException](symbolTable.evaluateType("x", RelationshipType()))
+    symbolTable.evaluateType("x", RelationshipType())
   }
 
   @Test def adding_string_with_string_gives_string_type() {

@@ -26,13 +26,14 @@ import org.neo4j.cypher.internal.commands._
 import expressions.{Literal, Property, Entity, RelationshipFunction}
 import org.junit.{Ignore, Test}
 import collection.mutable.Map
+import org.neo4j.cypher.internal.symbols.NodeType
 
 class SingleShortestPathPipeTest extends GraphDatabaseTestBase with Assertions {
 
-  val path = ShortestPath("p", "a", "b", Seq(), Direction.BOTH, Some(15), optional = true, single = true, None, True())
+  val path = ShortestPath("p", "a", "b", Seq(), Direction.BOTH, Some(15), optional = true, single = true, relIterator = None, predicate = True())
 
   def runThroughPipeAndGetPath(a: Node, b: Node, path: ShortestPath): Path = {
-    val source = new FakePipe(List(Map("a" -> a, "b" -> b)))
+    val source = new FakePipe(List(Map("a" -> a, "b" -> b)), "a"->NodeType(), "b"->NodeType())
 
 
     val pipe = new ShortestPathPipe(source, path)

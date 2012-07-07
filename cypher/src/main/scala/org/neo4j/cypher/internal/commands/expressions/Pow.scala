@@ -24,9 +24,7 @@ case class Pow(a: Expression, b: Expression) extends Arithmetics(a, b) {
 
   def verb = "power"
 
-  def stringWithString(a: String, b: String) = throwTypeError(a, b)
-
-  def numberWithNumber(a: Number, b: Number) = math.pow(a.doubleValue(), b.doubleValue())
+  def calc(a: Number, b: Number) = math.pow(a.doubleValue(), b.doubleValue())
 
   def rewrite(f: (Expression) => Expression) = f(Pow(a.rewrite(f), b.rewrite(f)))
 }

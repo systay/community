@@ -22,8 +22,14 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.junit.Test
 import org.junit.Assert._
 import org.neo4j.cypher.internal.commands._
-import expressions.{CountStar, Entity}
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PartiallySolvedQuery}
+import expressions._
+import expressions.Collect
+import expressions.CountStar
+import expressions.Entity
+import expressions.HeadFunction
+import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
+import org.neo4j.cypher.internal.commands.ReturnItem
+import org.neo4j.cypher.internal.executionplan.ExecutionPlanInProgress
 
 class AggregationBuilderTest extends BuilderTest {
 

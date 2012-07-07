@@ -24,6 +24,7 @@ import org.neo4j.cypher.EntityNotFoundException
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.helpers.ThisShouldNotHappenError
 
 case class Property(entity: String, property: String) extends CastableExpression {
   def compute(m: Map[String, Any]): Any = {
@@ -50,5 +51,11 @@ case class Property(entity: String, property: String) extends CastableExpression
 
   def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = Map(entity -> MapType())
 
-  def calculateType(symbols: SymbolTable2) = AnyType()
+  def calculateType(symbols: SymbolTable2) =
+    throw new ThisShouldNotHappenError("Andres", "This class should override evaluateType, and this method should never be run")
+
+  override def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2) = {
+    symbols.evaluateType(entity, MapType())
+    expectedType
+  }
 }

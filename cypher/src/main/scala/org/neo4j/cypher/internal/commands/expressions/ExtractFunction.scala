@@ -55,7 +55,7 @@ case class ExtractFunction(iterable: Expression, id: String, expression: Express
   }
 
   def calculateType(symbols: SymbolTable2): CypherType = {
-    val typeOfElementsInCollection = iterable.evaluateType(AnyIterableType(), symbols).asInstanceOf[IterableType].iteratedType
+    val typeOfElementsInCollection = iterable.evaluateType(AnyIterableType(), symbols).iteratedType
 
     expression.evaluateType(AnyType(), symbols.add(id, typeOfElementsInCollection))
   }

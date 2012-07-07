@@ -1,6 +1,6 @@
 Cypher tries to be type safe within a query. That means that it tries to stop
 you from building nonsensical queries, e.g. a pattern where an identifier is
-usedd first as a pattern path and then a pattern node. MATCH n = n-->()
+used first as a pattern path and then a pattern node. MATCH n = n-->()
 
 To do this, it has a class tree hierarchy of types, with Any as the root of
 it all.

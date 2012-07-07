@@ -52,7 +52,7 @@ with Typed {
   def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2): T = {
     val t = calculateType(symbols)
 
-    if (!expectedType.isAssignableFrom(t)) {
+    if (!expectedType.isAssignableFrom(t)) {   //TODO - should be similar to symtboable excption
       throw new CypherTypeException("expected: %s but got %s".format(expectedType, t))
     }
 
@@ -87,7 +87,7 @@ trait HasTypedExpressions {
   def checkTypes(symbols:SymbolTable2)
 }
 
-case class CachedExpression(key:String, identifier:Identifier) extends CastableExpression {
+case class CachedExpression(key:String, typ:CypherType) extends CastableExpression {
   override def apply(m: Map[String, Any]) = m(key)
   protected def compute(v1: Map[String, Any]) = null
   def declareDependencies(extectedType: CypherType) = Seq()
@@ -97,7 +97,9 @@ case class CachedExpression(key:String, identifier:Identifier) extends CastableE
 
   def identifierDependencies(expectedType: CypherType) = Map()
 
-  def calculateType(symbols: SymbolTable2) = identifier.typ
+  def calculateType(symbols: SymbolTable2) = typ
+
+  val identifier = Identifier(key, typ)
 }
 
 abstract class Arithmetics(left: Expression, right: Expression)
@@ -118,16 +120,14 @@ abstract class Arithmetics(left: Expression, right: Expression)
     val bVal = right(m)
 
     (aVal, bVal) match {
-      case (x: Number, y: Number) => numberWithNumber(x, y)
-      case (x: String, y: String) => stringWithString(x, y)
+      case (x: Number, y: Number) => calc(x, y)
       case _ => throwTypeError(bVal, aVal)
     }
 
   }
 
   def verb: String
-  def stringWithString(a: String, b: String): String
-  def numberWithNumber(a: Number, b: Number): Number
+  def calc(a: Number, b: Number): Number
   def declareDependencies(extectedType: CypherType) = left.declareDependencies(extectedType) ++ right.declareDependencies(extectedType)
   def filter(f: (Expression) => Boolean) = if(f(this))
     Seq(this) ++ left.filter(f) ++ right.filter(f)

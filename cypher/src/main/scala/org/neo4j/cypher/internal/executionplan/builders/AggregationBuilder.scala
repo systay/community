@@ -20,53 +20,73 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.{Pipe, ExtractPipe, EagerAggregationPipe}
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
-import org.neo4j.cypher.internal.commands.expressions.{CachedExpression, AggregationExpression, Expression}
+import org.neo4j.cypher.internal.executionplan.{PartiallySolvedQuery, ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.commands.expressions.{Entity, CachedExpression, AggregationExpression, Expression}
+import org.neo4j.cypher.internal.symbols.SymbolTable2
 
-class AggregationBuilder extends PlanBuilder with ExpressionExtractor {
+
+/*
+The work done here is non-trivial, so I'll try to explain it in English.
+
+For this return-clause:
+  RETURN m, head(collect(n.x)), last(collect(n.x))
+
+we have to take the following steps.
+
+Step 1:
+Calculate and save to the execution context the values of the keys and aggregate expressions, in this case:
+Key: m
+Aggregation: collect(n.x)
+
+The aggregation result will be saved under a random key, so it can be used to sort and calculate compound expressions.
+
+Step 2:
+Rewrite the remainder of the query to not use the aggregation expression, instead now using the key to the aggregation
+value.
+ */
+
+class AggregationBuilder extends PlanBuilder  {
   def apply(plan: ExecutionPlanInProgress) = {
-    val (keyExpressionsToExtract, _) = getExpressions(plan)
+    // First, calculate the key expressions and save them down to the map
+    val keyExpressionsToExtract = getExpressions(plan)
+    val planToAggregate = ExtractBuilder.extractIfNecessary(plan, keyExpressionsToExtract.keys)
 
-    val newPlan = ExtractBuilder.extractIfNecessary(plan, keyExpressionsToExtract)
+    // Get the aggregate expressions to calculate, and their named key expressions
+    val expressions = getExpressions(planToAggregate)
+    val namedAggregates = expressions.aggregates.map( exp => "  INTERNAL_AGGREGATE" + exp.hashCode -> exp ).toMap
 
-    val x = getExpressions(newPlan)
-    val namedKeyExpressions: Map[String, Expression] = x._1
-    val aggregationExpressions: Seq[AggregationExpression] = x._2
+    val resultPipe = new EagerAggregationPipe(planToAggregate.pipe, expressions.keys, namedAggregates)
 
-    val pipe = new EagerAggregationPipe(newPlan.pipe, namedKeyExpressions, aggregationExpressions)
-
-    val query = newPlan.query
-
-    val allReturnExpressions = query.returns.flatMap(_.token.expressions(pipe.symbols2))
-
-    val keyExpressions: Seq[Expression] = namedKeyExpressions.values.toSeq
-    val notKeyAndNotAggregate = allReturnExpressions.filterNot( (i: (String, Expression)) => keyExpressions.contains(i._2))
-
-    val resultPipe = extractAggregatedValues(notKeyAndNotAggregate, pipe)
-
-    val resultQ = query.copy(
-      aggregation = query.aggregation.map(_.solve),
-      aggregateQuery = query.aggregateQuery.solve,
+    //Mark aggregations as Solved.
+    val resultQ = planToAggregate.query.copy(
+      aggregation = planToAggregate.query.aggregation.map(_.solve),
+      aggregateQuery = planToAggregate.query.aggregateQuery.solve,
       extracted = true
-    ).rewrite(removeAggregates)
+    )
 
-    newPlan.copy(query = resultQ, pipe = resultPipe)
+    //Rewrite the remainder of the query to use cached expression instead of the aggregate expressions
+    val rewrittenQuery = rewriteQuery(namedAggregates, planToAggregate.pipe.symbols2, resultQ)
+
+    planToAggregate.copy(query = rewrittenQuery, pipe = resultPipe)
   }
 
-
-  def extractAggregatedValues(notKeyAndNotAggregate: Seq[(String, Expression)], pipe: EagerAggregationPipe): Pipe = if (notKeyAndNotAggregate.isEmpty) pipe
-  else {
-
-    val rewritten: Map[String, Expression] = notKeyAndNotAggregate.map {
-      case (name,expression) => name -> expression.rewrite(removeAggregates)
-    }.toMap
-
-    new ExtractPipe(pipe, rewritten)
+  def rewriteQuery(namedAggregates: Map[String, AggregationExpression], symbols: SymbolTable2, query: PartiallySolvedQuery): PartiallySolvedQuery = {
+    namedAggregates.foldLeft(query) {
+      case (p, (key, aggregate)) => p.rewrite(e =>
+        if (e == aggregate)
+          CachedExpression(key, e.getType(symbols))
+        else
+          e
+      )
+    }
   }
 
-  private def removeAggregates(e: Expression) = e match {
-    case e: AggregationExpression => CachedExpression(e.identifier.name, e.identifier)
-    case x                        => x
+  private def getExpressions(plan: ExecutionPlanInProgress): ExtractedExpressions = {
+    val keys: Seq[(String, Expression)] =
+      plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols2)).
+      filterNot(_._2.containsAggregate)
+
+    ExtractedExpressions(keys.toMap, plan.query.aggregation.map(_.token))
   }
 
   def canWorkWith(plan: ExecutionPlanInProgress) = {
@@ -75,21 +95,12 @@ class AggregationBuilder extends PlanBuilder with ExpressionExtractor {
     q.aggregateQuery.token &&
     q.aggregateQuery.unsolved &&
     q.readyToAggregate
-
   }
 
   def priority: Int = PlanBuilder.Aggregation
 }
 
-trait ExpressionExtractor {
-  def getExpressions(plan: ExecutionPlanInProgress): (Map[String, Expression], Seq[AggregationExpression]) = {
-    val keys = plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols2)).filterNot(tuple => tuple._2.containsAggregate)
-
-    val returnAggregates: Seq[AggregationExpression] = plan.query.aggregation.map(_.token)
-    val sortAggregates: Seq[AggregationExpression] = plan.query.sort.filter(_.token.expression.isInstanceOf[AggregationExpression]).map(_.token.expression.asInstanceOf[AggregationExpression])
-
-    val aggregates: Seq[AggregationExpression] = sortAggregates ++ returnAggregates
-
-    (keys.toMap, aggregates)
-  }
+case class ExtractedExpressions(keys: Map[String, Expression],
+                                aggregates: Seq[AggregationExpression])  {
+  lazy val namedAggregations = aggregates.map( exp => "  INTERNAL_AGGREGATE" + exp.hashCode -> exp ).toMap
 }

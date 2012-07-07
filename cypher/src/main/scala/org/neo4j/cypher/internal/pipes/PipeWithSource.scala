@@ -22,6 +22,7 @@ package org.neo4j.cypher.internal.pipes
 import collection.Seq
 import collection.Map
 import org.neo4j.cypher.internal.symbols.{CypherType, Identifier}
+import org.neo4j.helpers.ThisShouldNotHappenError
 
 abstract class PipeWithSource(val source: Pipe) extends Pipe with Dependant with IdentifierDependantHelper {
   dependencies.foreach(source.symbols.assertHas(_))
@@ -52,6 +53,7 @@ trait IdentifierDependantHelper {
       case (key, types) => val t: CypherType = types match {
         case List(single: CypherType)               => single
         case List(one: CypherType, two: CypherType) => one.mergeWith(two)
+        case _ => throw new ThisShouldNotHappenError("Andres", "This line is to stop a Scala warning, and should never run")
       }
       key -> t
     }
