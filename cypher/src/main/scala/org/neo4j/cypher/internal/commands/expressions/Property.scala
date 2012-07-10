@@ -58,4 +58,6 @@ case class Property(entity: String, property: String) extends CastableExpression
     symbols.evaluateType(entity, MapType())
     expectedType
   }
+
+  def symbolTableDependencies = Set(entity)
 }

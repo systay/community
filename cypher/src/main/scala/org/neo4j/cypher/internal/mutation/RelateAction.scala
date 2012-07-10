@@ -144,6 +144,8 @@ case class RelateAction(links: RelateLink*) extends UpdateAction {
   def deps = mergeDeps(links.map(_.deps))
 
   def checkTypes(symbols: SymbolTable2) {links.foreach(l=>l.checkTypes(symbols))}
+
+  def symbolTableDependencies = links.flatMap(_.symbolTableDependencies).toSet
 }
 
 sealed abstract class RelateResult

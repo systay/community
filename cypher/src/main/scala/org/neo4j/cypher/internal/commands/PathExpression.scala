@@ -28,7 +28,10 @@ import org.neo4j.graphdb.Path
 import org.neo4j.cypher.internal.executionplan.builders.PatternGraphBuilder
 import org.neo4j.cypher.internal.symbols.Identifier
 
-case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with PathExtractor with PatternGraphBuilder {
+case class PathExpression(pathPattern: Seq[Pattern])
+  extends Expression
+  with PathExtractor
+  with PatternGraphBuilder {
   val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
   val identifiers: Seq[(String, CypherType)] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p => p._1.startsWith("  UNNAMED")))
 
@@ -72,4 +75,6 @@ case class PathExpression(pathPattern: Seq[Pattern]) extends Expression with Pat
     pathPattern.foreach(_.checkTypes(symbols))
     new IterableType( PathType() )
   }
+
+  def symbolTableDependencies = pathPattern.flatMap(_.symbolTableDependencies).toSet
 }

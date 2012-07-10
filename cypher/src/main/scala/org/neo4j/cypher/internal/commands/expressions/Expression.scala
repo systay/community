@@ -75,21 +75,12 @@ trait TypeSafe {
   */
   def checkTypes(symbols: SymbolTable2)
 
-  def symbolDependenciesMet(symbols: SymbolTable2):Boolean = {
-    symbolTableDependencies.exists {
-      case (name, typ) => !check(symbols, name, typ)
-    }
-  }
+  def symbolDependenciesMet(symbols: SymbolTable2): Boolean =
+    !symbolTableDependencies.exists(name => !check(symbols, name))
 
-  def symbolTableDependencies : Map[String,CypherType]
+  def symbolTableDependencies : Set[String]
 
-  private def check(symbols: SymbolTable2, name: String, typ: CypherType): Boolean = try {
-    symbols.evaluateType(name, typ)
-    true
-  } catch {
-    case _ => false
-  }
-
+  private def check(symbols: SymbolTable2, name: String): Boolean = symbols.identifiers.contains(name)
 }
 
 /*
@@ -106,8 +97,6 @@ trait Typed {
   Checks if internal type dependencies are met and returns the actual type of the expression
   */
   def getType(symbols: SymbolTable2):CypherType = evaluateType(AnyType(), symbols)
-
-
 }
 
 case class CachedExpression(key:String, typ:CypherType) extends CastableExpression {
@@ -124,7 +113,7 @@ case class CachedExpression(key:String, typ:CypherType) extends CastableExpressi
 
   val identifier = Identifier(key, typ)
 
-  def symbolTableDependencies() = Map(key -> typ)
+  def symbolTableDependencies = Set(key)
 }
 
 abstract class Arithmetics(left: Expression, right: Expression)

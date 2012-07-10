@@ -55,4 +55,6 @@ abstract class AggregationWithInnerExpression(inner:Expression) extends Aggregat
     inner.filter(f)
 
   def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(ScalarType())
+
+  def symbolTableDependencies = inner.symbolTableDependencies
 }

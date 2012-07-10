@@ -93,6 +93,8 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
   def checkTypes(symbols: SymbolTable2) {
     checkTypes(props, symbols)
   }
+
+  def symbolTableDependencies = symbolTableDependencies(props)
 }
 
 case class CreateRelationshipStartItem(key: String, from: (Expression, Map[String, Expression]), to: (Expression, Map[String, Expression]), typ: String, props: Map[String, Expression])
@@ -145,6 +147,9 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
     checkTypes(props, symbols)
   }
 
+  def symbolTableDependencies = symbolTableDependencies(from._2) ++
+    symbolTableDependencies(to._2) ++
+    symbolTableDependencies(props)
 }
 
 trait Mutator extends StartItem {

@@ -25,18 +25,17 @@ import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.graphdb._
 import org.neo4j.cypher.internal.commands._
-import expressions.{HasTypedExpressions, Entity, Literal, Expression}
+import expressions.{TypeSafe, Entity, Literal, Expression}
 import org.neo4j.cypher.{RelatePathNotUnique, CypherTypeException}
 import org.neo4j.cypher.internal.commands.CreateNodeStartItem
 import org.neo4j.cypher.internal.symbols.Identifier
 import org.neo4j.cypher.internal.commands.CreateRelationshipStartItem
-import scala.Some
 import org.neo4j.cypher.internal.symbols.RelationshipType
 
 case class NamedExpectation(name: String, properties: Map[String, Expression])
   extends GraphElementPropertyFunctions
   with IterableSupport
-  with HasTypedExpressions {
+  with TypeSafe {
   def this(name: String) = this(name, Map.empty)
 
   def compareWithExpectations(pc: PropertyContainer, ctx: ExecutionContext): Boolean = properties.forall {
@@ -55,8 +54,11 @@ case class NamedExpectation(name: String, properties: Map[String, Expression])
   }
   def deps: Map[String, CypherType] = deps(properties)
 
-  def checkTypes(symbols: SymbolTable2) {
 
+  def symbolTableDependencies = symbolTableDependencies(properties)
+
+  def checkTypes(symbols: SymbolTable2) {
+    checkTypes(properties, symbols)
   }
 }
 
@@ -66,7 +68,7 @@ object RelateLink {
 }
 
 case class RelateLink(start: NamedExpectation, end: NamedExpectation, rel: NamedExpectation, relType: String, dir: Direction)
-  extends GraphElementPropertyFunctions with HasTypedExpressions {
+  extends GraphElementPropertyFunctions with TypeSafe {
   lazy val relationshipType = DynamicRelationshipType.withName(relType)
 
   def exec(context: ExecutionContext, state: QueryState): Option[(RelateLink, RelateResult)] = {
@@ -156,6 +158,10 @@ case class RelateLink(start: NamedExpectation, end: NamedExpectation, rel: Named
   lazy val identifier2 = Seq(start.name -> NodeType(), end.name -> NodeType(), rel.name -> RelationshipType())
 
   def dependencies = (propDependencies(start.properties) ++ propDependencies(end.properties) ++ propDependencies(rel.properties)).distinct
+
+  def symbolTableDependencies = symbolTableDependencies(start.properties) ++
+    symbolTableDependencies(end.properties) ++
+    symbolTableDependencies(rel.properties)
 
   def rewrite(f: (Expression) => Expression): RelateLink = {
     val s = NamedExpectation(start.name, rewrite(start.properties, f))

@@ -47,4 +47,6 @@ case class Entity(entityName: String) extends CastableExpression with Typed {
     throw new ThisShouldNotHappenError("Andres", "This class should override evaluateType, and this method should never be run")
 
   override def evaluateType(expectedType: CypherType, symbols: SymbolTable2) = symbols.evaluateType(entityName, expectedType)
+
+  def symbolTableDependencies = Set(entityName)
 }

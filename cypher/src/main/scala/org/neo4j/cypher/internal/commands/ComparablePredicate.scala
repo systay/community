@@ -53,6 +53,8 @@ abstract sealed class ComparablePredicate(left: Expression, right: Expression) e
     left.evaluateType(AnyType(), symbols)
     right.evaluateType(AnyType(), symbols)
   }
+
+  def symbolTableDependencies = left.symbolTableDependencies ++ right.symbolTableDependencies
 }
 
 case class Equals(a: Expression, b: Expression) extends Predicate with Comparer {
@@ -74,6 +76,8 @@ case class Equals(a: Expression, b: Expression) extends Predicate with Comparer 
   def checkTypes(symbols: SymbolTable2) {
     a.evaluateType(AnyType(), symbols)
   }
+
+  def symbolTableDependencies = a.symbolTableDependencies ++ b.symbolTableDependencies
 }
 
 case class LessThan(a: Expression, b: Expression) extends ComparablePredicate(a, b) {

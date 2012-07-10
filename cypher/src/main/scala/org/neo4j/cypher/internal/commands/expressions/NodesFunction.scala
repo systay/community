@@ -49,4 +49,6 @@ case class NodesFunction(path: Expression) extends NullInNullOutExpression(path)
     path.evaluateType(new IterableType(MapType()), symbols)
     new IterableType(NodeType())
   }
+
+  def symbolTableDependencies = path.symbolTableDependencies
 }

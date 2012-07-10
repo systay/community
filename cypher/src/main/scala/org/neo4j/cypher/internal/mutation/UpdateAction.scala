@@ -28,7 +28,7 @@ import java.util.{Map => JavaMap}
 import scala.collection.JavaConverters._
 import collection.Map
 import org.neo4j.cypher.internal.commands._
-import expressions.{TypeSafe, HasTypedExpressions, Expression}
+import expressions.{TypeSafe, Expression}
 
 trait UpdateAction extends IdentifierDependantHelper with TypeSafe {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
@@ -52,6 +52,9 @@ trait GraphElementPropertyFunctions extends IterableSupport with IdentifierDepen
   def checkTypes(props: Map[String, Expression], symbols:SymbolTable2) {
     props.values.foreach(_.evaluateType(AnyType(), symbols))
   }
+
+  def symbolTableDependencies(props: Map[String, Expression]):Set[String] = props.values.flatMap(_.symbolTableDependencies).toSet
+
 
   def deps(props: Map[String, Expression]): Map[String, CypherType] = mergeDeps(props.values.map(_.identifierDependencies(AnyType())).toSeq)
 

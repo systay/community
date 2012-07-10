@@ -26,7 +26,8 @@ import org.neo4j.cypher.internal.symbols.Identifier
 
 case class FilterFunction(collection: Expression, id: String, predicate: Predicate)
   extends NullInNullOutExpression(collection)
-  with IterableSupport {
+  with IterableSupport
+  with Closure {
   def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).filter(element => predicate.isMatch(m + (id -> element)))
 
   val identifier = Identifier("filter(%s in %s : %s)".format(id, collection.identifier.name, predicate), collection.identifier.typ)
@@ -55,4 +56,6 @@ case class FilterFunction(collection: Expression, id: String, predicate: Predica
 
     t
   }
+
+  def symbolTableDependencies = symbolTableDependencies(collection, predicate, id)
 }

@@ -84,5 +84,5 @@ case class DeleteEntityAction(elementToDelete: Expression)
     }
   }
 
-
+  def symbolTableDependencies = elementToDelete.symbolTableDependencies
 }

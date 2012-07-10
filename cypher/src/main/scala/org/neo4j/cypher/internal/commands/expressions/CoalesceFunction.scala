@@ -56,4 +56,5 @@ case class CoalesceFunction(expressions: Expression*) extends Expression {
     }
   }
 
+  def symbolTableDependencies = expressions.flatMap(_.symbolTableDependencies).toSet
 }

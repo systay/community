@@ -48,4 +48,6 @@ case class RelationshipFunction(path: Expression) extends NullInNullOutExpressio
     path.evaluateType(PathType(), symbols)
     new IterableType(RelationshipType())
   }
+
+  def symbolTableDependencies = path.symbolTableDependencies
 }

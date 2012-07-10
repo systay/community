@@ -44,4 +44,6 @@ case class RelationshipTypeFunction(relationship: Expression) extends NullInNull
     relationship.evaluateType(RelationshipType(), symbols)
     StringType()
   }
+
+  def symbolTableDependencies = relationship.symbolTableDependencies
 }

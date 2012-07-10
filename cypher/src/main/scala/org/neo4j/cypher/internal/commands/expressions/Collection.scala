@@ -52,4 +52,6 @@ case class Collection(expressions: Expression*) extends CastableExpression {
     }
 
   }
+
+  def symbolTableDependencies = expressions.flatMap(_.symbolTableDependencies).toSet
 }

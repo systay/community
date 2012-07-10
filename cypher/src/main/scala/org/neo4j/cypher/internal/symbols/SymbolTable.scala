@@ -121,6 +121,7 @@ class SymbolTable(val identifiers: Identifier*) {
 }
 
 class SymbolTable2(val identifiers: Map[String, CypherType]) {
+  def hasIdentifierNamed(name: String): Boolean = identifiers.contains(name)
   def size: Int = identifiers.size
   def this()=this(Map())
   def add(key: String, typ: CypherType): SymbolTable2 = new SymbolTable2(identifiers + (key -> typ))

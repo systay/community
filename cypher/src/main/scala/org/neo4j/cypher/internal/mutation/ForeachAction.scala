@@ -24,7 +24,6 @@ import org.neo4j.cypher.internal.commands.IterableSupport
 import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyIterableType}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 
-
 case class ForeachAction(collection: Expression, id: String, actions: Seq[UpdateAction])
   extends UpdateAction
   with IterableSupport {
@@ -83,5 +82,11 @@ case class ForeachAction(collection: Expression, id: String, actions: Seq[Update
     val innerSymbols: SymbolTable2 = symbols.add(id, t)
 
     actions.foreach(_.checkTypes(innerSymbols))
+  }
+
+  def symbolTableDependencies = {
+    val updateActionsDeps = actions.flatMap(_.symbolTableDependencies).filterNot(_ == id).toSet
+    val collectionDeps = collection.symbolTableDependencies
+    updateActionsDeps ++ collectionDeps
   }
 }

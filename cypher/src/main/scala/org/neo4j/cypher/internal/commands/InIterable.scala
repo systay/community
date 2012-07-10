@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.commands
 
 import collection.Seq
-import expressions.Expression
+import expressions.{Closure, Expression}
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import java.lang.{Iterable => JavaIterable}
@@ -29,7 +29,10 @@ import collection.JavaConverters._
 import org.neo4j.cypher.internal.symbols.AnyType
 import org.neo4j.cypher.internal.symbols.Identifier
 
-abstract class InIterable(collection: Expression, id: String, predicate: Predicate) extends Predicate with IterableSupport {
+abstract class InIterable(collection: Expression, id: String, predicate: Predicate)
+  extends Predicate
+  with IterableSupport
+  with Closure {
   def seqMethod[U](f: Seq[U]): ((U) => Boolean) => Boolean
 
   def isMatch(m: Map[String, Any]): Boolean = {
@@ -67,6 +70,8 @@ abstract class InIterable(collection: Expression, id: String, predicate: Predica
     val innerType = collection.evaluateType(AnyIterableType(), symbols).iteratedType
     predicate.checkTypes(symbols.add(id, innerType))
   }
+
+  def symbolTableDependencies = symbolTableDependencies(collection, predicate, id)
 }
 
 case class AllInIterable(iterable: Expression, symbolName: String, inner: Predicate) extends InIterable(iterable, symbolName, inner) {

@@ -25,7 +25,6 @@ import collection.Seq
 import org.neo4j.cypher.internal.pipes._
 import org.neo4j.cypher._
 import internal.commands._
-import collection.mutable.{Map => MutableMap}
 import internal.symbols.SymbolTable
 
 class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends ExecutionPlan {
@@ -36,7 +35,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
   private def prepareExecutionPlan(): ((Map[String, Any]) => ExecutionResult, String) = {
 
     var continue = true
-    var planInProgress = ExecutionPlanInProgress(PartiallySolvedQuery(inputQuery), new ParameterPipe(), false)
+    var planInProgress = ExecutionPlanInProgress(PartiallySolvedQuery(inputQuery), new ParameterPipe(), containsTransaction = false)
 
     while (continue) {
       while (builders.exists(_.canWorkWith(planInProgress))) {
@@ -136,8 +135,6 @@ The Neo4j Team
     new FilterBuilder,
     new NamedPathBuilder,
     new ExtractBuilder,
-    //TODO: Reintroduce this when the problems with SlicePipe are solved.
-    //new SortedAggregationBuilder,
     new MatchBuilder,
     new SortBuilder,
     new ColumnFilterBuilder,

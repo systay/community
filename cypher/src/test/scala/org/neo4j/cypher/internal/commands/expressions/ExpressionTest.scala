@@ -114,4 +114,6 @@ class TestExpression extends Expression {
   def identifierDependencies(expectedType: CypherType) = Map()
 
   def calculateType(symbols: SymbolTable2): CypherType = null
+
+  def symbolTableDependencies = Set()
 }

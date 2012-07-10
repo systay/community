@@ -56,4 +56,6 @@ case class PropertySetAction(prop: Property, e: Expression)
   def checkTypes(symbols: SymbolTable2) {
     e.evaluateType(AnyType(), symbols)
   }
+
+  def symbolTableDependencies = prop.symbolTableDependencies
 }

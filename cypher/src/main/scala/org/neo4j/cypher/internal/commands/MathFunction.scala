@@ -46,6 +46,8 @@ abstract class MathFunction(arg: Expression) extends Expression with NumericHelp
   def identifierDependencies(expectedType: CypherType) = arg.identifierDependencies(NumberType())
 
   def calculateType(symbols: SymbolTable2) = arg.evaluateType(NumberType(), symbols)
+
+  def symbolTableDependencies = arg.symbolTableDependencies
 }
 
 trait NumericHelper {
@@ -102,6 +104,10 @@ case class RangeFunction(start: Expression, end: Expression, step: Expression) e
     step.evaluateType(NumberType(), symbols)
     new IterableType(NumberType())
   }
+
+  def symbolTableDependencies = start.symbolTableDependencies ++
+        end.symbolTableDependencies ++
+        step.symbolTableDependencies
 }
 
 case class SignFunction(argument: Expression) extends MathFunction(argument) {

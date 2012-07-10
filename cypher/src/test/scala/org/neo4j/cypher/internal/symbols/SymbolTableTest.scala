@@ -173,4 +173,6 @@ class FakeExpression(typ: CypherType) extends Expression {
   def filter(f: (Expression) => Boolean): Seq[Expression] = null
 
   def calculateType(symbols: SymbolTable2) = typ
+
+  def symbolTableDependencies = Set()
 }

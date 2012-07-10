@@ -46,4 +46,6 @@ case class Literal(v: Any) extends Expression {
   def identifierDependencies(expectedType: CypherType) = Map()
 
   def calculateType(symbols: SymbolTable2): CypherType = CypherType.fromJava(v)
+
+  def symbolTableDependencies = Set()
 }

@@ -51,4 +51,6 @@ case class DeletePropertyAction(element: Expression, property: String)
   def checkTypes(symbols: SymbolTable2) {
     element.evaluateType(MapType(), symbols)
   }
+
+  def symbolTableDependencies = element.symbolTableDependencies
 }

@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.{HasTypedExpressions, Literal, Property, Expression}
+import expressions.{TypeSafe, Literal, Property, Expression}
 import java.lang.String
 import collection.Seq
 import scala.collection.JavaConverters._
@@ -28,9 +28,9 @@ import org.neo4j.cypher.internal.pipes.{IdentifierDependant, Dependant}
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.helpers.ThisShouldNotHappenError
 import collection.Map
-import org.neo4j.cypher.SyntaxException
+import org.neo4j.cypher.{CypherTypeException, SyntaxException}
 
-abstract class Predicate extends Dependant with IdentifierDependant with HasTypedExpressions {
+abstract class Predicate extends Dependant with IdentifierDependant with TypeSafe {
   def ++(other: Predicate): Predicate = And(this, other)
   def isMatch(m: Map[String, Any]): Boolean
 
@@ -72,6 +72,8 @@ case class NullablePredicate(inner: Predicate, exp: Seq[(Expression, Boolean)]) 
   def checkTypes(symbols: SymbolTable2) {
     inner.checkTypes(symbols)
   }
+
+  def symbolTableDependencies = inner.symbolTableDependencies ++ exp.flatMap(_._1.symbolTableDependencies).toSet
 }
 
 
@@ -90,6 +92,8 @@ case class And(a: Predicate, b: Predicate) extends Predicate {
     a.checkTypes(symbols)
     b.checkTypes(symbols)
   }
+
+  def symbolTableDependencies = a.symbolTableDependencies ++ b.symbolTableDependencies
 }
 
 case class Or(a: Predicate, b: Predicate) extends Predicate with Dependant {
@@ -107,6 +111,8 @@ case class Or(a: Predicate, b: Predicate) extends Predicate with Dependant {
     a.checkTypes(symbols)
     b.checkTypes(symbols)
   }
+
+  def symbolTableDependencies = a.symbolTableDependencies ++ b.symbolTableDependencies
 }
 
 case class Not(a: Predicate) extends Predicate {
@@ -122,6 +128,8 @@ case class Not(a: Predicate) extends Predicate {
   def checkTypes(symbols: SymbolTable2) {
     a.checkTypes(symbols)
   }
+
+  def symbolTableDependencies = a.symbolTableDependencies
 }
 
 case class HasRelationshipTo(from: Expression, to: Expression, dir: Direction, relType: Seq[String]) extends Predicate {
@@ -154,6 +162,7 @@ case class HasRelationshipTo(from: Expression, to: Expression, dir: Direction, r
     from.checkTypes(symbols)
     to.checkTypes(symbols)
   }
+  def symbolTableDependencies = from.symbolTableDependencies ++ to.symbolTableDependencies
 }
 
 case class HasRelationship(from: Expression, dir: Direction, relType: Seq[String]) extends Predicate {
@@ -181,6 +190,8 @@ case class HasRelationship(from: Expression, dir: Direction, relType: Seq[String
   def checkTypes(symbols: SymbolTable2) {
     from.checkTypes(symbols)
   }
+
+  def symbolTableDependencies = from.symbolTableDependencies
 }
 
 case class IsNull(expression: Expression) extends Predicate {
@@ -196,6 +207,7 @@ case class IsNull(expression: Expression) extends Predicate {
   def checkTypes(symbols: SymbolTable2) {
     expression.checkTypes(symbols)
   }
+  def symbolTableDependencies = expression.symbolTableDependencies
 }
 
 case class True() extends Predicate {
@@ -209,6 +221,7 @@ case class True() extends Predicate {
   def filter(f: (Expression) => Boolean) = Seq()
   def identifierDependencies(expectedType: CypherType) = Map()
   def checkTypes(symbols: SymbolTable2) {}
+  def symbolTableDependencies = Set()
 }
 
 case class Has(property: Property) extends Predicate {
@@ -233,6 +246,8 @@ case class Has(property: Property) extends Predicate {
   def checkTypes(symbols: SymbolTable2) {
     property.checkTypes(symbols)
   }
+
+  def symbolTableDependencies = property.symbolTableDependencies
 }
 
 case class LiteralRegularExpression(a: Expression, regex: Literal) extends Predicate {
@@ -254,6 +269,8 @@ case class LiteralRegularExpression(a: Expression, regex: Literal) extends Predi
     a.checkTypes(symbols)
     regex.checkTypes(symbols)
   }
+
+  def symbolTableDependencies = a.symbolTableDependencies ++ regex.symbolTableDependencies
 }
 
 case class RegularExpression(a: Expression, regex: Expression) extends Predicate {
@@ -280,31 +297,30 @@ case class RegularExpression(a: Expression, regex: Expression) extends Predicate
     a.checkTypes(symbols)
     regex.checkTypes(symbols)
   }
+  def symbolTableDependencies = a.symbolTableDependencies ++ regex.symbolTableDependencies
 }
 
-case class NonEmpty(inner:Expression) extends Predicate with IterableSupport {
+case class NonEmpty(collection:Expression) extends Predicate with IterableSupport {
   def isMatch(m: Map[String, Any]): Boolean = {
-    val collection = inner(m)
-    if (this.isCollection(collection)) {
-      this.makeTraversable(inner(m)).nonEmpty
-    } else if(collection == null) {
-      false
-    } else    {
-      throw new SyntaxException("wut")
+    collection(m) match {
+      case IsIterable(x) => this.makeTraversable(collection(m)).nonEmpty
+      case null          => false
+      case x             => throw new CypherTypeException("Expected a collection, got `%s`".format(x))
     }
-
   }
 
-  def dependencies: Seq[Identifier] = inner.dependencies(AnyIterableType())
+  def dependencies: Seq[Identifier] = collection.dependencies(AnyIterableType())
   def atoms: Seq[Predicate] = Seq(this)
-  override def toString: String = "nonEmpty(" + inner.identifier.name + ")"
+  override def toString: String = "nonEmpty(" + collection.identifier.name + ")"
   def containsIsNull = false
-  def exists(f: (Expression) => Boolean) = inner.exists(f)
-  def rewrite(f: (Expression) => Expression) = NonEmpty(inner.rewrite(f))
-  def filter(f: (Expression) => Boolean) = inner.filter(f)
-  def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(AnyIterableType())
+  def exists(f: (Expression) => Boolean) = collection.exists(f)
+  def rewrite(f: (Expression) => Expression) = NonEmpty(collection.rewrite(f))
+  def filter(f: (Expression) => Boolean) = collection.filter(f)
+  def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
 
   def checkTypes(symbols: SymbolTable2) {
-    inner.checkTypes(symbols)
+    collection.checkTypes(symbols)
   }
+
+  def symbolTableDependencies = collection.symbolTableDependencies
 }

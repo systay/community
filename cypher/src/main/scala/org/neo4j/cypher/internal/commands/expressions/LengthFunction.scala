@@ -50,4 +50,6 @@ with ExpressionWInnerExpression {
 
   val myType = LongType()
   val expectedInnerType = AnyIterableType()
+
+  def symbolTableDependencies = inner.symbolTableDependencies
 }

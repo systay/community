@@ -87,6 +87,8 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
     ast.checkTypes(symbols)
     PathType()
   }
+
+  def symbolTableDependencies = ast.symbolTableDependencies
 }
 
 trait FOO {

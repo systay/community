@@ -70,4 +70,6 @@ case class Add(a: Expression, b: Expression) extends Expression {
     val mergedInnerType = iterableType.iteratedType.mergeWith(singleElement)
     new IterableType(mergedInnerType)
   }
+
+  def symbolTableDependencies = a.symbolTableDependencies ++ b.symbolTableDependencies
 }
