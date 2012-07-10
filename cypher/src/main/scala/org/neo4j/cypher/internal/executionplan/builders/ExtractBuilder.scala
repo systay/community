@@ -48,8 +48,8 @@ object ExtractBuilder {
 
     if (missing.nonEmpty) {
       val newPsq = expressions.foldLeft(query)((psq, exp) => psq.rewrite(fromQueryExpression =>
-        if (exp == fromQueryExpression)
-          CachedExpression(fromQueryExpression.identifier.name, fromQueryExpression.getType(plan.pipe.symbols2))
+        if (exp._2 == fromQueryExpression)
+          CachedExpression(exp._1, fromQueryExpression.getType(plan.pipe.symbols2))
         else
           fromQueryExpression
       ))

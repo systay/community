@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.junit.Test
 import org.junit.Assert._
 import org.neo4j.cypher.internal.commands.SortItem
-import org.neo4j.cypher.internal.symbols.{ScalarType, Identifier}
+import org.neo4j.cypher.internal.symbols.{AnyType, ScalarType, Identifier}
 import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
 import org.neo4j.cypher.internal.commands.expressions.{CachedExpression, Property}
 
@@ -36,7 +36,7 @@ class SortBuilderTest extends BuilderTest {
       extracted = true
     )
 
-    val expected = List(Solved(SortItem(CachedExpression("x.foo", ScalarType()), ascending = true)))
+    val expected = List(Solved(SortItem(CachedExpression("x.foo", AnyType()), ascending = true)))
 
     val p = createPipe(nodes = Seq("x"))
 

@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.pipes
 
 import org.neo4j.cypher.internal.commands.ReturnItem
 import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, Identifier, SymbolTable}
-import org.neo4j.cypher.internal.commands.expressions.ParameterValue
+import org.neo4j.cypher.internal.commands.expressions.{Entity, CachedExpression, ParameterValue}
 
 class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe: Boolean)
   extends PipeWithSource(source) {
@@ -43,11 +43,17 @@ class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe:
     source.createResults(state).map(ctx => {
       val newMap = MutableMaps.create(ctx.size)
 
-      ctx.foreach {
-        // TODO: Parameters should really be in the state and not in the execution context
-        case (k, p: ParameterValue) if !lastPipe     => newMap.put(k, p)
-        case (k, p) if (returnItemNames.contains(k)) => newMap.put(k, p)
-        case _                                       =>
+      returnItems.foreach {
+        case ReturnItem(Entity(oldName), newName, _)              => newMap.put(newName, ctx(oldName))
+        case ReturnItem(CachedExpression(oldName, _), newName, _) => newMap.put(newName, ctx(oldName))
+        case ReturnItem(_, name, _)                               => newMap.put(name, ctx(name))
+      }
+
+      if (!lastPipe) {
+        ctx.foreach {
+          case (k, p: ParameterValue) => newMap.put(k, p)
+          case _ =>
+        }
       }
 
       ctx.newFrom( newMap )

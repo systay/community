@@ -52,7 +52,8 @@ with Typed {
   def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2): T = {
     val t = calculateType(symbols)
 
-    if (!expectedType.isAssignableFrom(t)) {   //TODO - should be similar to symtboable excption
+    if (!expectedType.isAssignableFrom(t) &&
+        !t.isAssignableFrom(expectedType)) {
       throw new CypherTypeException("expected: %s but got %s".format(expectedType, t))
     }
 

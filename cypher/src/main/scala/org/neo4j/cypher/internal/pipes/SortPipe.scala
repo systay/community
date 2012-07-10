@@ -49,6 +49,8 @@ class SortPipe(source: Pipe, sortDescription: List[SortItem]) extends Pipe with 
   override def executionPlan(): String = source.executionPlan() + "\r\nSort(" + sortDescription.mkString(",") + ")"
 
   private def assertDependenciesAreMet() {
-    sortDescription.map(_.expression.identifier).foreach( source.symbols.assertHas )
+    sortDescription.foreach {
+      case SortItem(e,_) => e.checkTypes(source.symbols2)
+    }
   }
 }

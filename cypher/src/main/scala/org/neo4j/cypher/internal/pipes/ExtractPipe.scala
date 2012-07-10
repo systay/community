@@ -28,11 +28,7 @@ import org.neo4j.cypher.internal.symbols.Identifier
 //This class will extract properties and other stuff to make the maps
 //easy to work with for other pipes
 class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extends PipeWithSource(source) {
-  def dependencies = {
-    val seq: Seq[Identifier] = expressions.values.flatMap(_.dependencies(AnyType())).toSeq
-    println(seq)
-    seq
-  }
+  def dependencies = expressions.values.flatMap(_.dependencies(AnyType())).toSeq
 
   def getSymbolType(item: ReturnItem): Identifier = item.identifier
 

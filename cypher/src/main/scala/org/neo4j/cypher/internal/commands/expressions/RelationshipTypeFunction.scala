@@ -42,6 +42,6 @@ case class RelationshipTypeFunction(relationship: Expression) extends NullInNull
 
   def calculateType(symbols: SymbolTable2) = {
     relationship.evaluateType(RelationshipType(), symbols)
-    RelationshipType()
+    StringType()
   }
 }
