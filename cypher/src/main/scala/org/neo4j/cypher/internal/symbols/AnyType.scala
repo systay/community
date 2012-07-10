@@ -44,6 +44,8 @@ object CypherType {
 trait CypherType {
   def isAssignableFrom(other: CypherType): Boolean = this.getClass.isAssignableFrom(other.getClass)
 
+  def iteratedType: CypherType = throw new RuntimeException("wut")
+
   def mergeWith(other: CypherType): CypherType = {
     if (this.isAssignableFrom(other)) other
     else if (other.isAssignableFrom(this)) this
@@ -63,6 +65,8 @@ case class AnyType() extends CypherType {
       case x: AnyRef => x.getClass == this.getClass
       case _ => false
     }
+
+  override val iteratedType: CypherType = this
 
   override def toString: String = this.getClass.getSimpleName
 

@@ -65,7 +65,7 @@ case class Add(a: Expression, b: Expression) extends Expression {
     }
   }
 
-  private def mergeWithCollection(collection: AnyType, singleElement: AnyType):CypherType= {
+  private def mergeWithCollection(collection: CypherType, singleElement: CypherType):CypherType= {
     val iterableType = collection.asInstanceOf[IterableType]
     val mergedInnerType = iterableType.iteratedType.mergeWith(singleElement)
     new IterableType(mergedInnerType)

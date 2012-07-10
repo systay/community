@@ -123,6 +123,11 @@ class VariableLengthPatternRelationship(pathName: String,
     Identifier(key, new IterableType(RelationshipType()))) ++
                                                relIterable.toSeq.map(Identifier(_, new IterableType(RelationshipType())))
 
+  override def identifiers2: Map[String, CypherType] =
+    Map(startNode.key -> NodeType(),
+      endNode.key -> NodeType(),
+      key -> new IterableType(RelationshipType())) ++ relIterable.map(_ -> new IterableType(RelationshipType())).toMap
+
   override def getGraphRelationships(node: PatternNode, realNode: Node): Seq[GraphRelationship] = {
 
     val depthEval = (minHops, maxHops) match {

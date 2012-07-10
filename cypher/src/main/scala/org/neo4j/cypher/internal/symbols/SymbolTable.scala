@@ -121,18 +121,16 @@ class SymbolTable(val identifiers: Identifier*) {
 }
 
 class SymbolTable2(val identifiers: Map[String, CypherType]) {
+  def size: Int = identifiers.size
   def this()=this(Map())
   def add(key: String, typ: CypherType): SymbolTable2 = new SymbolTable2(identifiers + (key -> typ))
   def add(value: Map[String, CypherType]):SymbolTable2 = new SymbolTable2(identifiers ++ value)
   def filter(f:String=>Boolean): SymbolTable2 = new SymbolTable2(identifiers.filterKeys(f))
 
-  def evaluateType[T <: CypherType](name:String, expectedType: T):T = identifiers.get(name) match {
-    case Some(typ) if (expectedType.isAssignableFrom(typ))          => typ.asInstanceOf[T]
-    case Some(typ) if (typ.isAssignableFrom(expectedType))          => typ.asInstanceOf[T]
-    case Some(typ)                                                  => throw new CypherTypeException(
-      """Expected identifier `%s` to be of type:
-%s, but it is of type:
-%s.""".format(name, expectedType, typ))
-    case None                                                       => throw new CypherTypeException("Need an identifier named `%s` but no such found".format(name))
+  def evaluateType[T <: CypherType](name: String, expectedType: T): T = identifiers.get(name) match {
+    case Some(typ) if (expectedType.isAssignableFrom(typ)) => typ.asInstanceOf[T]
+    case Some(typ) if (typ.isAssignableFrom(expectedType)) => typ.asInstanceOf[T]
+    case Some(typ)                                         => throw new CypherTypeException("Expected `%s` to be a %s but it was %s".format(name, expectedType, typ))
+    case None                                              => throw new CypherTypeException("Unknown identifier `%s`.".format(name))
   }
 }

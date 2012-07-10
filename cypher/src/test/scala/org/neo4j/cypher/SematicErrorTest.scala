@@ -25,7 +25,7 @@ import org.junit.Test
 class SematicErrorTest extends ExecutionEngineHelper {
   @Test def returnNodeThatsNotThere() {
     expectedError("start x=node(0) return bar",
-      """Unknown identifier `bar`.""")
+      "Unknown identifier `bar`.")
   }
 
   @Test def throwOnDisconnectedPattern() {

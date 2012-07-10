@@ -38,7 +38,6 @@ import org.neo4j.kernel.GraphDatabaseAPI
 trait Pipe {
   def createResults(state: QueryState): Traversable[ExecutionContext]
 
-  def symbols: SymbolTable
   def symbols2: SymbolTable2
 
   def executionPlan(): String

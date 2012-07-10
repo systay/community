@@ -19,9 +19,13 @@
  */
 package org.neo4j.cypher.internal.pipes
 
+import org.neo4j.cypher.internal.symbols._
+import org.neo4j.cypher.internal.commands.expressions.Entity
+import org.neo4j.cypher.internal.commands.expressions.CachedExpression
+import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.cypher.internal.commands.expressions.ParameterValue
 import org.neo4j.cypher.internal.commands.ReturnItem
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, Identifier, SymbolTable}
-import org.neo4j.cypher.internal.commands.expressions.{Entity, CachedExpression, ParameterValue}
+import org.neo4j.cypher.internal.symbols.Identifier
 
 class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe: Boolean)
   extends PipeWithSource(source) {
@@ -29,7 +33,7 @@ class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe:
   val symbols = new SymbolTable(identifiers: _*)
   val symbols2 = new SymbolTable2(identifiers2.toMap)
 
-  private lazy val identifiers2: Seq[(String, AnyType)] = returnItems.
+  private lazy val identifiers2: Seq[(String, CypherType)] = returnItems.
     map( ri => ri.name->ri.expression.evaluateType(AnyType(), source.symbols2))
 
   private lazy val identifiers = source.symbols.identifiers.flatMap {

@@ -28,10 +28,11 @@ import java.util.{Map => JavaMap}
 import scala.collection.JavaConverters._
 import collection.Map
 import org.neo4j.cypher.internal.commands._
-import expressions.{HasTypedExpressions, Expression}
+import expressions.{TypeSafe, HasTypedExpressions, Expression}
 
-trait UpdateAction extends IdentifierDependantHelper with HasTypedExpressions {
+trait UpdateAction extends IdentifierDependantHelper with TypeSafe {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
+  def checkTypes(symbols:SymbolTable2)
   def dependencies:Seq[Identifier]
   def identifier:Seq[Identifier]
   def identifier2:Seq[(String,CypherType)]

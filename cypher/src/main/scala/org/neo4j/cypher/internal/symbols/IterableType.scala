@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.symbols
 
 import java.lang.String
 
-class IterableType(val iteratedType: CypherType) extends AnyType {
+class IterableType(override val iteratedType: CypherType) extends AnyType {
 
   override def toString: String = "IterableType<" + iteratedType + ">"
 

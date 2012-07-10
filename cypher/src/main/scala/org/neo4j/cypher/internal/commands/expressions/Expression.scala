@@ -26,7 +26,8 @@ import collection.Map
 
 abstract class Expression extends (Map[String, Any] => Any)
 with IdentifierDependant
-with Typed {
+with Typed
+with TypeSafe {
   protected def compute(v1: Map[String, Any]) : Any
   def apply(m: Map[String, Any]) = m.getOrElse(identifier.name, compute(m))
 
@@ -49,7 +50,7 @@ with Typed {
 
   protected def calculateType(symbols: SymbolTable2): CypherType
 
-  def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2): T = {
+  def evaluateType(expectedType: CypherType, symbols: SymbolTable2): CypherType = {
     val t = calculateType(symbols)
 
     if (!expectedType.isAssignableFrom(t) &&
@@ -57,8 +58,38 @@ with Typed {
       throw new CypherTypeException("expected: %s but got %s".format(expectedType, t))
     }
 
-    t.asInstanceOf[T]
+    t
   }
+
+  def checkTypes(symbols: SymbolTable2) {
+    evaluateType(AnyType(), symbols)
+  }
+}
+
+/*
+TypeSafe is everything that needs to check it's types
+ */
+trait TypeSafe {
+  /*
+  Checks if internal type dependencies are met
+  */
+  def checkTypes(symbols: SymbolTable2)
+
+  def symbolDependenciesMet(symbols: SymbolTable2):Boolean = {
+    symbolTableDependencies.exists {
+      case (name, typ) => !check(symbols, name, typ)
+    }
+  }
+
+  def symbolTableDependencies : Map[String,CypherType]
+
+  private def check(symbols: SymbolTable2, name: String, typ: CypherType): Boolean = try {
+    symbols.evaluateType(name, typ)
+    true
+  } catch {
+    case _ => false
+  }
+
 }
 
 /*
@@ -69,23 +100,14 @@ trait Typed {
   Checks if internal type dependencies are met, checks if the expected type is valid,
   and returns the actual type of the expression
    */
-  def evaluateType[T <: CypherType](expectedType: T, symbols: SymbolTable2): T
+  def evaluateType(expectedType: CypherType, symbols: SymbolTable2): CypherType
 
   /*
-  Checks if internal type dependencies are met
-   */
-  def checkTypes(symbols: SymbolTable2) {
-    evaluateType(AnyType(), symbols)
-  }
-
-  /*
- Checks if internal type dependencies are met and returns the actual type of the expression
+  Checks if internal type dependencies are met and returns the actual type of the expression
   */
   def getType(symbols: SymbolTable2):CypherType = evaluateType(AnyType(), symbols)
-}
 
-trait HasTypedExpressions {
-  def checkTypes(symbols:SymbolTable2)
+
 }
 
 case class CachedExpression(key:String, typ:CypherType) extends CastableExpression {
@@ -101,6 +123,8 @@ case class CachedExpression(key:String, typ:CypherType) extends CastableExpressi
   def calculateType(symbols: SymbolTable2) = typ
 
   val identifier = Identifier(key, typ)
+
+  def symbolTableDependencies() = Map(key -> typ)
 }
 
 abstract class Arithmetics(left: Expression, right: Expression)
