@@ -57,5 +57,5 @@ case class PropertySetAction(prop: Property, e: Expression)
     e.evaluateType(AnyType(), symbols)
   }
 
-  def symbolTableDependencies = prop.symbolTableDependencies
+  def symbolTableDependencies = prop.symbolTableDependencies ++ e.symbolTableDependencies
 }

@@ -22,11 +22,12 @@ package org.neo4j.cypher.internal.pipes
 import matching.{PatternGraph, MatchingContext}
 import java.lang.String
 import org.neo4j.cypher.internal.commands.Predicate
+import org.neo4j.cypher.internal.symbols.{Identifier, SymbolTable}
 
 class MatchPipe(source: Pipe, predicates: Seq[Predicate], patternGraph: PatternGraph) extends Pipe {
-  val matchingContext = new MatchingContext(source.symbols, source.symbols2, predicates, patternGraph)
-  val symbols = matchingContext.symbols
-  val symbols2 = matchingContext.symbols2
+  val matchingContext = new MatchingContext(source.symbols2, predicates, patternGraph)
+  val symbols2 = matchingContext.symbols
+  val symbols = new SymbolTable(symbols2.identifiers.map(x => Identifier(x._1, x._2)).toSeq:_*)
 
   def createResults(state: QueryState) =
     source.createResults(state).flatMap(ctx => {

@@ -83,8 +83,11 @@ trait TypeSafe {
     case _=> false
   }
 
-  def symbolDependenciesMet(symbols: SymbolTable2): Boolean =
-    !symbolTableDependencies.exists(name => !check(symbols, name))
+  def symbolDependenciesMet(symbols: SymbolTable2): Boolean = {
+    val apa = symbolTableDependencies
+    val x = apa.filter(name => !check(symbols, name))
+    x.isEmpty
+  }
 
   def symbolTableDependencies : Set[String]
 

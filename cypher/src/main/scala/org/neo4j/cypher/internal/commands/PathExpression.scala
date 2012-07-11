@@ -36,7 +36,7 @@ case class PathExpression(pathPattern: Seq[Pattern])
   val identifiers: Seq[(String, CypherType)] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p => p._1.startsWith("  UNNAMED")))
 
   val symbols2 = new SymbolTable2(identifiers.toMap)
-  val matchingContext = new MatchingContext(symbols, symbols2, Seq(), buildPatternGraph(symbols, pathPattern))
+  val matchingContext = new MatchingContext(symbols2, Seq(), buildPatternGraph(symbols2, pathPattern))
   val interestingPoints = pathPattern.flatMap(_.possibleStartPoints.map(_._1)).distinct
 
   def compute(m: Map[String, Any]): Any = {

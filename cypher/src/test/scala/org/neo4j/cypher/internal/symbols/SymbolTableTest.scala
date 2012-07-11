@@ -89,7 +89,7 @@ class SymbolTable2Test extends Assertions {
     val s = createSymbols()
 
     //then
-    intercept[CypherTypeException](s.evaluateType("p", AnyType()))
+    intercept[SyntaxException](s.evaluateType("p", AnyType()))
   }
 
   @Test def identifier_with_wrong_type() {

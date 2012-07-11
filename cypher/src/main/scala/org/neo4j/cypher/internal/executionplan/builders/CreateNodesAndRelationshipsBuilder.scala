@@ -78,15 +78,15 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
 
   def applicableTo(pipe: Pipe)(start: QueryToken[StartItem]):Boolean = start match {
     case Unsolved(x: CreateNodeStartItem)         => x.checkTypes(pipe.symbols2)
-    case Unsolved(x: CreateRelationshipStartItem) => pipe.symbols.satisfies(x.dependencies.toSeq)
+    case Unsolved(x: CreateRelationshipStartItem) => x.checkTypes(pipe.symbols2)
     case _                                        => false
   }
 
-  override def missingDependencies(plan: ExecutionPlanInProgress) = plan.query.start.flatMap {
-    case Unsolved(x: CreateNodeStartItem)         => plan.pipe.symbols.missingDependencies(x.dependencies.toSeq)
-    case Unsolved(x: CreateRelationshipStartItem) => plan.pipe.symbols.missingDependencies(x.dependencies.toSeq)
+  override def missingDependencies(plan: ExecutionPlanInProgress): Seq[String] = plan.query.start.flatMap {
+    case Unsolved(x: CreateNodeStartItem)         => plan.pipe.symbols2.missingSymbolTableDependencies(x)
+    case Unsolved(x: CreateRelationshipStartItem) => plan.pipe.symbols2.missingSymbolTableDependencies(x)
     case _                                        => Seq()
-  }.map(_.name)
+  }
 
   def canWorkWith(plan: ExecutionPlanInProgress) = plan.query.start.exists(applicableTo(plan.pipe))
 

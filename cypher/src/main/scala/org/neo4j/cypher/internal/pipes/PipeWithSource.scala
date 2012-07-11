@@ -25,7 +25,7 @@ import org.neo4j.cypher.internal.symbols.{CypherType, Identifier}
 import org.neo4j.helpers.ThisShouldNotHappenError
 
 abstract class PipeWithSource(val source: Pipe) extends Pipe with Dependant with IdentifierDependantHelper {
-  dependencies.foreach(source.symbols.assertHas(_))
+//  dependencies.foreach(source.symbols.assertHas(_))
 
   def deps:Map[String, CypherType]
 }

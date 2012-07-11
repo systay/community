@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.symbols
 
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
-import org.neo4j.cypher.internal.commands.expressions.Expression
+import org.neo4j.cypher.internal.commands.expressions.{TypeSafe, Typed, Expression}
 import collection.Map
 
 class SymbolTable(val identifiers: Identifier*) {
@@ -123,16 +123,18 @@ class SymbolTable(val identifiers: Identifier*) {
 class SymbolTable2(val identifiers: Map[String, CypherType]) {
   def hasIdentifierNamed(name: String): Boolean = identifiers.contains(name)
   def size: Int = identifiers.size
-  def this()=this(Map())
+  def this() = this(Map())
   def add(key: String, typ: CypherType): SymbolTable2 = new SymbolTable2(identifiers + (key -> typ))
-  def add(value: Map[String, CypherType]):SymbolTable2 = new SymbolTable2(identifiers ++ value)
-  def filter(f:String=>Boolean): SymbolTable2 = new SymbolTable2(identifiers.filterKeys(f))
+  def add(value: Map[String, CypherType]): SymbolTable2 = new SymbolTable2(identifiers ++ value)
+  def filter(f: String => Boolean): SymbolTable2 = new SymbolTable2(identifiers.filterKeys(f))
+  def keys: Seq[String] = identifiers.map(_._1).toSeq
+  def missingSymbolTableDependencies(x: TypeSafe) = x.symbolTableDependencies.filterNot( dep => identifiers.exists(_._1 == dep))
 
   def evaluateType(name: String, expectedType: CypherType): CypherType = identifiers.get(name) match {
     case Some(typ) if (expectedType.isAssignableFrom(typ)) => typ
     case Some(typ) if (typ.isAssignableFrom(expectedType)) => typ
     case Some(typ)                                         => throw new CypherTypeException("Expected `%s` to be a %s but it was %s".format(name, expectedType, typ))
-    case None                                              => throw new CypherTypeException("Unknown identifier `%s`.".format(name))
+    case None                                              => throw new SyntaxException("Unknown identifier `%s`.".format(name))
   }
 
   def checkType(name: String, expectedType: CypherType): Boolean = try {

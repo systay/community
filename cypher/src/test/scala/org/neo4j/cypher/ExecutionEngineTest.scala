@@ -1221,11 +1221,9 @@ return a""")
 
     val result = parseAndExecute( """
 start a  = node(1)
-return a as OneLove""").toList
+return a as OneLove""")
 
-    println(result)
-
-//    assert(List(a) === result.columnAs[Node]("OneLove").toList)
+    assert(List(a) === result.columnAs[Node]("OneLove").toList)
   }
 
   @Test def shouldSupportColumnRenamingForAggregatesAsWell() {

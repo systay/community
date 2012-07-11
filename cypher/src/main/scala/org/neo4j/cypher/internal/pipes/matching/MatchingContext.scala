@@ -29,18 +29,15 @@ import collection.Map
  * The deciding factor is whether or not the pattern has loops in it. If it does, we have to use the much more
  * expensive pattern matching. If it doesn't, we get away with much simpler methods
  */
-class MatchingContext(boundIdentifiers: SymbolTable,
-                      boundIdentifiers2: SymbolTable2,
+class MatchingContext(boundIdentifiers: SymbolTable2,
                       predicates: Seq[Predicate] = Seq(),
                       patternGraph: PatternGraph) {
 
   val builder: MatcherBuilder = decideWhichMatcherToUse()
 
-  private def identifiers:Seq[Identifier] = patternGraph.patternRels.values.flatMap(p => p.identifiers).toSeq
-  private def identifiers2 = patternGraph.patternRels.values.flatMap(p => p.identifiers2).toMap
+  private def identifiers = patternGraph.patternRels.values.flatMap(p => p.identifiers2).toMap
 
-  lazy val symbols = boundIdentifiers.add(identifiers: _*)
-  lazy val symbols2 = boundIdentifiers2.add(identifiers2)
+  lazy val symbols = boundIdentifiers.add(identifiers)
 
   def getMatches(sourceRow: Map[String, Any]): Traversable[Map[String, Any]] = {
     builder.getMatches(sourceRow)

@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.neo4j.cypher.internal.pipes.{MatchPipe, Pipe}
 import org.neo4j.cypher.internal.commands._
 import org.neo4j.cypher.internal.executionplan.PlanBuilder
-import org.neo4j.cypher.internal.symbols.{NodeType, SymbolTable}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, NodeType}
 import org.neo4j.cypher.internal.pipes.matching.{PatternRelationship, PatternNode, PatternGraph}
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.cypher.internal.executionplan.ExecutionPlanInProgress
@@ -36,7 +36,7 @@ class MatchBuilder extends PlanBuilder with PatternGraphBuilder {
     val items = q.patterns.filter(yesOrNo(_, p, q.start))
     val patterns = items.map(_.token)
     val predicates = q.where.filter(!_.solved).map(_.token)
-    val graph = buildPatternGraph(p.symbols, patterns)
+    val graph = buildPatternGraph(p.symbols2, patterns)
 
     val mandatoryGraph = graph.mandatoryGraph
 
@@ -63,13 +63,19 @@ class MatchBuilder extends PlanBuilder with PatternGraphBuilder {
   private def yesOrNo(q: QueryToken[_], p: Pipe, start: Seq[QueryToken[StartItem]]) = q match {
     case Unsolved(x: ShortestPath) => false
     case Unsolved(x: Pattern) => {
+      val patternIdentifiers = x.possibleStartPoints.map(_._1)
+      val startItems = start.map(_.token.identifierName)
 
-      val resolvedStartPoints = start.map(si => x.possibleStartPoints.find(_._1 == si.token.identifierName) match {
+      startItems.exists( patternIdentifiers.contains )
+
+      val apa = start.map(si => patternIdentifiers.find(_ == si.token.identifierName) match {
         case Some(_) => si.solved
         case None => true
-      }).foldLeft(true)(_ && _)
+      })
 
-      lazy val pipeSatisfied = p.symbols.satisfies(x.predicate.dependencies)
+      val resolvedStartPoints =  apa.foldLeft(true)(_ && _)
+
+      val pipeSatisfied = x.predicate.checkTypes(p.symbols2)
 
       resolvedStartPoints && pipeSatisfied
     }
@@ -80,13 +86,13 @@ class MatchBuilder extends PlanBuilder with PatternGraphBuilder {
 }
 
 trait PatternGraphBuilder {
-  def buildPatternGraph(boundIdentifiers: SymbolTable, patterns: Seq[Pattern]): PatternGraph = {
+  def buildPatternGraph(boundIdentifiers: SymbolTable2, patterns: Seq[Pattern]): PatternGraph = {
     val patternNodeMap: scala.collection.mutable.Map[String, PatternNode] = scala.collection.mutable.Map()
     val patternRelMap: scala.collection.mutable.Map[String, PatternRelationship] = scala.collection.mutable.Map()
 
     boundIdentifiers.identifiers.
-      filter(_.typ == NodeType()). //Find all bound nodes...
-      foreach(id => patternNodeMap(id.name) = new PatternNode(id.name)) //...and create patternNodes for them
+      filter(_._2 == NodeType()). //Find all bound nodes...
+      foreach(id => patternNodeMap(id._1) = new PatternNode(id._1)) //...and create patternNodes for them
 
     patterns.foreach(_ match {
       case RelatedTo(left, right, rel, relType, dir, optional, predicate) => {
@@ -109,5 +115,4 @@ trait PatternGraphBuilder {
 
     new PatternGraph(patternNodeMap.toMap, patternRelMap.toMap, boundIdentifiers.keys)
   }
-
 }
