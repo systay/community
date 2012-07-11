@@ -66,9 +66,9 @@ abstract class InIterable(collection: Expression, id: String, predicate: Predica
     mergedDeps.filterKeys(_ != id)
   }
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     val innerType = collection.evaluateType(AnyIterableType(), symbols).iteratedType
-    predicate.checkTypes(symbols.add(id, innerType))
+    predicate.assertTypes(symbols.add(id, innerType))
   }
 
   def symbolTableDependencies = symbolTableDependencies(collection, predicate, id)

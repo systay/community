@@ -57,7 +57,7 @@ case class NamedExpectation(name: String, properties: Map[String, Expression])
 
   def symbolTableDependencies = symbolTableDependencies(properties)
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     checkTypes(properties, symbols)
   }
 }
@@ -174,7 +174,7 @@ case class RelateLink(start: NamedExpectation, end: NamedExpectation, rel: Named
 
   def deps:Map[String,CypherType] = mergeDeps(Seq(start.deps, end.deps, rel.deps))
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     checkTypes(start.properties, symbols)
     checkTypes(end.properties, symbols)
     checkTypes(rel.properties, symbols)

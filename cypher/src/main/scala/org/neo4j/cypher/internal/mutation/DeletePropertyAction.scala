@@ -48,7 +48,7 @@ case class DeletePropertyAction(element: Expression, property: String)
 
   def deps = element.identifierDependencies(ScalarType())
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     element.evaluateType(MapType(), symbols)
   }
 

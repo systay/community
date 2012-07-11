@@ -48,7 +48,7 @@ class ColumnFilterBuilder extends PlanBuilder {
 
       val filterPipe = new ColumnFilterPipe(newPlan.pipe, returnItems, isLastPipe)
 
-      val resultPipe = if (filterPipe.symbols != p.symbols || isLastPipe) {
+      val resultPipe = if (filterPipe.symbols2 != p.symbols2 || isLastPipe) {
         filterPipe
       } else {
         p

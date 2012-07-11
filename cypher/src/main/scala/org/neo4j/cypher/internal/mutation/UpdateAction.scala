@@ -32,7 +32,7 @@ import expressions.{TypeSafe, Expression}
 
 trait UpdateAction extends IdentifierDependantHelper with TypeSafe {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
-  def checkTypes(symbols:SymbolTable2)
+  def assertTypes(symbols:SymbolTable2)
   def dependencies:Seq[Identifier]
   def identifier:Seq[Identifier]
   def identifier2:Seq[(String,CypherType)]

@@ -23,7 +23,7 @@ import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBui
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.cypher.internal.pipes.{Pipe, ExecuteUpdateCommandsPipe, TransactionStartPipe}
 import org.neo4j.cypher.internal.mutation.UpdateAction
-import org.neo4j.cypher.internal.symbols.{NodeType, Identifier, SymbolTable}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, NodeType}
 import org.neo4j.cypher.internal.commands._
 import collection.Map
 import expressions.{Entity, Expression}
@@ -34,7 +34,7 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
     val q = plan.query
     val mutatingQueryTokens = q.start.filter(applicableTo(plan.pipe))
     val commands = mutatingQueryTokens.map(_.token.asInstanceOf[UpdateAction])
-    val allCommands = expandCommands(commands, plan.pipe.symbols)
+    val allCommands = expandCommands(commands, plan.pipe.symbols2)
 
     val p = if (plan.containsTransaction) {
       plan.pipe
@@ -48,24 +48,24 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
     plan.copy(query = q.copy(start = resultQuery), pipe = resultPipe, containsTransaction = true)
   }
 
-  private def expandCommands(commands: Seq[UpdateAction], symbols: SymbolTable): Seq[UpdateAction] = {
+  private def expandCommands(commands: Seq[UpdateAction], symbols: SymbolTable2): Seq[UpdateAction] = {
     val missingCreateNodeActions = commands.flatMap {
-      case createNode: CreateNodeStartItem => Seq()
+      case createNode: CreateNodeStartItem        => Seq()
       case createRel: CreateRelationshipStartItem =>
-        alsoCreateNode(createRel.from, symbols, commands) ++
+          alsoCreateNode(createRel.from, symbols, commands) ++
           alsoCreateNode(createRel.to, symbols, commands)
-      case x => Seq()
+      case x                                      => Seq()
     }
 
     missingCreateNodeActions.distinct ++ commands
   }
 
-  private def alsoCreateNode(e: (Expression, Map[String,Expression]), symbols: SymbolTable, commands: Seq[UpdateAction]): Seq[UpdateAction] = e._1 match {
+  private def alsoCreateNode(e: (Expression, Map[String, Expression]), symbols: SymbolTable2, commands: Seq[UpdateAction]): Seq[UpdateAction] = e._1 match {
     case Entity(name) =>
-      val nodeFromUnderlyingPipe = symbols.satisfies(Seq(Identifier(name, NodeType())))
+      val nodeFromUnderlyingPipe = symbols.checkType(name, NodeType())
       val nodeFromOtherCommand = commands.exists {
         case CreateNodeStartItem(n, _) => n == name
-        case _ => false
+        case _                         => false
       }
 
       if (!nodeFromUnderlyingPipe && !nodeFromOtherCommand)
@@ -76,19 +76,16 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
     case _ => Seq()
   }
 
-
-  //key: String, from: Expression, to: Expression, typ: String, props: Map[String, Expression])
-
-  def applicableTo(pipe: Pipe)(start: QueryToken[StartItem]) = start match {
-    case Unsolved(x: CreateNodeStartItem) => pipe.symbols.satisfies(x.dependencies.toSeq)
+  def applicableTo(pipe: Pipe)(start: QueryToken[StartItem]):Boolean = start match {
+    case Unsolved(x: CreateNodeStartItem)         => x.checkTypes(pipe.symbols2)
     case Unsolved(x: CreateRelationshipStartItem) => pipe.symbols.satisfies(x.dependencies.toSeq)
-    case _ => false
+    case _                                        => false
   }
 
   override def missingDependencies(plan: ExecutionPlanInProgress) = plan.query.start.flatMap {
-    case Unsolved(x: CreateNodeStartItem) => plan.pipe.symbols.missingDependencies(x.dependencies.toSeq)
+    case Unsolved(x: CreateNodeStartItem)         => plan.pipe.symbols.missingDependencies(x.dependencies.toSeq)
     case Unsolved(x: CreateRelationshipStartItem) => plan.pipe.symbols.missingDependencies(x.dependencies.toSeq)
-    case _ => Seq()
+    case _                                        => Seq()
   }.map(_.name)
 
   def canWorkWith(plan: ExecutionPlanInProgress) = plan.query.start.exists(applicableTo(plan.pipe))

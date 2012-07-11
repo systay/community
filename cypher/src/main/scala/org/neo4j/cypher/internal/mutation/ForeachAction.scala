@@ -76,12 +76,12 @@ case class ForeachAction(collection: Expression, id: String, actions: Seq[Update
     mergedDeps.filterKeys(_ != id)
   }
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     val t = collection.evaluateType(AnyIterableType(), symbols).iteratedType
 
     val innerSymbols: SymbolTable2 = symbols.add(id, t)
 
-    actions.foreach(_.checkTypes(innerSymbols))
+    actions.foreach(_.assertTypes(innerSymbols))
   }
 
   def symbolTableDependencies = {

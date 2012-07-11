@@ -50,7 +50,7 @@ class SortPipe(source: Pipe, sortDescription: List[SortItem]) extends Pipe with 
 
   private def assertDependenciesAreMet() {
     sortDescription.foreach {
-      case SortItem(e,_) => e.checkTypes(source.symbols2)
+      case SortItem(e,_) => e.assertTypes(source.symbols2)
     }
   }
 }

@@ -84,7 +84,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
   def identifierDependencies(expectedType: CypherType) = ast.identifierDependencies(PathType())
 
   def calculateType(symbols: SymbolTable2) = {
-    ast.checkTypes(symbols)
+    ast.assertTypes(symbols)
     PathType()
   }
 

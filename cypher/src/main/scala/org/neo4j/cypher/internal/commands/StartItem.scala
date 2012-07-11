@@ -90,7 +90,7 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
 
   def deps = deps(props)
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     checkTypes(props, symbols)
   }
 
@@ -141,7 +141,7 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
     mergeDeps(Seq(fromDeps, toDeps, relDeps))
   }
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     checkTypes(from._2, symbols)
     checkTypes(to._2, symbols)
     checkTypes(props, symbols)

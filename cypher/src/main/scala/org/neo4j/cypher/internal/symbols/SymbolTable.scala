@@ -128,10 +128,17 @@ class SymbolTable2(val identifiers: Map[String, CypherType]) {
   def add(value: Map[String, CypherType]):SymbolTable2 = new SymbolTable2(identifiers ++ value)
   def filter(f:String=>Boolean): SymbolTable2 = new SymbolTable2(identifiers.filterKeys(f))
 
-  def evaluateType[T <: CypherType](name: String, expectedType: T): T = identifiers.get(name) match {
-    case Some(typ) if (expectedType.isAssignableFrom(typ)) => typ.asInstanceOf[T]
-    case Some(typ) if (typ.isAssignableFrom(expectedType)) => typ.asInstanceOf[T]
+  def evaluateType(name: String, expectedType: CypherType): CypherType = identifiers.get(name) match {
+    case Some(typ) if (expectedType.isAssignableFrom(typ)) => typ
+    case Some(typ) if (typ.isAssignableFrom(expectedType)) => typ
     case Some(typ)                                         => throw new CypherTypeException("Expected `%s` to be a %s but it was %s".format(name, expectedType, typ))
     case None                                              => throw new CypherTypeException("Unknown identifier `%s`.".format(name))
+  }
+
+  def checkType(name: String, expectedType: CypherType): Boolean = try {
+    evaluateType(name, expectedType)
+    true
+  } catch {
+    case _ => false
   }
 }

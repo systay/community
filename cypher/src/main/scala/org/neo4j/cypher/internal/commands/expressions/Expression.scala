@@ -61,7 +61,7 @@ with TypeSafe {
     t
   }
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     evaluateType(AnyType(), symbols)
   }
 }
@@ -71,9 +71,17 @@ TypeSafe is everything that needs to check it's types
  */
 trait TypeSafe {
   /*
-  Checks if internal type dependencies are met
+  Checks if internal type dependencies are met. Throws an exception if it fails
   */
-  def checkTypes(symbols: SymbolTable2)
+  def assertTypes(symbols: SymbolTable2)
+
+  // Same as assert types, but doesn't throw if it fails
+  def checkTypes(symbols: SymbolTable2): Boolean = try {
+    assertTypes(symbols)
+    true
+  } catch {
+    case _=> false
+  }
 
   def symbolDependenciesMet(symbols: SymbolTable2): Boolean =
     !symbolTableDependencies.exists(name => !check(symbols, name))
@@ -89,7 +97,7 @@ Typed is the trait all classes that have a return type, or have dependencies on 
 trait Typed {
   /*
   Checks if internal type dependencies are met, checks if the expected type is valid,
-  and returns the actual type of the expression
+  and returns the actual type of the expression. Will throw an exception if the check fails
    */
   def evaluateType(expectedType: CypherType, symbols: SymbolTable2): CypherType
 

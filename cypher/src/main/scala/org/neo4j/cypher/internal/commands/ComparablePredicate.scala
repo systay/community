@@ -49,7 +49,7 @@ abstract sealed class ComparablePredicate(left: Expression, right: Expression) e
   def filter(f: (Expression) => Boolean): Seq[Expression] = left.filter(f) ++ right.filter(f)
   def identifierDependencies(expectedType: CypherType) = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     left.evaluateType(AnyType(), symbols)
     right.evaluateType(AnyType(), symbols)
   }
@@ -73,7 +73,7 @@ case class Equals(a: Expression, b: Expression) extends Predicate with Comparer 
 
   def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     a.evaluateType(AnyType(), symbols)
   }
 

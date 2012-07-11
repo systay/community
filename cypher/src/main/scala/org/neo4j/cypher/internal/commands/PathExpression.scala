@@ -72,7 +72,7 @@ case class PathExpression(pathPattern: Seq[Pattern])
   def identifierDependencies(expectedType: CypherType) = mergeDeps(pathPattern.map(_.identifierDependencies(AnyType())))
 
   def calculateType(symbols: SymbolTable2): CypherType = {
-    pathPattern.foreach(_.checkTypes(symbols))
+    pathPattern.foreach(_.assertTypes(symbols))
     new IterableType( PathType() )
   }
 

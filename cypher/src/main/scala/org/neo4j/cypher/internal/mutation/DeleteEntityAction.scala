@@ -70,7 +70,7 @@ case class DeleteEntityAction(elementToDelete: Expression)
 
   def deps = elementToDelete.identifierDependencies(MapType())
 
-  def checkTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable2) {
     val elementType = elementToDelete.evaluateType(AnyType(), symbols)
 
     checkTypes(elementType)
