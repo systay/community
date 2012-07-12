@@ -202,7 +202,7 @@ case class ShortestPath(pathName: String,
 
   def cloneWithOtherName(newName: String) = copy(pathName = newName)
 
-  def symbolTableDependencies = predicate.symbolTableDependencies
+  def symbolTableDependencies = predicate.symbolTableDependencies ++ Set(start, end)
 
   private def relInfo: String = {
     var info = "["
@@ -222,6 +222,7 @@ case class ShortestPath(pathName: String,
   def nodes = Seq(start,end)
 
   def assertTypes(symbols: SymbolTable2) {
+    possibleStartPoints.foreach(p => symbols.evaluateType(p._1, p._2))
     predicate.assertTypes(symbols)
   }
 }

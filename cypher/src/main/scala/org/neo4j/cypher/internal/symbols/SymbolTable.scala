@@ -26,7 +26,7 @@ import collection.Map
 class SymbolTable(val identifiers: Identifier*) {
   assertNoDuplicatesExist()
 
-  def satisfies(needs: Seq[Identifier]): Boolean = try {
+  private def satisfies(needs: Seq[Identifier]): Boolean = try {
     needs.foreach(assertHas(_))
     true
   } catch {

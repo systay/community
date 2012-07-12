@@ -40,7 +40,7 @@ class ShortestPathBuilder extends PlanBuilder {
   def canWorkWith(plan: ExecutionPlanInProgress) = plan.query.patterns.exists(yesOrNo(plan.pipe, _))
 
   private def yesOrNo(p: Pipe, token: QueryToken[_]): Boolean = token match {
-    case Unsolved(sp: ShortestPath) => p.symbols.satisfies(sp.dependencies)
+    case Unsolved(sp: ShortestPath) => sp.checkTypes(p.symbols2)
     case _ => false
   }
 
