@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.{TypeSafe, Literal, Property, Expression}
+import expressions.{Literal, Property, Expression}
 import java.lang.String
 import collection.Seq
 import scala.collection.JavaConverters._
@@ -28,7 +28,7 @@ import org.neo4j.cypher.internal.pipes.{IdentifierDependant, Dependant}
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.helpers.ThisShouldNotHappenError
 import collection.Map
-import org.neo4j.cypher.{CypherTypeException, SyntaxException}
+import org.neo4j.cypher.CypherTypeException
 
 abstract class Predicate extends Dependant with IdentifierDependant with TypeSafe {
   def ++(other: Predicate): Predicate = And(this, other)

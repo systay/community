@@ -49,14 +49,11 @@ class ShortestPathBuilder extends PlanBuilder {
 
   override def missingDependencies(plan: ExecutionPlanInProgress) = {
     val querySoFar = plan.query
-    val symbols = plan.pipe.symbols
+    val symbols = plan.pipe.symbols2
 
     val unsolvedShortestPaths: Seq[ShortestPath] = querySoFar.patterns.
       filter(sp => !sp.solved && sp.token.isInstanceOf[ShortestPath]).map(_.token.asInstanceOf[ShortestPath])
 
-
-    val missingDependencies = unsolvedShortestPaths.flatMap(sp => symbols.missingDependencies(sp.dependencies)).distinct
-
-    missingDependencies.map(_.name)
+    unsolvedShortestPaths.flatMap(sp => symbols.missingSymbolTableDependencies(sp)).distinct
   }
 }

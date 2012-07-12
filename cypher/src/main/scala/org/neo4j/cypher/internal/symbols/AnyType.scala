@@ -22,41 +22,6 @@ package org.neo4j.cypher.internal.symbols
 import java.lang.String
 import org.neo4j.cypher.CypherTypeException
 
-object CypherType {
-
-  def fromJava(obj:Any):CypherType = {
-    if(obj.isInstanceOf[String] || obj.isInstanceOf[Char])
-      return StringType()
-
-    if(obj.isInstanceOf[Number])
-      return NumberType()
-
-    if(obj.isInstanceOf[Boolean])
-      return BooleanType()
-
-    if(obj.isInstanceOf[Seq[_]] || obj.isInstanceOf[Array[_]])
-      return AnyIterableType()
-
-    AnyType()
-  }
-}
-
-trait CypherType {
-  def isAssignableFrom(other: CypherType): Boolean = this.getClass.isAssignableFrom(other.getClass)
-
-  def iteratedType: CypherType = throw new RuntimeException("wut")
-
-  def mergeWith(other: CypherType): CypherType = {
-    if (this.isAssignableFrom(other)) other
-    else if (other.isAssignableFrom(this)) this
-    else throw new CypherTypeException("Failed merging " + this + " with " + other)
-  }
-
-  def parentType : CypherType
-
-  val isIterable: Boolean = false
-}
-
 case class AnyType() extends CypherType {
   override def equals(other: Any) = if (other == null)
     false

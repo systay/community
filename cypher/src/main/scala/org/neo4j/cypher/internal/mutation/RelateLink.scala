@@ -25,7 +25,7 @@ import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.graphdb._
 import org.neo4j.cypher.internal.commands._
-import expressions.{TypeSafe, Entity, Literal, Expression}
+import expressions.{Entity, Literal, Expression}
 import org.neo4j.cypher.{RelatePathNotUnique, CypherTypeException}
 import org.neo4j.cypher.internal.commands.CreateNodeStartItem
 import org.neo4j.cypher.internal.symbols.Identifier

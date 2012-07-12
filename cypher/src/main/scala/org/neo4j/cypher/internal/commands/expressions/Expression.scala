@@ -66,47 +66,6 @@ with TypeSafe {
   }
 }
 
-/*
-TypeSafe is everything that needs to check it's types
- */
-trait TypeSafe {
-  /*
-  Checks if internal type dependencies are met. Throws an exception if it fails
-  */
-  def assertTypes(symbols: SymbolTable2)
-
-  // Same as assert types, but doesn't throw if it fails
-  def checkTypes(symbols: SymbolTable2): Boolean = try {
-    assertTypes(symbols)
-    true
-  } catch {
-    case _=> false
-  }
-
-  def symbolDependenciesMet(symbols: SymbolTable2): Boolean =
-      symbolTableDependencies.forall(name => check(symbols, name))
-
-  def symbolTableDependencies: Set[String]
-
-  private def check(symbols: SymbolTable2, name: String): Boolean = symbols.identifiers.contains(name)
-}
-
-/*
-Typed is the trait all classes that have a return type, or have dependencies on an expressions' type.
- */
-trait Typed {
-  /*
-  Checks if internal type dependencies are met, checks if the expected type is valid,
-  and returns the actual type of the expression. Will throw an exception if the check fails
-   */
-  def evaluateType(expectedType: CypherType, symbols: SymbolTable2): CypherType
-
-  /*
-  Checks if internal type dependencies are met and returns the actual type of the expression
-  */
-  def getType(symbols: SymbolTable2):CypherType = evaluateType(AnyType(), symbols)
-}
-
 case class CachedExpression(key:String, typ:CypherType) extends CastableExpression {
   override def apply(m: Map[String, Any]) = m(key)
   protected def compute(v1: Map[String, Any]) = null

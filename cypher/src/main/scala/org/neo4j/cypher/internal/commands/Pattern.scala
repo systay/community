@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.{TypeSafe, Expression}
+import expressions.Expression
 import org.neo4j.graphdb.Direction
 import java.lang.String
 import collection.Seq

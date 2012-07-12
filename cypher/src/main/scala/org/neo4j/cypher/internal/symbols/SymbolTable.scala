@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.symbols
 
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
-import org.neo4j.cypher.internal.commands.expressions.{TypeSafe, Expression}
+import org.neo4j.cypher.internal.commands.expressions.Expression
 import collection.Map
 
 class SymbolTable(val identifiers: Identifier*) {
@@ -32,8 +32,6 @@ class SymbolTable(val identifiers: Identifier*) {
   } catch {
     case _ => false
   }
-
-  def missingDependencies(needs: Seq[Identifier]): Seq[Identifier] = needs.filter(id => !satisfies(Seq(id)))
 
   def missingExpressions(needs: Seq[Expression]): Seq[Expression] = needs.filter(id => !satisfies(Seq(id.identifier)))
 
