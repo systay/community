@@ -1219,9 +1219,7 @@ return a""")
   @Test def shouldSupportColumnRenaming() {
     val a = createNode(Map("name" -> "Andreas"))
 
-    val result = parseAndExecute( """
-start a  = node(1)
-return a as OneLove""")
+    val result = parseAndExecute("start a = node(1) return a as OneLove")
 
     assert(List(a) === result.columnAs[Node]("OneLove").toList)
   }
@@ -1253,7 +1251,7 @@ return a""")
     assert(List(a) === result.columnAs[Node]("a").toList)
   }
 
-  @Test(expected = classOf[CypherTypeException]) def shouldNotSupportSortingOnThingsAfterDistinctHasRemovedIt() {
+  @Test(expected = classOf[SyntaxException]) def shouldNotSupportSortingOnThingsAfterDistinctHasRemovedIt() {
     createNode("name" -> "A", "age" -> 13)
     createNode("name" -> "B", "age" -> 12)
     createNode("name" -> "C", "age" -> 11)
@@ -1372,8 +1370,7 @@ return leaf, stuff
     val result = parseAndExecute( """
 start a  = node(1), other = node(2,3)
 where not(a-->other)
-return other
-                                  """)
+return other""")
 
     assert(List(Map("other" -> c)) === result.toList)
   }

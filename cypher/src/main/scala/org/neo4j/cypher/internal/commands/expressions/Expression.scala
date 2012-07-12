@@ -55,7 +55,7 @@ with TypeSafe {
 
     if (!expectedType.isAssignableFrom(t) &&
         !t.isAssignableFrom(expectedType)) {
-      throw new CypherTypeException("expected: %s but got %s".format(expectedType, t))
+      throw new CypherTypeException("%s expected to be of type %s but it is of type %s".format(this, expectedType, t))
     }
 
     t
@@ -83,13 +83,10 @@ trait TypeSafe {
     case _=> false
   }
 
-  def symbolDependenciesMet(symbols: SymbolTable2): Boolean = {
-    val apa = symbolTableDependencies
-    val x = apa.filter(name => !check(symbols, name))
-    x.isEmpty
-  }
+  def symbolDependenciesMet(symbols: SymbolTable2): Boolean =
+      symbolTableDependencies.forall(name => check(symbols, name))
 
-  def symbolTableDependencies : Set[String]
+  def symbolTableDependencies: Set[String]
 
   private def check(symbols: SymbolTable2, name: String): Boolean = symbols.identifiers.contains(name)
 }

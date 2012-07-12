@@ -53,8 +53,8 @@ class FilterBuilder extends PlanBuilder {
   }
 
   private def yesOrNo(q: QueryToken[_], p: Pipe) = q match {
-    case Unsolved(pred: Predicate) => p.symbols.satisfies(pred.dependencies)
-    case _ => false
+    case Unsolved(pred: Predicate) => pred.symbolDependenciesMet(p.symbols2)
+    case _                         => false
   }
 
   def canWorkWith(plan: ExecutionPlanInProgress) = plan.query.where.exists(pred => yesOrNo(pred, plan.pipe))

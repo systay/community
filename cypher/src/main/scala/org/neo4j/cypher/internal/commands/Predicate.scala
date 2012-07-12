@@ -266,8 +266,8 @@ case class LiteralRegularExpression(a: Expression, regex: Literal) extends Predi
   def identifierDependencies(expectedType: CypherType) = a.identifierDependencies(StringType())
 
   def assertTypes(symbols: SymbolTable2) {
-    a.assertTypes(symbols)
-    regex.assertTypes(symbols)
+    a.evaluateType(StringType(), symbols)
+    regex.evaluateType(StringType(), symbols)
   }
 
   def symbolTableDependencies = a.symbolTableDependencies ++ regex.symbolTableDependencies
@@ -294,8 +294,8 @@ case class RegularExpression(a: Expression, regex: Expression) extends Predicate
   def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(StringType()), regex.identifierDependencies(StringType()))
 
   def assertTypes(symbols: SymbolTable2) {
-    a.assertTypes(symbols)
-    regex.assertTypes(symbols)
+    a.evaluateType(StringType(), symbols)
+    regex.evaluateType(StringType(), symbols)
   }
   def symbolTableDependencies = a.symbolTableDependencies ++ regex.symbolTableDependencies
 }
@@ -319,7 +319,7 @@ case class NonEmpty(collection:Expression) extends Predicate with IterableSuppor
   def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
 
   def assertTypes(symbols: SymbolTable2) {
-    collection.assertTypes(symbols)
+    collection.evaluateType(AnyIterableType(), symbols)
   }
 
   def symbolTableDependencies = collection.symbolTableDependencies

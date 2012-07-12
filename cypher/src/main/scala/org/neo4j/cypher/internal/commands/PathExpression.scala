@@ -58,7 +58,8 @@ case class PathExpression(pathPattern: Seq[Pattern])
     matches.map(getPath)
   }
 
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p=> p._1.startsWith("  UNNAMED"))).
+  def declareDependencies(extectedType: CypherType): Seq[Identifier] =
+    pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p=> p._1.startsWith("  UNNAMED"))).
   map {
     case (id,typ) => Identifier(id,typ)
   }
@@ -76,5 +77,10 @@ case class PathExpression(pathPattern: Seq[Pattern])
     new IterableType( PathType() )
   }
 
-  def symbolTableDependencies = pathPattern.flatMap(_.symbolTableDependencies).toSet
+  def symbolTableDependencies = {
+    val patternDependencies = pathPattern.flatMap(_.symbolTableDependencies).toSet
+    val startPointDependencies = pathPattern.flatMap(_.possibleStartPoints).map(_._1).filterNot(_.startsWith("  UNNAMED")).toSet
+    val totatl = patternDependencies ++ startPointDependencies
+    totatl
+  }
 }

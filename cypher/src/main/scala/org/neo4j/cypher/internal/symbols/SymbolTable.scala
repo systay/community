@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.symbols
 
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
-import org.neo4j.cypher.internal.commands.expressions.{TypeSafe, Typed, Expression}
+import org.neo4j.cypher.internal.commands.expressions.{TypeSafe, Expression}
 import collection.Map
 
 class SymbolTable(val identifiers: Identifier*) {

@@ -27,6 +27,8 @@ class FilterPipe(source: Pipe, predicate: Predicate) extends PipeWithSource(sour
   val symbols = source.symbols
   val symbols2 = source.symbols2
 
+  predicate.assertTypes(symbols2)
+
   def createResults(state: QueryState) = source.createResults(state).filter(ctx => predicate.isMatch(ctx))
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "Filter(" + predicate.toString + ")"
