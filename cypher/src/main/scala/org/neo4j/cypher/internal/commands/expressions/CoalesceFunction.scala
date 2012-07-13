@@ -50,7 +50,7 @@ case class CoalesceFunction(expressions: Expression*) extends Expression {
   def identifierDependencies(expectedType: CypherType) = mergeDeps(expressions.map(_.identifierDependencies(AnyType())))
 
   def calculateType(symbols: SymbolTable2) = {
-    expressions.map(_.evaluateType(AnyType(), symbols)) match {
+    expressions.map(_.getType(symbols)) match {
       case Seq() => ScalarType()
       case types => types.foldLeft(AnyType().asInstanceOf[CypherType])(_ mergeWith _)
     }

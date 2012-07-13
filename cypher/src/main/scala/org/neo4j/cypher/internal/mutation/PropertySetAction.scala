@@ -54,7 +54,7 @@ case class PropertySetAction(prop: Property, e: Expression)
   def deps = mergeDeps(prop.identifierDependencies(AnyType()), e.identifierDependencies(AnyType()))
 
   def assertTypes(symbols: SymbolTable2) {
-    e.evaluateType(AnyType(), symbols)
+    e.checkTypes(symbols)
   }
 
   def symbolTableDependencies = prop.symbolTableDependencies ++ e.symbolTableDependencies

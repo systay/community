@@ -22,13 +22,13 @@ package org.neo4j.cypher.internal.mutation
 import org.neo4j.cypher.CypherTypeException
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.graphdb.{RelationshipType => KernelRelType, _}
-import org.neo4j.cypher.internal.pipes.{IdentifierDependantHelper, QueryState, ExecutionContext}
+import org.neo4j.cypher.internal.pipes.{IdentifierDependantHelper, IdentifierDependant, QueryState, ExecutionContext}
 
 import java.util.{Map => JavaMap}
 import scala.collection.JavaConverters._
 import collection.Map
 import org.neo4j.cypher.internal.commands._
-import expressions.Expression
+import expressions.{ Expression}
 
 trait UpdateAction extends IdentifierDependantHelper with TypeSafe {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
@@ -50,7 +50,7 @@ trait GraphElementPropertyFunctions extends IterableSupport with IdentifierDepen
   }
 
   def checkTypes(props: Map[String, Expression], symbols:SymbolTable2) {
-    props.values.foreach(_.evaluateType(AnyType(), symbols))
+    props.values.foreach(_.checkTypes(symbols))
   }
 
   def symbolTableDependencies(props: Map[String, Expression]):Set[String] = props.values.flatMap(_.symbolTableDependencies).toSet

@@ -26,7 +26,7 @@ import org.neo4j.cypher.internal.symbols.Identifier
 import org.neo4j.helpers.ThisShouldNotHappenError
 
 case class Entity(entityName: String) extends CastableExpression with Typed {
-  def compute(m: Map[String, Any]): Any = m.getOrElse(entityName, throw new NotFoundException("Failed to find `" + entityName + "`"))
+  def compute(m: Map[String, Any]): Any = m.getOrElse(entityName, throw new NotFoundException("Unknown identifier `%s`".format(entityName)))
 
   val identifier: Identifier = Identifier(entityName, AnyType())
 

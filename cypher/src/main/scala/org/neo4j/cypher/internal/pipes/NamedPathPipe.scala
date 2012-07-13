@@ -23,10 +23,13 @@ import org.neo4j.cypher.internal.commands.NamedPath
 import org.neo4j.cypher.internal.symbols.{PathType, Identifier}
 
 class NamedPathPipe(source: Pipe, path: NamedPath) extends Pipe {
-  def createResults(state: QueryState) = source.createResults(state).map(ctx => {
-    ctx.put(path.pathName, path.getPath(ctx))
-    ctx
-  })
+  def createResults(state: QueryState) = {
+    val results = source.createResults(state)
+    results.map(ctx => {
+      ctx.put(path.pathName, path.getPath(ctx))
+      ctx
+    })
+  }
 
   val symbols = source.symbols.add(Identifier(path.pathName, PathType()))
   val symbols2 = source.symbols2.add(path.pathName, PathType())

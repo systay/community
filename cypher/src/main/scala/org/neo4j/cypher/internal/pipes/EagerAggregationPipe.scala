@@ -48,7 +48,7 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Express
 
   private def createSymbols2() = {
     val typeExtractor: ((String, Expression)) => (String, CypherType) = {
-      case (id, exp) => id -> exp.evaluateType(AnyType(), source.symbols2)
+      case (id, exp) => id -> exp.getType(source.symbols2)
     }
 
     val keyIdentifiers = keyExpressions.map(typeExtractor)

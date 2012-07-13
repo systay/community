@@ -34,7 +34,7 @@ class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe:
   val symbols2 = new SymbolTable2(identifiers2.toMap)
 
   private lazy val identifiers2: Seq[(String, CypherType)] = returnItems.
-    map( ri => ri.name->ri.expression.evaluateType(AnyType(), source.symbols2))
+    map( ri => ri.name->ri.expression.getType(source.symbols2))
 
   private lazy val identifiers = source.symbols.identifiers.flatMap {
     // Yay! My first monad!

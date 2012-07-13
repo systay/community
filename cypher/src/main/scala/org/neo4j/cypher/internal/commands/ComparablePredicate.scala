@@ -50,8 +50,8 @@ abstract sealed class ComparablePredicate(left: Expression, right: Expression) e
   def identifierDependencies(expectedType: CypherType) = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
 
   def assertTypes(symbols: SymbolTable2) {
-    left.evaluateType(AnyType(), symbols)
-    right.evaluateType(AnyType(), symbols)
+    left.checkTypes(symbols)
+    right.checkTypes(symbols)
   }
 
   def symbolTableDependencies = left.symbolTableDependencies ++ right.symbolTableDependencies
@@ -74,7 +74,7 @@ case class Equals(a: Expression, b: Expression) extends Predicate with Comparer 
   def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
 
   def assertTypes(symbols: SymbolTable2) {
-    a.evaluateType(AnyType(), symbols)
+    a.checkTypes(symbols)
   }
 
   def symbolTableDependencies = a.symbolTableDependencies ++ b.symbolTableDependencies

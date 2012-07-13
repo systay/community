@@ -23,7 +23,7 @@ import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.pipes.aggregation.CountFunction
 
 case class Count(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
-  def typ = IntegerType()
+  def typ = LongType()
 
   def name = "count"
 

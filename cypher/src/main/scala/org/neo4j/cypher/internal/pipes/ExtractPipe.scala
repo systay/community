@@ -32,11 +32,21 @@ class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extend
 
   def getSymbolType(item: ReturnItem): Identifier = item.identifier
 
-  val symbols: SymbolTable = source.symbols.add(expressions.values.toSeq.map(_.identifier):_*)
+  val symbols: SymbolTable = {
+    val seq = expressions.map {
+      case (name, exp) => Identifier(name, exp.getType(source.symbols2))
+    }.toSeq
 
-  val symbols2: SymbolTable2 = source.symbols2.add(expressions.map {
-    case (name, expression) => name -> expression.evaluateType(AnyType(), source.symbols2)
-  })
+    source.symbols.add(seq: _*)
+  }
+
+  val symbols2: SymbolTable2 = {
+    val newIdentifiers = expressions.map {
+      case (name, expression) => name -> expression.getType(source.symbols2)
+    }
+
+    source.symbols2.add(newIdentifiers)
+  }
 
   def createResults(state: QueryState) = source.createResults(state).map(subgraph => {
     expressions.foreach {
