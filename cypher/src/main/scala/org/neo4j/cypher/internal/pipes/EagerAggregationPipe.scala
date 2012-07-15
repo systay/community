@@ -41,7 +41,7 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Express
 
   private def createSymbols() = {
     val keySymbols: SymbolTable = new SymbolTable(keyExpressions.map(x => Identifier(x._1, x._2.getType(source.symbols2))).toSeq:_*)
-    val aggregatedColumns: Seq[Identifier] = aggregations.map(_._2.identifier).toSeq
+    val aggregatedColumns: Seq[Identifier] = aggregations.map(x => Identifier(x._1, x._2.getType(source.symbols2))).toSeq
 
     keySymbols.add(aggregatedColumns: _*)
   }

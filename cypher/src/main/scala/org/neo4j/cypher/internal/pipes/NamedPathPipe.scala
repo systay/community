@@ -24,8 +24,7 @@ import org.neo4j.cypher.internal.symbols.{PathType, Identifier}
 
 class NamedPathPipe(source: Pipe, path: NamedPath) extends Pipe {
   def createResults(state: QueryState) = {
-    val results = source.createResults(state)
-    results.map(ctx => {
+    source.createResults(state).map(ctx => {
       ctx.put(path.pathName, path.getPath(ctx))
       ctx
     })

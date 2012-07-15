@@ -50,19 +50,15 @@ abstract sealed class ComparablePredicate(left: Expression, right: Expression) e
   def identifierDependencies(expectedType: CypherType) = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
 
   def assertTypes(symbols: SymbolTable2) {
-    left.checkTypes(symbols)
-    right.checkTypes(symbols)
+    left.assertTypes(symbols)
+    right.assertTypes(symbols)
   }
 
   def symbolTableDependencies = left.symbolTableDependencies ++ right.symbolTableDependencies
 }
 
 case class Equals(a: Expression, b: Expression) extends Predicate with Comparer {
-  def isMatch(m: Map[String, Any]): Boolean = {
-    val a1 = a(m)
-    val b1 = b(m)
-    a1 == b1
-  }
+  def isMatch(m: Map[String, Any]): Boolean = a(m) == b(m)
   def atoms = Seq(this)
   def exists(f: (Expression) => Boolean) = a.exists(f) || b.exists(f)
   def dependencies = a.dependencies(AnyType()) ++ b.dependencies(AnyType())
@@ -74,7 +70,8 @@ case class Equals(a: Expression, b: Expression) extends Predicate with Comparer 
   def identifierDependencies(expectedType: CypherType) = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
 
   def assertTypes(symbols: SymbolTable2) {
-    a.checkTypes(symbols)
+    a.assertTypes(symbols)
+    b.assertTypes(symbols)
   }
 
   def symbolTableDependencies = a.symbolTableDependencies ++ b.symbolTableDependencies

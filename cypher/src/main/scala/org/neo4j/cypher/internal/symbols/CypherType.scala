@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.symbols
 
-import org.neo4j.cypher.CypherTypeException
+import org.neo4j.cypher.{CypherException, CypherTypeException}
 
 trait CypherType {
   def isAssignableFrom(other: CypherType): Boolean = this.getClass.isAssignableFrom(other.getClass)
@@ -69,7 +69,7 @@ trait TypeSafe {
     assertTypes(symbols)
     true
   } catch {
-    case _ => false
+    case _: CypherException => false
   }
 
   def symbolDependenciesMet(symbols: SymbolTable2): Boolean =
