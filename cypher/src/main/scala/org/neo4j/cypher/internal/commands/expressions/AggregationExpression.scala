@@ -24,18 +24,10 @@ import org.neo4j.cypher.internal.pipes.aggregation._
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.SyntaxException
 import collection.Map
+import org.neo4j.helpers.ThisShouldNotHappenError
 
 abstract class AggregationExpression extends Expression {
-  def compute(m: Map[String, Any]) = m.get(name) match  {
-    case None => null
-    case Some(x) => x
-  }
-
-  override val identifier = Identifier(name, typ)
-
-  def name: String
-
-  def typ: CypherType
+  def apply(m: Map[String, Any]) = throw new ThisShouldNotHappenError("Andres", "Aggregations should not be used like this.")
 
   def createAggregationFunction: AggregationFunction
 }
@@ -44,17 +36,12 @@ abstract class AggregationWithInnerExpression(inner:Expression) extends Aggregat
   if(inner.containsAggregate)
     throw new SyntaxException("Can't use aggregate functions inside of aggregate functions.")
   
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = inner.dependencies(expectedInnerType)
   def expectedInnerType: CypherType
   
-  override val identifier = Identifier("%s(%s)".format(name, inner.identifier.name), typ)
-
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ inner.filter(f)
   else
     inner.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(ScalarType())
 
   def symbolTableDependencies = inner.symbolTableDependencies
 }

@@ -27,18 +27,12 @@ import org.neo4j.cypher.internal.symbols.Identifier
 case class RelationshipTypeFunction(relationship: Expression) extends NullInNullOutExpression(relationship) {
   def compute(value: Any, m: Map[String, Any]) = value.asInstanceOf[Relationship].getType.name()
 
-  lazy val identifier = Identifier("TYPE(" + relationship.identifier.name + ")", StringType())
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = relationship.dependencies(RelationshipType())
-
   def rewrite(f: (Expression) => Expression) = f(RelationshipTypeFunction(relationship.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ relationship.filter(f)
   else
     relationship.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = relationship.identifierDependencies(RelationshipType())
 
   def calculateType(symbols: SymbolTable2) = {
     relationship.evaluateType(RelationshipType(), symbols)

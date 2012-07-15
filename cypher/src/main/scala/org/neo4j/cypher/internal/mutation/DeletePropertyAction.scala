@@ -37,16 +37,11 @@ case class DeletePropertyAction(element: Expression, property: String)
     Stream(context)
   }
 
-  def dependencies = element.dependencies(MapType())
-
-  def identifier = Seq.empty
   def identifier2 = Seq.empty
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = element.filter(f)
 
   def rewrite(f: (Expression) => Expression): UpdateAction = DeletePropertyAction(element.rewrite(f), property: String)
-
-  def deps = element.identifierDependencies(ScalarType())
 
   def assertTypes(symbols: SymbolTable2) {
     element.evaluateType(MapType(), symbols)

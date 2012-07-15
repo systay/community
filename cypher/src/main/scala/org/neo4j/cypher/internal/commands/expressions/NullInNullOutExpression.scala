@@ -23,7 +23,7 @@ import collection.Map
 abstract class NullInNullOutExpression(argument: Expression) extends Expression {
   def compute(value: Any, m: Map[String, Any]): Any
 
-  def compute(m: Map[String, Any]): Any = argument(m) match {
+  def apply(m: Map[String, Any]): Any = argument(m) match {
     case null => null
     case x    => compute(x, m)
   }

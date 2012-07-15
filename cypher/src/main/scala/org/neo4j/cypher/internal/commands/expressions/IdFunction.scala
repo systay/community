@@ -32,18 +32,12 @@ case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) 
     case x => throw new CypherTypeException("Expected `%s` to be a node or relationship, but it was ``".format(inner, x.getClass.getSimpleName))
   }
 
-  val identifier = Identifier("ID(" + inner.identifier.name + ")", LongType())
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = inner.dependencies(MapType())
-
   def rewrite(f: (Expression) => Expression) = f(IdFunction(inner.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ inner.filter(f)
   else
     inner.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(MapType())
 
   def calculateType(symbols: SymbolTable2): CypherType = LongType()
 

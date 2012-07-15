@@ -23,7 +23,7 @@ import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType, Ide
 import org.neo4j.cypher.ParameterNotFoundException
 import collection.Map
 
-case class ParameterExpression(parameterName: String) extends CastableExpression {
+case class ParameterExpression(parameterName: String) extends Expression {
   def compute(m: Map[String, Any]): Any = {
     val getFromMap: Any = m.getOrElse("-=PARAMETER=-" + parameterName + "-=PARAMETER=-", throw new ParameterNotFoundException("Expected a parameter named " + parameterName))
 
@@ -35,11 +35,7 @@ case class ParameterExpression(parameterName: String) extends CastableExpression
 
   override def apply(m: Map[String, Any]) = compute(m)
 
-  val identifier: Identifier = Identifier(parameterName, AnyType())
-
   override def toString(): String = "{" + parameterName + "}"
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
 
   def rewrite(f: (Expression) => Expression) = f(this)
 
@@ -47,8 +43,6 @@ case class ParameterExpression(parameterName: String) extends CastableExpression
     Seq(this)
   else
     Seq()
-
-  def identifierDependencies(expectedType: CypherType) = Map()
 
   def calculateType(symbols: SymbolTable2) = AnyType()
 

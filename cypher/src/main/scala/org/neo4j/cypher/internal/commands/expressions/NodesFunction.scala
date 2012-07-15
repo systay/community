@@ -29,12 +29,8 @@ import collection.JavaConverters._
 case class NodesFunction(path: Expression) extends NullInNullOutExpression(path) {
   def compute(value: Any, m: Map[String, Any]) = value match {
     case p: Path => p.nodes().asScala.toSeq
-    case x       => throw new SyntaxException("Expected " + path.identifier.name + " to be a path.")
+    case x       => throw new SyntaxException("Expected " + path + " to be a path.")
   }
-
-  val identifier = Identifier("NODES(" + path.identifier.name + ")", new IterableType(NodeType()))
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = path.dependencies(PathType())
 
   def rewrite(f: (Expression) => Expression) = f(NodesFunction(path.rewrite(f)))
 
@@ -42,8 +38,6 @@ case class NodesFunction(path: Expression) extends NullInNullOutExpression(path)
     Seq(this) ++ path.filter(f)
   else
     path.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = path.identifierDependencies(AnyIterableType())
 
   def calculateType(symbols: SymbolTable2) = {
     path.evaluateType(new IterableType(MapType()), symbols)

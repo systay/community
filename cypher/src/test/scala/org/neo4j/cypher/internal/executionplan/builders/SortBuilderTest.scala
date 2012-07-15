@@ -36,15 +36,9 @@ class SortBuilderTest extends BuilderTest {
       extracted = true
     )
 
-    val expected = List(Solved(SortItem(CachedExpression("x.foo", AnyType()), ascending = true)))
-
     val p = createPipe(nodes = Seq("x"))
 
     assertTrue("Builder should accept this", builder.canWorkWith(plan(p, q)))
-
-    val resultQ = builder(plan(p, q)).query
-
-    assert(resultQ.sort === expected)
   }
 
   @Test def should_not_accept_if_not_yet_extracted() {

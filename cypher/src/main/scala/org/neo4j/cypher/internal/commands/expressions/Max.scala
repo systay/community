@@ -23,15 +23,11 @@ import org.neo4j.cypher.internal.symbols.{AnyIterableType, CypherType, SymbolTab
 import org.neo4j.cypher.internal.pipes.aggregation.MaxFunction
 
 case class Max(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
-  def typ = NumberType()
-
-  def name = "max"
-
   def createAggregationFunction = new MaxFunction(anInner)
 
   def expectedInnerType = NumberType()
 
   def rewrite(f: (Expression) => Expression) = f(Max(anInner.rewrite(f)))
 
-  def calculateType(symbols: SymbolTable2): CypherType = anInner.evaluateType(AnyIterableType(), symbols).iteratedType
+  def calculateType(symbols: SymbolTable2): CypherType = anInner.getType(symbols)
 }

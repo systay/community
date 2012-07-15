@@ -29,7 +29,7 @@ import scala.Some
 import org.neo4j.cypher.internal.pipes.IdentifierDependant
 
 
-abstract class Pattern extends IdentifierDependant with TypeSafe {
+abstract class Pattern extends TypeSafe {
   def optional: Boolean
   def predicate: Predicate
   def possibleStartPoints: Seq[(String,CypherType)]
@@ -43,18 +43,8 @@ abstract class Pattern extends IdentifierDependant with TypeSafe {
   def equalOrUnnamed(name1: String, name2: String) = name1 == name2 || (name1.startsWith("  UNNAMED") && name2.startsWith("  UNNAMED"))
   protected def filtered(x:Seq[String]): Seq[String] =x.filter(!_.startsWith("  UNNAMED"))
 
-
-
   def nodes:Seq[String]
   def rels:Seq[String]
-  def identifierDependencies(expectedType: CypherType) = {
-    val nodeDeps: Map[String, CypherType] = filtered(nodes).map(_ -> NodeType.asInstanceOf[CypherType]).toMap
-    val relDeps: Map[String, CypherType] = filtered(rels).map(_ -> RelationshipType.asInstanceOf[CypherType]).toMap
-    mergeDeps(nodeDeps,relDeps)
-  }
-
-  def dependencies: Seq[Identifier]= null
-
 }
 
 object RelatedTo {
@@ -197,8 +187,6 @@ case class ShortestPath(pathName: String,
   override def toString: String = pathName + "=" + algo + "(" + start + left(dir) + relInfo + right(dir) + end + ")"
 
   private def algo = if (single) "singleShortestPath" else "allShortestPath"
-
-  override def dependencies: Seq[Identifier] = Seq(Identifier(start, NodeType()), Identifier(end, NodeType())) ++ predicate.dependencies
 
   def cloneWithOtherName(newName: String) = copy(pathName = newName)
 

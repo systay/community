@@ -37,23 +37,15 @@ import org.neo4j.cypher.internal.commands.ShortestPath
  * It's also the base class for all shortest paths
  */
 class ShortestPathPipe(source: Pipe, ast: ShortestPath) extends PipeWithSource(source) {
-  def startName = ast.start
-
-  def endName = ast.end
-
-  def relType = ast.relTypes
-
-  def dir = ast.dir
-
-  def maxDepth = ast.maxDepth
-
-  def optional = ast.optional
-
-  def pathName = ast.pathName
-
-  def returnItems: Seq[ReturnItem] = Seq()
-
-  val expression = ShortestPathExpression(ast)
+  private def startName = ast.start
+  private def endName = ast.end
+  private def relType = ast.relTypes
+  private def dir = ast.dir
+  private def maxDepth = ast.maxDepth
+  private def optional = ast.optional
+  private def pathName = ast.pathName
+  private def returnItems: Seq[ReturnItem] = Seq()
+  private val expression = ShortestPathExpression(ast)
 
   def createResults(state: QueryState) = source.createResults(state).flatMap(ctx => {
     val result: Stream[Path] = expression(ctx).asInstanceOf[Stream[Path]]
@@ -69,15 +61,9 @@ class ShortestPathPipe(source: Pipe, ast: ShortestPath) extends PipeWithSource(s
 
   })
 
-
-  def dependencies: Seq[Identifier] = Seq(Identifier(startName, NodeType()), Identifier(endName, NodeType()))
-
-//  val symbols = source.symbols.add(Identifier(pathName, PathType()))
   val symbols2 = source.symbols2.add(pathName, PathType())
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "ShortestPath(" + ast + ")"
-
-  def deps = ast.identifierDependencies(AnyType())
 
   def assertTypes(symbols: SymbolTable2) {
     ast.assertTypes(symbols)

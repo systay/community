@@ -30,24 +30,12 @@ case class FilterFunction(collection: Expression, id: String, predicate: Predica
   with Closure {
   def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).filter(element => predicate.isMatch(m + (id -> element)))
 
-  val identifier = Identifier("filter(%s in %s : %s)".format(id, collection.identifier.name, predicate), collection.identifier.typ)
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = (collection.dependencies(AnyIterableType()) ++ predicate.dependencies).filterNot(_.name == id)
-
   def rewrite(f: (Expression) => Expression) = f(FilterFunction(collection.rewrite(f), id, predicate.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ collection.filter(f)
   else
     collection.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = {
-    val mergedDeps: Map[String, CypherType] = mergeDeps(collection.identifierDependencies(AnyIterableType()), predicate.identifierDependencies(AnyType()))
-
-    // Filter depends on everything that the iterable and the predicate depends on, except
-    // the new identifier inserted into the predicate symbol table, named with id
-    mergedDeps.filterKeys(_ != id)
-  }
 
   def calculateType(symbols: SymbolTable2): CypherType = {
     val t = collection.evaluateType(AnyIterableType(), symbols)

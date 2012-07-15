@@ -24,17 +24,11 @@ import org.neo4j.cypher.EntityNotFoundException
 import collection.Map
 
 case class Nullable(expression: Expression) extends Expression {
-  val identifier = Identifier(expression.identifier.name + "?", expression.identifier.typ)
-
-  def compute(m: Map[String, Any]) = try {
+  def apply(m: Map[String, Any]) = try {
     expression.apply(m)
   } catch {
     case x: EntityNotFoundException => null
   }
-
-  def declareDependencies(extectedType: CypherType) = expression.dependencies(extectedType)
-
-  override def dependencies(extectedType: CypherType) = expression.dependencies(extectedType)
 
   def rewrite(f: (Expression) => Expression) = f(Nullable(expression.rewrite(f)))
 
@@ -42,8 +36,6 @@ case class Nullable(expression: Expression) extends Expression {
     Seq(this) ++ expression.filter(f)
   else
     expression.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = expression.identifierDependencies(expectedType)
 
   def calculateType(symbols: SymbolTable2): CypherType = expression.getType(symbols)
 

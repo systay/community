@@ -23,14 +23,8 @@ import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.symbols.Identifier
 import collection.Map
 
-case class Collection(expressions: Expression*) extends CastableExpression {
-  def compute(m: Map[String, Any]): Any = expressions.map(e => e(m))
-
-  val identifier: Identifier = Identifier(name, AnyIterableType())
-
-  private def name = expressions.map(_.identifier.name).mkString("[", ", ", "]")
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = expressions.flatMap(_.declareDependencies(AnyType()))
+case class Collection(expressions: Expression*) extends Expression {
+  def apply(m: Map[String, Any]): Any = expressions.map(e => e(m))
 
   def rewrite(f: (Expression) => Expression): Expression = f(Collection(expressions.map(f): _*))
 
@@ -38,8 +32,6 @@ case class Collection(expressions: Expression*) extends CastableExpression {
     Seq(this) ++ expressions.flatMap(_.filter(f))
   else
     expressions.flatMap(_.filter(f))
-
-  def identifierDependencies(expectedType: CypherType) = mergeDeps(expressions.map(_.identifierDependencies(ScalarType())))
 
   def calculateType(symbols: SymbolTable2): CypherType = {
     expressions.map(_.getType(symbols)) match {

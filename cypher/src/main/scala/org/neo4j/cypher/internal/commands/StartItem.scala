@@ -79,16 +79,11 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
     }
   }
 
-  def dependencies = propDependencies(props)
-
-  def identifier = Seq(Identifier(key, NodeType()))
   def identifier2 = Seq(key -> NodeType())
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = props.values.flatMap(_.filter(f)).toSeq
 
   def rewrite(f: (Expression) => Expression): UpdateAction = CreateNodeStartItem(key, rewrite(props, f))
-
-  def deps = deps(props)
 
   def assertTypes(symbols: SymbolTable2) {
     checkTypes(props, symbols)
@@ -104,18 +99,6 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
   with GraphElementPropertyFunctions {
   private lazy val relationshipType = DynamicRelationshipType.withName(typ)
 
-  def dependencies = {
-    val fromDeps = nodeDependencies(from._1)
-    val toDeps = nodeDependencies(to._1)
-    val propDeps = propDependencies(props)
-    fromDeps ++ toDeps ++ propDeps
-  }
-
-  private def nodeDependencies(e:Expression):Seq[Identifier] = e match {
-    case Entity(_) => Seq()
-    case x => x.dependencies(NodeType())
-  }
-
   def filter(f: (Expression) => Boolean): Seq[Expression] = from._1.filter(f) ++ props.values.flatMap(_.filter(f))
 
   def rewrite(f: (Expression) => Expression) = CreateRelationshipStartItem(key, (f(from._1), from._2), (f(to._1), to._2), typ, props.map(mapRewrite(f)))
@@ -130,16 +113,7 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
     Stream(context)
   }
 
-  def identifier = Seq(Identifier(key, RelationshipType()))
   def identifier2 = Seq(key-> RelationshipType())
-
-  def deps = {
-    val fromDeps = deps(from._2)
-    val toDeps = deps(to._2)
-    val relDeps = deps(props)
-
-    mergeDeps(Seq(fromDeps, toDeps, relDeps))
-  }
 
   def assertTypes(symbols: SymbolTable2) {
     checkTypes(from._2, symbols)
@@ -147,9 +121,9 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
     checkTypes(props, symbols)
   }
 
-  def symbolTableDependencies = symbolTableDependencies(from._2) ++
-    symbolTableDependencies(to._2) ++
-    symbolTableDependencies(props)
+  def symbolTableDependencies = (from._2.flatMap(_._2.symbolTableDependencies) ++
+                                to._2.flatMap(_._2.symbolTableDependencies) ++
+                                props.flatMap(_._2.symbolTableDependencies)).toSet
 }
 
 trait Mutator extends StartItem {

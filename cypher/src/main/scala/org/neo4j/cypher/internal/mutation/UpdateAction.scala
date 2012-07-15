@@ -30,18 +30,15 @@ import collection.Map
 import org.neo4j.cypher.internal.commands._
 import expressions.{ Expression}
 
-trait UpdateAction extends IdentifierDependantHelper with TypeSafe {
+trait UpdateAction extends TypeSafe {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
   def assertTypes(symbols:SymbolTable2)
-  def dependencies:Seq[Identifier]
-  def identifier:Seq[Identifier]
   def identifier2:Seq[(String,CypherType)]
   def rewrite(f: Expression => Expression):UpdateAction
   def filter(f: Expression => Boolean): Seq[Expression]
-  def deps:Map[String,CypherType]
 }
 
-trait GraphElementPropertyFunctions extends IterableSupport with IdentifierDependantHelper {
+trait GraphElementPropertyFunctions extends IterableSupport {
   def setProperties(pc: PropertyContainer, props: Map[String, Expression], context: ExecutionContext, state: QueryState) {
     props.foreach {
       case ("*", expression) => setAllMapKeyValues(expression, context, pc, state)
@@ -54,11 +51,6 @@ trait GraphElementPropertyFunctions extends IterableSupport with IdentifierDepen
   }
 
   def symbolTableDependencies(props: Map[String, Expression]):Set[String] = props.values.flatMap(_.symbolTableDependencies).toSet
-
-
-  def deps(props: Map[String, Expression]): Map[String, CypherType] = mergeDeps(props.values.map(_.identifierDependencies(AnyType())).toSeq)
-
-  def propDependencies(props: Map[String, Expression]) = props.values.flatMap(_.dependencies(AnyType())).toSeq.distinct
 
   def rewrite(props: Map[String, Expression], f: (Expression) => Expression): Map[String, Expression] = props.map{ case (k,v) => k->v.rewrite(f) }
 

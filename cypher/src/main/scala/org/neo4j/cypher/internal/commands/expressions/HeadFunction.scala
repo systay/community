@@ -26,17 +26,6 @@ import org.neo4j.cypher.internal.symbols.Identifier
 case class HeadFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
   def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).head
 
-  private def myType = collection.identifier.typ match {
-    case x: IterableType => x.iteratedType
-    case _               => ScalarType()
-  }
-
-  override def dependencies(extectedType: CypherType): Seq[Identifier] = declareDependencies(extectedType)
-
-  val identifier = Identifier("head(" + collection.identifier.name + ")", myType)
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = collection.dependencies(AnyIterableType())
-
   def rewrite(f: (Expression) => Expression) = f(HeadFunction(collection.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))

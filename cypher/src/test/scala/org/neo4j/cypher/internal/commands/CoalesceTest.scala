@@ -48,17 +48,13 @@ class CoalesceTest extends Assertions {
 }
 
 case class BreakingExpression() extends Expression {
-  protected def compute(v1: Map[String, Any]) = Assert.fail("Coalesce is not lazy")
-
-  val identifier = Identifier("breaking",AnyType())
-
-  def declareDependencies(extectedType: CypherType) = null
+  def apply(v1: Map[String, Any]) {
+    Assert.fail("Coalesce is not lazy")
+  }
 
   def rewrite(f: (Expression) => Expression) = null
 
   def filter(f: (Expression) => Boolean) = null
-
-  def identifierDependencies(expectedType: CypherType) = Map()
 
   def calculateType(symbols: SymbolTable2): CypherType = AnyType()
 

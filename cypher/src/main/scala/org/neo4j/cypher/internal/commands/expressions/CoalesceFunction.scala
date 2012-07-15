@@ -21,24 +21,18 @@ package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
-import org.neo4j.cypher.internal.symbols.Identifier
 
 case class CoalesceFunction(expressions: Expression*) extends Expression {
-  def compute(m: Map[String, Any]): Any = expressions.toStream.map(expression => expression(m)).find(value => value != null) match {
+  def apply(m: Map[String, Any]): Any = expressions.toStream.map(expression => expression(m)).find(value => value != null) match {
     case None    => null
     case Some(x) => x
   }
 
   def innerExpectedType: Option[CypherType] = None
 
-  val argumentsString: String = expressions.map(_.identifier.name).mkString(",")
-
-  //TODO: Find out the closest matching return type
-  val identifier = Identifier("COALESCE(" + argumentsString + ")", AnyType())
+  val argumentsString: String = expressions.mkString(",")
 
   override def toString() = "coalesce(" + argumentsString + ")"
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = expressions.flatMap(_.dependencies(AnyType()))
 
   def rewrite(f: (Expression) => Expression) = f(CoalesceFunction(expressions.map(e => e.rewrite(f)): _*))
 
@@ -46,8 +40,6 @@ case class CoalesceFunction(expressions: Expression*) extends Expression {
     Seq(this) ++ expressions.flatMap(_.filter(f))
   else
     expressions.flatMap(_.filter(f))
-
-  def identifierDependencies(expectedType: CypherType) = mergeDeps(expressions.map(_.identifierDependencies(AnyType())))
 
   def calculateType(symbols: SymbolTable2) = {
     expressions.map(_.getType(symbols)) match {

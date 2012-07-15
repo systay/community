@@ -41,7 +41,7 @@ class ExtractBuilder extends PlanBuilder {
 }
 
 object ExtractBuilder {
-  def extractIfNecessary(plan: ExecutionPlanInProgress, expressionsToExtract: Map[String, Expression]): (ExecutionPlanInProgress) = {
+  def extractIfNecessary(plan: ExecutionPlanInProgress, expressionsToExtract: Map[String, Expression]): ExecutionPlanInProgress = {
 
     val expressions = expressionsToExtract.filter {
       case (k, CachedExpression(_, _)) => false

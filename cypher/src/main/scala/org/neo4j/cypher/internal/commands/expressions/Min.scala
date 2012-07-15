@@ -23,15 +23,11 @@ import org.neo4j.cypher.internal.symbols.{AnyIterableType, CypherType, SymbolTab
 import org.neo4j.cypher.internal.pipes.aggregation.MinFunction
 
 case class Min(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
-  def typ = NumberType()
-
-  def name = "min"
-
   def createAggregationFunction = new MinFunction(anInner)
 
   def expectedInnerType = NumberType()
 
   def rewrite(f: (Expression) => Expression) = f(Min(anInner.rewrite(f)))
 
-  def calculateType(symbols: SymbolTable2): CypherType = anInner.evaluateType(AnyIterableType(), symbols).iteratedType
+  def calculateType(symbols: SymbolTable2): CypherType = anInner.getType(symbols)
 }

@@ -26,18 +26,12 @@ import org.neo4j.cypher.internal.symbols.Identifier
 case class LastFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
   def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).last
 
-  val identifier = Identifier("last(" + collection.identifier.name + ")", ScalarType())
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = collection.dependencies(AnyIterableType())
-
   def rewrite(f: (Expression) => Expression) = f(LastFunction(collection.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ collection.filter(f)
   else
     collection.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
 
   def calculateType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols).iteratedType
 

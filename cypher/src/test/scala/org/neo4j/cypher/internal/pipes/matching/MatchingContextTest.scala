@@ -448,18 +448,6 @@ class MatchingContextTest extends GraphDatabaseTestBase with Assertions with Pat
       Map("pA" -> a, "pR1" -> r1, "pB" -> b, "pC" -> c, "pR2" -> r2))
   }
 
-  /*
-   @Test def predicateConcerningRelationship() {
-    val r = relate(a, b, "rel", Map("age" -> 15))
-    val r2 = relate(a, b, "rel", Map("age" -> 5))
-
-    val patterns: Seq[Pattern] = Seq(RelatedTo("a", "b", "r", "rel", Direction.OUTGOING, false))
-    val matchingContext = new MatchingContext(patterns, bind("a"), Seq(Equals(Property("r", "age"), Literal(5))))
-
-    assertMatches(matchingContext.getMatches(Map("a" -> a)), 1, Map("a" -> a, "b" -> b, "r" -> r2))
-  }
-   */
-
   @Test def predicateConcerningRelationship() {
     val r = relate(a, b, "rel", Map("age" -> 15))
     val r2 = relate(a, b, "rel", Map("age" -> 5))
@@ -532,12 +520,9 @@ class MatchingContextTest extends GraphDatabaseTestBase with Assertions with Pat
   }
 
   private def createMatchingContextWith(patterns: Seq[Pattern], nodes: Seq[String], rels: Seq[String], predicates:Seq[Predicate]=Seq[Predicate]()): MatchingContext = {
-    val nodeIdentifiers = nodes.map(x => Identifier(x, NodeType()))
     val nodeIdentifiers2 = nodes.map(_ -> NodeType())
-    val relIdentifiers = rels.map(x => Identifier(x, RelationshipType()))
     val relIdentifiers2 = rels.map(_ ->RelationshipType())
 
-    val identifiers = nodeIdentifiers++relIdentifiers
     val identifiers2 = (nodeIdentifiers2++relIdentifiers2).toMap
     val symbols2 = new SymbolTable2(identifiers2)
     new MatchingContext(symbols2, predicates, buildPatternGraph(symbols2, patterns))
@@ -549,8 +534,8 @@ class MatchingContextTest extends GraphDatabaseTestBase with Assertions with Pat
   private def createMatchingContextWithNodes(patterns: Seq[Pattern], nodes: Seq[String], predicates: Seq[Predicate] = Seq[Predicate]()): MatchingContext =
     createMatchingContextWith(patterns, nodes, Seq(), predicates)
 
-  private def compare(matches: Map[String, Any], expecations: Map[String, Any]): Boolean = {
-    expecations.foreach(kv =>
+  private def compare(matches: Map[String, Any], expectation: Map[String, Any]): Boolean = {
+    expectation.foreach(kv =>
       matches.get(kv._1) match {
         case None => return false
         case Some(x) => if (x != kv._2) return false

@@ -23,10 +23,6 @@ import org.neo4j.cypher.internal.symbols.{CypherType, SymbolTable2, NumberType}
 import org.neo4j.cypher.internal.pipes.aggregation.AvgFunction
 
 case class Avg(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
-  def typ = NumberType()
-
-  def name = "avg"
-
   def createAggregationFunction = new AvgFunction(anInner)
 
   def expectedInnerType = NumberType()

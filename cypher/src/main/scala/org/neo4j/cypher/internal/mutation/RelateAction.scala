@@ -28,7 +28,6 @@ import org.neo4j.graphdb.{Lock, PropertyContainer}
 import org.neo4j.cypher.internal.commands.StartItem
 
 case class RelateAction(links: RelateLink*) extends UpdateAction {
-  def dependencies: Seq[Identifier] = links.flatMap(_.dependencies)
 
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext] = {
     var linksToDo: Seq[RelateLink] = links
@@ -136,12 +135,9 @@ case class RelateAction(links: RelateLink*) extends UpdateAction {
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = links.flatMap(_.filter(f)).distinct
 
-  def identifier: Seq[Identifier] = links.flatMap(_.identifier).distinct
   def identifier2: Seq[(String,CypherType)] = links.flatMap(_.identifier2).distinct
 
   def rewrite(f: (Expression) => Expression): UpdateAction = RelateAction(links.map(_.rewrite(f)): _*)
-
-  def deps = mergeDeps(links.map(_.deps))
 
   def assertTypes(symbols: SymbolTable2) {links.foreach(l=>l.assertTypes(symbols))}
 

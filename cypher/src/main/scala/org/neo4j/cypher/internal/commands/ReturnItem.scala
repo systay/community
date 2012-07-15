@@ -24,11 +24,10 @@ import org.neo4j.cypher.internal.pipes.Dependant
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
 
-abstract class ReturnColumn extends Dependant {
+abstract class ReturnColumn {
   def expressions(symbols: SymbolTable2): Map[String,Expression]
 
   def name: String
-  def deps:Map[String,CypherType]
 }
 
 case class AllIdentifiers() extends ReturnColumn {
@@ -37,25 +36,13 @@ case class AllIdentifiers() extends ReturnColumn {
     map(n => n -> Entity(n)).toMap
 
   def name = "*"
-
-  def dependencies = Seq()
-  def deps:Map[String,CypherType]=Map()
 }
 
 case class ReturnItem(expression: Expression, name: String, renamed: Boolean = false)
   extends ReturnColumn {
-
   def expressions(symbols: SymbolTable2) = Map(name -> expression)
 
-  val dependencies = expression.dependencies(AnyType())
-
-  val identifier = Identifier(name, expression.identifier.typ)
-
-  val columnName = identifier.name
-
-  override def toString = identifier.name
+  override def toString = name
 
   def rename(newName: String) = ReturnItem(expression, newName, renamed = true)
-
-  def deps = expression.identifierDependencies(AnyType())
 }

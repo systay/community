@@ -37,7 +37,7 @@ trait MinMax extends AggregationFunction with Comparer {
     value(data) match {
       case null =>
       case x: Comparable[_] => checkIfLargest(x)
-      case _ => throw new SyntaxException("MIN/MAX can only handle values of Comparable type, or null. This was a :" + value.identifier)
+      case _ => throw new SyntaxException("MIN/MAX can only handle values of Comparable type, or null. This was a :" + value)
     }
   }
 

@@ -84,7 +84,7 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
     assert(n.getProperty("name") === "Andres")
   }
 
-  private def getNode(key:String, n:Node) = InjectValue(n, Identifier(key, NodeType()))
+  private def getNode(key:String, n:Node) = InjectValue(n, NodeType())
 
   @Test
   def create_rel() {
@@ -132,18 +132,14 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
   }
 }
 
-case class InjectValue(value:Any, identifier:Identifier) extends Expression {
-  protected def compute(v1: CollectionMap[String, Any]) = value
-
-  def declareDependencies(x: CypherType) = Seq()
+case class InjectValue(value:Any, typ:CypherType) extends Expression {
+  def apply(v1: CollectionMap[String, Any]) = value
 
   def filter(f: (Expression) => Boolean) = Seq(this)
 
   def rewrite(f: (Expression) => Expression) = this
 
-  def identifierDependencies(expectedType: CypherType) = mutable.Map()
-
-  def calculateType(symbols: SymbolTable2): CypherType = identifier.typ
+  def calculateType(symbols: SymbolTable2): CypherType = typ
 
   def symbolTableDependencies = Set()
 }

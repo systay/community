@@ -32,15 +32,17 @@ case class PathExpression(pathPattern: Seq[Pattern])
   extends Expression
   with PathExtractor
   with PatternGraphBuilder {
-//  val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
   val identifiers: Seq[(String, CypherType)] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p => p._1.startsWith("  UNNAMED")))
 
   val symbols2 = new SymbolTable2(identifiers.toMap)
   val matchingContext = new MatchingContext(symbols2, Seq(), buildPatternGraph(symbols2, pathPattern))
-  val interestingPoints = pathPattern.flatMap(_.possibleStartPoints.map(_._1)).distinct
+  val interestingPoints: Seq[String] = pathPattern.
+    flatMap(_.possibleStartPoints.map(_._1)).
+    filterNot(_.startsWith("  UNNAMED")).
+    distinct
 
-  def compute(m: Map[String, Any]): Any = {
-    val returnNull = declareDependencies(AnyType()).map(_.name).exists(key => m.get(key) match {
+  def apply(m: Map[String, Any]): Any = {
+    val returnNull = interestingPoints.exists(key => m.get(key) match {
       case None => throw new ThisShouldNotHappenError("Andres", "This execution plan should not exist.")
       case Some(null) => true
       case Some(x) => false
@@ -58,19 +60,9 @@ case class PathExpression(pathPattern: Seq[Pattern])
     matches.map(getPath)
   }
 
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] =
-    pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p=> p._1.startsWith("  UNNAMED"))).
-  map {
-    case (id,typ) => Identifier(id,typ)
-  }
-
   def filter(f: (Expression) => Boolean): Seq[Expression] = Seq()
 
-  val identifier: Identifier = Identifier(pathPattern.mkString(","), PathType())
-
   def rewrite(f: (Expression) => Expression): Expression = f(PathExpression(pathPattern.map(_.rewrite(f))))
-
-  def identifierDependencies(expectedType: CypherType) = mergeDeps(pathPattern.map(_.identifierDependencies(AnyType())))
 
   def calculateType(symbols: SymbolTable2): CypherType = {
     pathPattern.foreach(_.assertTypes(symbols))
@@ -80,7 +72,6 @@ case class PathExpression(pathPattern: Seq[Pattern])
   def symbolTableDependencies = {
     val patternDependencies = pathPattern.flatMap(_.symbolTableDependencies).toSet
     val startPointDependencies = pathPattern.flatMap(_.possibleStartPoints).map(_._1).filterNot(_.startsWith("  UNNAMED")).toSet
-    val totatl = patternDependencies ++ startPointDependencies
-    totatl
+    patternDependencies ++ startPointDependencies
   }
 }

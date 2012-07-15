@@ -44,8 +44,6 @@ abstract class InIterable(collection: Expression, id: String, predicate: Predica
     })
   }
 
-  def dependencies: Seq[Identifier] = collection.dependencies(AnyIterableType()) ++ predicate.dependencies.filterNot(_.name == id)
-
   def atoms: Seq[Predicate] = Seq(this)
 
   def exists(f: (Expression) => Boolean) = collection.exists(f) || predicate.exists(f)
@@ -57,14 +55,6 @@ abstract class InIterable(collection: Expression, id: String, predicate: Predica
   def containsIsNull = predicate.containsIsNull
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = collection.filter(f) ++ predicate.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = {
-    val mergedDeps = mergeDeps(collection.identifierDependencies(AnyIterableType()), predicate.identifierDependencies(AnyType()))
-
-    // Filter depends on everything that the iterable and the predicate depends on, except
-    // the new identifier inserted into the predicate symbol table, named with id
-    mergedDeps.filterKeys(_ != id)
-  }
 
   def assertTypes(symbols: SymbolTable2) {
     val innerType = collection.evaluateType(AnyIterableType(), symbols).iteratedType

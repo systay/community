@@ -28,8 +28,6 @@ case class PropertySetAction(prop: Property, e: Expression)
   extends UpdateAction with GraphElementPropertyFunctions{
   val Property(entityKey, propertyKey) = prop
 
-  def dependencies = e.dependencies(AnyType())
-
   def exec(context: ExecutionContext, state: QueryState) = {
     val value = makeValueNeoSafe(e(context))
     val entity = context(entityKey).asInstanceOf[PropertyContainer]
@@ -44,14 +42,11 @@ case class PropertySetAction(prop: Property, e: Expression)
     Stream(context)
   }
 
-  def identifier = Seq.empty
   def identifier2 = Seq.empty
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = prop.filter(f) ++ e.filter(f)
 
   def rewrite(f: (Expression) => Expression): UpdateAction = PropertySetAction(prop, e.rewrite(f))
-
-  def deps = mergeDeps(prop.identifierDependencies(AnyType()), e.identifierDependencies(AnyType()))
 
   def assertTypes(symbols: SymbolTable2) {
     e.checkTypes(symbols)

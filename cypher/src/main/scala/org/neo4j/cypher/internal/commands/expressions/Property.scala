@@ -26,8 +26,8 @@ import collection.Map
 import org.neo4j.cypher.internal.symbols.Identifier
 import org.neo4j.helpers.ThisShouldNotHappenError
 
-case class Property(entity: String, property: String) extends CastableExpression {
-  def compute(m: Map[String, Any]): Any = {
+case class Property(entity: String, property: String) extends Expression {
+  def apply(m: Map[String, Any]): Any = {
     m(entity).asInstanceOf[PropertyContainer] match {
       case null              => null
       case propertyContainer => try {
@@ -38,18 +38,12 @@ case class Property(entity: String, property: String) extends CastableExpression
     }
   }
 
-  val identifier: Identifier = Identifier(entity + "." + property, ScalarType())
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq(Identifier(entity, MapType()))
-
   def rewrite(f: (Expression) => Expression) = f(this)
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this)
   else
     Seq()
-
-  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = Map(entity -> MapType())
 
   def calculateType(symbols: SymbolTable2) =
     throw new ThisShouldNotHappenError("Andres", "This class should override evaluateType, and this method should never be run")

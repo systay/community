@@ -22,9 +22,10 @@ package org.neo4j.cypher.internal.commands.expressions
 import org.junit.Test
 import org.scalatest.Assertions
 import org.neo4j.cypher.internal.symbols._
-import collection.Map
+import collection.{immutable, Map}
 import org.neo4j.cypher.CypherTypeException
 import org.neo4j.cypher.internal.symbols.Identifier
+import java.util.zip.ZipEntry
 
 class ExpressionTest extends Assertions {
   @Test def replacePropWithCache() {
@@ -81,39 +82,39 @@ class ExpressionTest extends Assertions {
   val e = new TestExpression
 
   private def merge(a: Map[String, CypherType], b: Map[String, CypherType], expected: Map[String, CypherType]) {
-    val r = e.exposedMergeDeps(a, b)
-    if (r != expected) {
+
+    val keys = (a.keys ++ b.keys).toSet
+
+    if (keys != expected.keys.toSet) {
+      fail("Wrong keys found: " + keys + " vs. " + expected.keys.toSet)
+    }
+
+    val result = keys.toSeq.map( k => (a.get(k), b.get(k)) match {
+      case (Some(x), None) => k->x
+      case (None, Some(x)) => k->x
+      case (Some(x), Some(y)) => k->x.mergeWith(y)
+    }).toMap
+
+    if (result != expected) {
       fail("""
 Merged:
     %s with
     %s
 
      Got: %s
-Expected: %s""".format(a, b, r, expected))
+Expected: %s""".format(a, b, result, expected))
     }
   }
 }
 
 class TestExpression extends Expression {
-  protected def compute(v1: Map[String, Any]): Any = null
-
-  def declareDependencies(expectedType: CypherType): Seq[Identifier] = null
-
-  def deps: Map[String, CypherType] = null
-
   def filter(f: (Expression) => Boolean): Seq[Expression] = null
 
-  val identifier: Identifier = null
-
   def rewrite(f: (Expression) => Expression): Expression = null
-
-  def exposedMergeDeps(a: Map[String, CypherType], b: Map[String, CypherType]): Map[String, CypherType] = mergeDeps(a, b)
-
-  /*This is a declaration of the identifiers that this particular expression expects to
-  find in the symboltable to be able to run successfully.*/
-  def identifierDependencies(expectedType: CypherType) = Map()
 
   def calculateType(symbols: SymbolTable2): CypherType = null
 
   def symbolTableDependencies = Set()
+
+  def apply(v1: Map[String, Any]) = null
 }

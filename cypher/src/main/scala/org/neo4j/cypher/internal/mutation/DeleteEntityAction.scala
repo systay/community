@@ -59,16 +59,11 @@ case class DeleteEntityAction(elementToDelete: Expression)
     }
   }
 
-  def identifier = Seq.empty
   def identifier2: Seq[(String, CypherType)] = Seq.empty
 
   def rewrite(f: (Expression) => Expression) = DeleteEntityAction(elementToDelete.rewrite(f))
 
   def filter(f: (Expression) => Boolean) = elementToDelete.filter(f)
-
-  def dependencies = elementToDelete.dependencies(AnyType())
-
-  def deps = elementToDelete.identifierDependencies(MapType())
 
   def assertTypes(symbols: SymbolTable2) {
     val elementType = elementToDelete.getType(symbols)

@@ -27,23 +27,12 @@ case class Literal(v: Any) extends Expression {
 
   override def apply(m: Map[String, Any]): Any = compute(m)
 
-  val identifier = Identifier(name, CypherType.fromJava(v))
-
-  private def name = v match {
-    case null => "null"
-    case x    => x.toString
-  }
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
-
   def rewrite(f: (Expression) => Expression) = f(this)
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this)
   else
     Seq()
-
-  def identifierDependencies(expectedType: CypherType) = Map()
 
   def calculateType(symbols: SymbolTable2): CypherType = CypherType.fromJava(v)
 

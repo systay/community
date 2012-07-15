@@ -52,8 +52,6 @@ case class NamedExpectation(name: String, properties: Map[String, Expression])
         else isCollection(expectationValue) && isCollection(elementValue) && makeTraversable(expectationValue).toList == makeTraversable(elementValue).toList
       }
   }
-  def deps: Map[String, CypherType] = deps(properties)
-
 
   def symbolTableDependencies = symbolTableDependencies(properties)
 
@@ -154,10 +152,7 @@ case class RelateLink(start: NamedExpectation, end: NamedExpectation, rel: Named
     case x => throw new CypherTypeException("Expected `" + key + "` to a node, but it is a " + x)
   }
 
-  lazy val identifier = Seq(Identifier(start.name, NodeType()), Identifier(end.name, NodeType()), Identifier(rel.name, RelationshipType()))
   lazy val identifier2 = Seq(start.name -> NodeType(), end.name -> NodeType(), rel.name -> RelationshipType())
-
-  def dependencies = (propDependencies(start.properties) ++ propDependencies(end.properties) ++ propDependencies(rel.properties)).distinct
 
   def symbolTableDependencies = symbolTableDependencies(start.properties) ++
     symbolTableDependencies(end.properties) ++
@@ -171,8 +166,6 @@ case class RelateLink(start: NamedExpectation, end: NamedExpectation, rel: Named
   }
 
   def filter(f: (Expression) => Boolean) = Seq.empty
-
-  def deps:Map[String,CypherType] = mergeDeps(Seq(start.deps, end.deps, rel.deps))
 
   def assertTypes(symbols: SymbolTable2) {
     checkTypes(start.properties, symbols)

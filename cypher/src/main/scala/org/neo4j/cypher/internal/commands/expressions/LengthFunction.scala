@@ -35,18 +35,12 @@ with ExpressionWInnerExpression {
     case x          => makeTraversable(x).toSeq.length
   }
 
-  val identifier = Identifier("LENGTH(" + inner.identifier.name + ")", IntegerType())
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = inner.dependencies(AnyIterableType()).toList
-
   def rewrite(f: (Expression) => Expression) = f(LengthFunction(inner.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ inner.filter(f)
   else
     inner.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = inner.identifierDependencies(AnyIterableType())
 
   val myType = LongType()
   val expectedInnerType = AnyIterableType()

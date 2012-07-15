@@ -23,17 +23,11 @@ import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, ScalarType, 
 import collection.Map
 
 case class Null() extends Expression {
-  protected def compute(v1: Map[String, Any]) = null
-
-  val identifier: Identifier = Identifier("null", ScalarType())
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq()
+  def apply(v1: Map[String, Any]) = null
 
   def rewrite(f: (Expression) => Expression): Expression = f(this)
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = if (f(this)) Seq(this) else Seq()
-
-  def identifierDependencies(expectedType: CypherType) = Map()
 
   def calculateType(symbols: SymbolTable2): CypherType = ScalarType()
 

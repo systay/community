@@ -23,10 +23,6 @@ import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.pipes.aggregation.SumFunction
 
 case class Sum(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
-  def typ = NumberType()
-
-  def name = "sum"
-
   def createAggregationFunction = new SumFunction(anInner)
 
   def expectedInnerType = NumberType()

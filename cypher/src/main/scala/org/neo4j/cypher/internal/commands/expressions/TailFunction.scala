@@ -25,18 +25,12 @@ import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyIterableType, CypherT
 case class TailFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
   def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).tail
 
-  val identifier = Identifier("tail(" + collection.identifier.name + ")", collection.identifier.typ)
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = collection.dependencies(AnyIterableType())
-
   def rewrite(f: (Expression) => Expression) = f(TailFunction(collection.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ collection.filter(f)
   else
     collection.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = collection.identifierDependencies(AnyIterableType())
 
   def calculateType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols)
 

@@ -23,10 +23,6 @@ import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType, IterableType}
 import org.neo4j.cypher.internal.pipes.aggregation.CollectFunction
 
 case class Collect(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
-  def typ = new IterableType(anInner.identifier.typ)
-
-  def name = "collect"
-
   def createAggregationFunction = new CollectFunction(anInner)
 
   def expectedInnerType = AnyType()

@@ -27,9 +27,7 @@ import org.neo4j.cypher.internal.symbols.AnyType
 import org.neo4j.cypher.internal.symbols.Identifier
 
 case class Add(a: Expression, b: Expression) extends Expression {
-  val identifier = Identifier(a.identifier.name + " + " + b.identifier.name, ScalarType())
-
-  def compute(m: Map[String, Any]) = {
+  def apply(m: Map[String, Any]) = {
     val aVal = a(m)
     val bVal = b(m)
 
@@ -43,16 +41,12 @@ case class Add(a: Expression, b: Expression) extends Expression {
     }
   }
 
-  def declareDependencies(extectedType: CypherType) = a.declareDependencies(extectedType) ++ b.declareDependencies(extectedType)
-
   def rewrite(f: (Expression) => Expression) = f(Add(a.rewrite(f), b.rewrite(f)))
 
   def filter(f: (Expression) => Boolean) = if (f(this))
     Seq(this) ++ a.filter(f) ++ b.filter(f)
   else
     a.filter(f) ++ b.filter(f)
-
-  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(a.identifierDependencies(AnyType()), b.identifierDependencies(AnyType()))
 
   def calculateType(symbols: SymbolTable2): CypherType = {
     val aT = a.getType(symbols)

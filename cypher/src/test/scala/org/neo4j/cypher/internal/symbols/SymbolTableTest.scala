@@ -110,13 +110,7 @@ class SymbolTable2Test extends Assertions {
 }
 
 class FakeExpression(typ: CypherType) extends Expression {
-  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = null
-
-  protected def compute(v1: Map[String, Any]): Any = null
-
-  val identifier: Identifier = Identifier("fake", typ)
-
-  def declareDependencies(expectedType: CypherType): Seq[Identifier] = null
+  def apply(v1: Map[String, Any]): Any = null
 
   def rewrite(f: (Expression) => Expression): Expression = null
 

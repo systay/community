@@ -19,50 +19,10 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import collection.Seq
-import collection.Map
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, TypeSafe, CypherType, Identifier}
-import org.neo4j.helpers.ThisShouldNotHappenError
+import org.neo4j.cypher.internal.symbols.SymbolTable2
 
 abstract class PipeWithSource(val source: Pipe) extends Pipe {
   def assertTypes(symbols: SymbolTable2)
 
   assertTypes(source.symbols2)
-}
-/*
-Classes that have dependencies on identifiers and their types
-
-PipeWithSource is then responsible for taking the dependencies of all expressions used by a pipe, and check if the
-underlying pipe meets them.
- */
-trait IdentifierDependant extends IdentifierDependantHelper {
-  /*This is a declaration of the identifiers that this particular expression expects to
-  find in the symboltable to be able to run successfully.*/
-  def identifierDependencies(expectedType:CypherType):Map[String, CypherType]
-}
-
-trait IdentifierDependantHelper {
-  def mergeDeps(deps: Seq[Map[String, CypherType]]): Map[String, CypherType] = deps.foldLeft(Map[String, CypherType]()) {
-    case (result, current) => mergeDeps(result, current)
-  }
-
-  def mergeDeps(a: Map[String, CypherType], b: Map[String, CypherType]): Map[String, CypherType] = {
-    val keys = (a.keys ++ b.keys).toSeq.distinct
-    val allDeps: Seq[(String, List[CypherType])] = keys.map(key => key -> (a.get(key) ++ b.get(key)).toList.distinct)
-    val map: Seq[(String, CypherType)] = allDeps.map {
-      case (key, types) => val t: CypherType = types match {
-        case List(single: CypherType)               => single
-        case List(one: CypherType, two: CypherType) => one.mergeWith(two)
-        case _ => throw new ThisShouldNotHappenError("Andres", "This line is to stop a Scala warning, and should never run")
-      }
-      key -> t
-    }
-    map.toMap
-  }
-}
-
-
-
-trait Dependant {
-  def dependencies: Seq[Identifier]
 }

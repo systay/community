@@ -25,14 +25,10 @@ import collection.Map
 import org.neo4j.cypher.internal.symbols.Identifier
 import org.neo4j.helpers.ThisShouldNotHappenError
 
-case class Entity(entityName: String) extends CastableExpression with Typed {
-  def compute(m: Map[String, Any]): Any = m.getOrElse(entityName, throw new NotFoundException("Unknown identifier `%s`".format(entityName)))
-
-  val identifier: Identifier = Identifier(entityName, AnyType())
+case class Entity(entityName: String) extends Expression with Typed {
+  def apply(m: Map[String, Any]): Any = m.getOrElse(entityName, throw new NotFoundException("Unknown identifier `%s`".format(entityName)))
 
   override def toString(): String = entityName
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = Seq(Identifier(entityName, extectedType))
 
   def rewrite(f: (Expression) => Expression) = f(this)
 
@@ -40,8 +36,6 @@ case class Entity(entityName: String) extends CastableExpression with Typed {
     Seq(this)
   else
     Seq()
-
-  def identifierDependencies(expectedType: CypherType) = Map(entityName -> expectedType)
 
   def calculateType(symbols: SymbolTable2) =
     throw new ThisShouldNotHappenError("Andres", "This class should override evaluateType, and this method should never be run")

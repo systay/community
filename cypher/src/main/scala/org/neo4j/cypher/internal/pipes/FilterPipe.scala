@@ -24,16 +24,11 @@ import org.neo4j.cypher.internal.commands.Predicate
 import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType}
 
 class FilterPipe(source: Pipe, predicate: Predicate) extends PipeWithSource(source) {
-//  val symbols = source.symbols
   val symbols2 = source.symbols2
 
   def createResults(state: QueryState) = source.createResults(state).filter(ctx => predicate.isMatch(ctx))
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "Filter(" + predicate.toString + ")"
-
-  def dependencies = predicate.dependencies
-
-  def deps = predicate.identifierDependencies(AnyType())
 
   def assertTypes(symbols: SymbolTable2) {
     predicate.assertTypes(symbols)

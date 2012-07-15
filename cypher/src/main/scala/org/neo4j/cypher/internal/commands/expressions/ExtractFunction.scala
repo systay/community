@@ -28,17 +28,12 @@ case class ExtractFunction(collection: Expression, id: String, expression: Expre
   extends NullInNullOutExpression(collection)
   with IterableSupport
   with Closure {
-  def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).map(iterValue => {
-    val innerMap = m + (id -> iterValue)
-    expression(innerMap)
-  }).toList
 
-  val identifier = Identifier("extract(" + id + " in " + collection.identifier.name + " : " + expression.identifier.name + ")", new IterableType(expression.identifier.typ))
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] =
-  // Extract depends on everything that the iterable and the expression depends on, except
-  // the new identifier inserted into the expression context, named with id
-    collection.dependencies(AnyIterableType()) ++ expression.dependencies(AnyType()).filterNot(_.name == id)
+  def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).map {
+    case iterValue =>
+      val innerMap = m + (id -> iterValue)
+      expression(innerMap)
+  }.toList
 
   def rewrite(f: (Expression) => Expression) = f(ExtractFunction(collection.rewrite(f), id, expression.rewrite(f)))
 
@@ -47,13 +42,6 @@ case class ExtractFunction(collection: Expression, id: String, expression: Expre
   else
     collection.filter(f) ++ expression.filter(f)
 
-  def identifierDependencies(expectedType: CypherType) = {
-    val mergedDeps: Map[String, CypherType] = mergeDeps(collection.identifierDependencies(AnyIterableType()), expression.identifierDependencies(AnyType()))
-
-    // Extract depends on everything that the iterable and the expression depends on, except
-    // the new identifier inserted into the expression context, named with id
-    mergedDeps.filterKeys(_ != id)
-  }
 
   def calculateType(symbols: SymbolTable2): CypherType = collection.evaluateType(AnyIterableType(), symbols)
 

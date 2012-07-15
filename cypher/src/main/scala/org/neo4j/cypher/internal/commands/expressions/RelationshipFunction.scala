@@ -28,12 +28,8 @@ import org.neo4j.cypher.internal.symbols.Identifier
 case class RelationshipFunction(path: Expression) extends NullInNullOutExpression(path) {
   def compute(value: Any, m: Map[String, Any]) = value match {
     case p: Path => p.relationships().asScala.toSeq
-    case x       => throw new SyntaxException("Expected " + path.identifier.name + " to be a path.")
+    case x       => throw new SyntaxException("Expected " + path + " to be a path.")
   }
-
-  val identifier = Identifier("RELATIONSHIPS(" + path.identifier.name + ")", new IterableType(RelationshipType()))
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = path.dependencies(PathType())
 
   def rewrite(f: (Expression) => Expression) = f(RelationshipFunction(path.rewrite(f)))
 
@@ -41,8 +37,6 @@ case class RelationshipFunction(path: Expression) extends NullInNullOutExpressio
     Seq(this) ++ path.filter(f)
   else
     path.filter(f)
-
-  def identifierDependencies(expectedType: CypherType) = path.identifierDependencies(PathType())
 
   def calculateType(symbols: SymbolTable2) = {
     path.evaluateType(PathType(), symbols)

@@ -25,28 +25,13 @@ import internal.symbols._
 import collection.Map
 
 abstract class Expression extends (Map[String, Any] => Any)
-with IdentifierDependant
 with Typed
 with TypeSafe {
-  protected def compute(v1: Map[String, Any]) : Any
-  def apply(m: Map[String, Any]) = m.getOrElse(identifier.name, compute(m))
-
-  val identifier: Identifier
-  def declareDependencies(expectedType: CypherType): Seq[Identifier]
-  def dependencies(expectedType: CypherType): Seq[Identifier] = {
-    val myType = identifier.typ
-    if (!expectedType.isAssignableFrom(myType))
-      throw new SyntaxException(identifier.name + " expected to be of type " + expectedType + " but it is of type " + identifier.typ)
-    declareDependencies(expectedType)
-  }
-
   def rewrite(f: Expression => Expression): Expression
   def exists(f: Expression => Boolean) = filter(f).nonEmpty
   def filter(f: Expression => Boolean): Seq[Expression]
   def subExpressions = filter( _ != this)
   def containsAggregate = exists(_.isInstanceOf[AggregationExpression])
-
-  override def toString() = identifier.name
 
   protected def calculateType(symbols: SymbolTable2): CypherType
 
@@ -64,39 +49,28 @@ with TypeSafe {
   def assertTypes(symbols: SymbolTable2) {
     evaluateType(AnyType(), symbols)
   }
+
+  override def toString() = getClass.getSimpleName
 }
 
-case class CachedExpression(key:String, typ:CypherType) extends CastableExpression {
-  override def apply(m: Map[String, Any]) = m(key)
-  protected def compute(v1: Map[String, Any]) = null
-  def declareDependencies(extectedType: CypherType) = Seq()
+case class CachedExpression(key:String, typ:CypherType) extends Expression {
+  def apply(m: Map[String, Any]) = m(key)
+
   def rewrite(f: (Expression) => Expression) = f(this)
   def filter(f: (Expression) => Boolean) = if(f(this)) Seq(this) else Seq()
-  override def toString() = "Cached(" + super.toString() + ")"
-
-  def identifierDependencies(expectedType: CypherType) = Map()
 
   def calculateType(symbols: SymbolTable2) = typ
-
-  val identifier = Identifier(key, typ)
 
   def symbolTableDependencies = Set(key)
 }
 
 abstract class Arithmetics(left: Expression, right: Expression)
   extends Expression {
-  val identifier = Identifier("%s %s %s".format(left.identifier.name, operand, right.identifier.name), NumberType())
-  def operand: String
   def throwTypeError(bVal: Any, aVal: Any): Nothing = {
-    throw new CypherTypeException("Don't know how to " + verb + " `" + name(bVal) + "` with `" + name(aVal) + "`")
+    throw new CypherTypeException("Don't know how to " + this + " `" + bVal + "` with `" + aVal + "`")
   }
 
-  private def name(x:Any)=x match {
-    case null => "null"
-    case _ => x.toString
-  }
-
-  def compute(m: Map[String, Any]) = {
+  def apply(m: Map[String, Any]) = {
     val aVal = left(m)
     val bVal = right(m)
 
@@ -104,18 +78,14 @@ abstract class Arithmetics(left: Expression, right: Expression)
       case (x: Number, y: Number) => calc(x, y)
       case _ => throwTypeError(bVal, aVal)
     }
-
   }
 
-  def verb: String
   def calc(a: Number, b: Number): Number
-  def declareDependencies(extectedType: CypherType) = left.declareDependencies(extectedType) ++ right.declareDependencies(extectedType)
+
   def filter(f: (Expression) => Boolean) = if(f(this))
     Seq(this) ++ left.filter(f) ++ right.filter(f)
   else
     left.filter(f) ++ right.filter(f)
-
-  def identifierDependencies(expectedType: CypherType): Map[String, CypherType] = mergeDeps(left.identifierDependencies(AnyType()), right.identifierDependencies(AnyType()))
 
   def calculateType(symbols: SymbolTable2): CypherType = {
     left.evaluateType(NumberType(), symbols)
@@ -134,8 +104,4 @@ trait ExpressionWInnerExpression extends Expression {
 
     myType
   }
-}
-
-abstract class CastableExpression extends Expression {
-  override def dependencies(extectedType: CypherType): Seq[Identifier] = declareDependencies(extectedType)
 }

@@ -31,7 +31,7 @@ trait NumericExpressionOnly {
     obj match {
       case null =>
       case number: Number => f(number)
-      case _ => throw new CypherTypeException("%s(%s) can only handle numerical values, or null.".format(name, value.identifier.name))
+      case _ => throw new CypherTypeException("%s(%s) can only handle numerical values, or null.".format(name, value))
     }
   }
 }

@@ -19,21 +19,13 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType}
 import org.neo4j.cypher.internal.pipes.aggregation.DistinctFunction
 
 case class Distinct(innerAggregator: AggregationExpression, expression: Expression) extends AggregationWithInnerExpression(expression) {
-  def typ = innerAggregator.identifier.typ
-
-  override val identifier = Identifier("%s(distinct %s)".format(innerAggregator.name, expression.identifier.name), innerAggregator.identifier.typ)
-
   def expectedInnerType = AnyType()
 
-  def name = "distinct"
-
   def createAggregationFunction = new DistinctFunction(expression, innerAggregator.createAggregationFunction)
-
-  override def declareDependencies(extectedType: CypherType): Seq[Identifier] = innerAggregator.dependencies(extectedType) ++ expression.dependencies(AnyType())
 
   def rewrite(f: (Expression) => Expression) = innerAggregator.rewrite(f) match {
     case inner: AggregationExpression => f(Distinct(inner, expression.rewrite(f)))
@@ -41,8 +33,6 @@ case class Distinct(innerAggregator: AggregationExpression, expression: Expressi
   }
 
   def calculateType(symbols: SymbolTable2): CypherType = innerAggregator.getType(symbols)
-
-  override def identifierDependencies(expectedType: CypherType) = mergeDeps(innerAggregator.identifierDependencies(AnyType()), expression.identifierDependencies(AnyType()))
 
   override def symbolTableDependencies = innerAggregator.symbolTableDependencies ++ expression.symbolTableDependencies
 }

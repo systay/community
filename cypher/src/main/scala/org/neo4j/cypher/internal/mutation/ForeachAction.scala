@@ -27,16 +27,6 @@ import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 case class ForeachAction(collection: Expression, id: String, actions: Seq[UpdateAction])
   extends UpdateAction
   with IterableSupport {
-  def dependencies = {
-    val ownIdentifiers = actions.flatMap(_.identifier)
-
-    val updateDeps = actions.flatMap(_.dependencies).
-      filterNot(_.name == id). //remove dependencies to the symbol we're introducing
-      filterNot(ownIdentifiers contains) //remove dependencies to identifiers we are introducing
-
-    collection.dependencies(AnyIterableType()) ++ updateDeps
-  }
-
   def exec(context: ExecutionContext, state: QueryState) = {
     val before = context.get(id)
 
@@ -63,18 +53,7 @@ case class ForeachAction(collection: Expression, id: String, actions: Seq[Update
 
   def rewrite(f: (Expression) => Expression) = ForeachAction(f(collection), id, actions.map(_.rewrite(f)))
 
-  def identifier = Seq.empty
   def identifier2 = Seq.empty
-
-  def deps = {
-
-    val actionDeps = mergeDeps(actions.map(_.deps))
-    val mergedDeps = mergeDeps(collection.identifierDependencies(AnyIterableType()), actionDeps)
-
-    // ForEach depends on everything that the iterable and the inner update actions depends on,
-    // except the identifier inserted into the foreach symbol table
-    mergedDeps.filterKeys(_ != id)
-  }
 
   def assertTypes(symbols: SymbolTable2) {
     val t = collection.evaluateType(AnyIterableType(), symbols).iteratedType

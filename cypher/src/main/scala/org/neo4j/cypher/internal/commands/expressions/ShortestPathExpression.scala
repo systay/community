@@ -34,9 +34,7 @@ import org.neo4j.cypher.internal.commands.{Pattern, PathExtractor, ShortestPath}
 case class ShortestPathExpression(ast: ShortestPath) extends Expression with PathExtractor {
   val pathPattern:Seq[Pattern] = Seq(ast)
 
-//  val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
-
-  def compute(m: Map[String, Any]): Stream[Path] = {
+  def apply(m: Map[String, Any]): Stream[Path] = {
     if (anyStartpointsContainNull(m)) {
       null
     } else {
@@ -52,19 +50,14 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
 
   def getEndPoint(m: Map[String, Any], start: String): Node = m.getOrElse(start, throw new SyntaxException("To find a shortest path, both ends of the path need to be provided. Couldn't find `" + start + "`")).asInstanceOf[Node]
 
-  private def anyStartpointsContainNull(m: Map[String, Any]): Boolean = {
-    declareDependencies(AnyType()).map(_.name).exists(key => m.get(key) match {
+  private def anyStartpointsContainNull(m: Map[String, Any]): Boolean =
+    symbolTableDependencies.exists(key => m.get(key) match {
       case None => throw new ThisShouldNotHappenError("Andres", "This execution plan should not exist.")
       case Some(null) => true
       case Some(x) => false
     })
-  }
-
-  def declareDependencies(extectedType: CypherType): Seq[Identifier] = ast.possibleStartPoints.filterNot(id => id._1.startsWith("  UNNAMED")).map{case(i,c)=>Identifier(i,c)}
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = Seq()
-
-  val identifier: Identifier = Identifier(ast.toString, PathType())
 
   def rewrite(f: (Expression) => Expression): Expression = f(ShortestPathExpression(ast.rewrite(f)))
 
@@ -80,8 +73,6 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
     new SingleShortestPathFOO(expander, ast.maxDepth.getOrElse(15))
   else
     new AllShortestPathsFOO(expander, ast.maxDepth.getOrElse(15))
-
-  def identifierDependencies(expectedType: CypherType) = ast.identifierDependencies(PathType())
 
   def calculateType(symbols: SymbolTable2) = {
     ast.assertTypes(symbols)

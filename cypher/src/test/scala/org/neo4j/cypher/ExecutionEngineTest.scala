@@ -1330,8 +1330,7 @@ return p""")
 start root  = node(1)
 match p = root-[*]->leaf
 where not(leaf-->())
-return p, leaf
-                                  """)
+return p, leaf""")
 
     assert(List(
       Map("leaf" -> b, "p" -> PathImpl(a, rab, b)),
