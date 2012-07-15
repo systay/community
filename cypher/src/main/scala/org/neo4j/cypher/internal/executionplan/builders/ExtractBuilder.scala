@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.ExtractPipe
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
-import org.neo4j.cypher.internal.commands.expressions.{CachedExpression, Expression}
+import org.neo4j.cypher.internal.commands.expressions.{Entity, CachedExpression, Expression}
 
 class ExtractBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
@@ -41,12 +41,18 @@ class ExtractBuilder extends PlanBuilder {
 }
 
 object ExtractBuilder {
-  def extractIfNecessary(plan: ExecutionPlanInProgress, expressions: Map[String, Expression]): (ExecutionPlanInProgress) = {
-    val missing = plan.pipe.symbols.missingExpressions(expressions.values.toSeq)
+  def extractIfNecessary(plan: ExecutionPlanInProgress, expressionsToExtract: Map[String, Expression]): (ExecutionPlanInProgress) = {
+
+    val expressions = expressionsToExtract.filter {
+      case (k, CachedExpression(_, _)) => false
+      case (k, Entity(_))              => false
+      case _                           => true
+    }
+
     val query = plan.query
     val pipe = plan.pipe
 
-    if (missing.nonEmpty) {
+    if (expressions.nonEmpty) {
       val newPsq = expressions.foldLeft(query)((psq, exp) => psq.rewrite(fromQueryExpression =>
         if (exp._2 == fromQueryExpression)
           CachedExpression(exp._1, fromQueryExpression.getType(plan.pipe.symbols2))

@@ -20,20 +20,10 @@
 package org.neo4j.cypher.internal.symbols
 
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
-import org.neo4j.cypher.internal.commands.expressions.Expression
 import collection.Map
 
 class SymbolTable(val identifiers: Identifier*) {
   assertNoDuplicatesExist()
-
-  private def satisfies(needs: Seq[Identifier]): Boolean = try {
-    needs.foreach(assertHas(_))
-    true
-  } catch {
-    case _ => false
-  }
-
-  def missingExpressions(needs: Seq[Expression]): Seq[Expression] = needs.filter(id => !satisfies(Seq(id.identifier)))
 
   def assertHas(name: String, typ: CypherType) {
     assertHas(Identifier(name, typ))
