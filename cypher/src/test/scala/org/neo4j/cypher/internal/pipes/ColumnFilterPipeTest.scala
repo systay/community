@@ -23,7 +23,7 @@ import org.junit.Assert
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
 import org.neo4j.cypher.internal.commands.ReturnItem
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, Identifier, NodeType, SymbolTable}
+import org.neo4j.cypher.internal.symbols.NodeType
 import collection.mutable.Map
 import org.neo4j.cypher.internal.commands.expressions.Entity
 

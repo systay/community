@@ -32,7 +32,7 @@ case class PathExpression(pathPattern: Seq[Pattern])
   extends Expression
   with PathExtractor
   with PatternGraphBuilder {
-  val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
+//  val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
   val identifiers: Seq[(String, CypherType)] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p => p._1.startsWith("  UNNAMED")))
 
   val symbols2 = new SymbolTable2(identifiers.toMap)

@@ -78,8 +78,7 @@ case class DeleteEntityAction(elementToDelete: Expression)
 
   private def checkTypes(t:CypherType) {
     t match {
-      case x:NodeType =>
-      case x:RelationshipType =>
+      case x:MapType =>
       case x:IterableType => checkTypes(x.iteratedType)
     }
   }

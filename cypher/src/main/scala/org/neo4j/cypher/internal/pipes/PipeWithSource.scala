@@ -21,13 +21,13 @@ package org.neo4j.cypher.internal.pipes
 
 import collection.Seq
 import collection.Map
-import org.neo4j.cypher.internal.symbols.{CypherType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, TypeSafe, CypherType, Identifier}
 import org.neo4j.helpers.ThisShouldNotHappenError
 
-abstract class PipeWithSource(val source: Pipe) extends Pipe with Dependant with IdentifierDependantHelper {
-//  dependencies.foreach(source.symbols.assertHas(_))
+abstract class PipeWithSource(val source: Pipe) extends Pipe {
+  def assertTypes(symbols: SymbolTable2)
 
-  def deps:Map[String, CypherType]
+  assertTypes(source.symbols2)
 }
 /*
 Classes that have dependencies on identifiers and their types

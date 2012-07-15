@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, SymbolTable}
+import org.neo4j.cypher.internal.symbols.SymbolTable2
 
 class EmptyResultPipe(source: Pipe)
   extends PipeWithSource(source) {
@@ -30,7 +30,7 @@ class EmptyResultPipe(source: Pipe)
     Seq()
   }
 
-  def symbols = new SymbolTable()
+//  def symbols = new SymbolTable()
 
   override def executionPlan(): String = source.executionPlan() + "\nEmptyResult()"
 
@@ -39,4 +39,6 @@ class EmptyResultPipe(source: Pipe)
   def deps = Map()
 
   def symbols2 = new SymbolTable2()
+
+  def assertTypes(symbols: SymbolTable2) {}
 }

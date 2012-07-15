@@ -19,13 +19,13 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, Identifier, SymbolTable, CypherType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType}
 import collection.Map
 
 class FakePipe(data: Seq[Map[String, Any]], identifiers: (String, CypherType)*) extends Pipe {
-  val symbols: SymbolTable = new SymbolTable(identifiers.map {
-    case (name, typ) => Identifier(name, typ)
-  }: _*)
+//  val symbols: SymbolTable = new SymbolTable(identifiers.map {
+//    case (name, typ) => Identifier(name, typ)
+//  }: _*)
   val symbols2: SymbolTable2 = new SymbolTable2(identifiers.toMap)
 
   def createResults(state: QueryState): Traversable[ExecutionContext] = data.map(m => ExecutionContext(collection.mutable.Map(m.toSeq: _*)))

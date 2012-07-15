@@ -21,10 +21,15 @@ package org.neo4j.cypher.internal.pipes
 
 import java.lang.String
 import collection.Seq
-import org.neo4j.cypher.internal.symbols.{AnyType, NodeType, Identifier, PathType}
+import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.commands.{ReturnItem, ShortestPath}
 import org.neo4j.graphdb.Path
 import org.neo4j.cypher.internal.commands.expressions.ShortestPathExpression
+import org.neo4j.cypher.internal.commands.ReturnItem
+import org.neo4j.cypher.internal.commands.expressions.ShortestPathExpression
+import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.symbols.AnyType
+import org.neo4j.cypher.internal.commands.ShortestPath
 
 /**
  * Shortest pipe inserts a single shortest path between two already found nodes
@@ -67,10 +72,14 @@ class ShortestPathPipe(source: Pipe, ast: ShortestPath) extends PipeWithSource(s
 
   def dependencies: Seq[Identifier] = Seq(Identifier(startName, NodeType()), Identifier(endName, NodeType()))
 
-  val symbols = source.symbols.add(Identifier(pathName, PathType()))
+//  val symbols = source.symbols.add(Identifier(pathName, PathType()))
   val symbols2 = source.symbols2.add(pathName, PathType())
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "ShortestPath(" + ast + ")"
 
   def deps = ast.identifierDependencies(AnyType())
+
+  def assertTypes(symbols: SymbolTable2) {
+    ast.assertTypes(symbols)
+  }
 }

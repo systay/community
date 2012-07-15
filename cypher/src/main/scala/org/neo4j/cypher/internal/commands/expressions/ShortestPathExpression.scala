@@ -34,7 +34,7 @@ import org.neo4j.cypher.internal.commands.{Pattern, PathExtractor, ShortestPath}
 case class ShortestPathExpression(ast: ShortestPath) extends Expression with PathExtractor {
   val pathPattern:Seq[Pattern] = Seq(ast)
 
-  val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
+//  val symbols = new SymbolTable(declareDependencies(AnyType()).distinct: _*)
 
   def compute(m: Map[String, Any]): Stream[Path] = {
     if (anyStartpointsContainNull(m)) {

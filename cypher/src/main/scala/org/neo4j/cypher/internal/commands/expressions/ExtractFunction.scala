@@ -55,11 +55,7 @@ case class ExtractFunction(collection: Expression, id: String, expression: Expre
     mergedDeps.filterKeys(_ != id)
   }
 
-  def calculateType(symbols: SymbolTable2): CypherType = {
-    val typeOfElementsInCollection = collection.evaluateType(AnyIterableType(), symbols).iteratedType
-
-    expression.getType(symbols.add(id, typeOfElementsInCollection))
-  }
+  def calculateType(symbols: SymbolTable2): CypherType = collection.evaluateType(AnyIterableType(), symbols)
 
   def symbolTableDependencies = symbolTableDependencies(collection, expression, id)
 }

@@ -40,8 +40,8 @@ class EagerAggregationPipeTest extends JUnitSuite {
     val aggregationPipe = new EagerAggregationPipe(source, returnItems, grouping)
 
     assertEquals(
-      Seq(Identifier("name", NodeType()), Identifier("count(*)", LongType())),
-      aggregationPipe.symbols.identifiers)
+      Map("name" -> NodeType(), "count(*)" -> LongType()),
+      aggregationPipe.symbols2.identifiers)
   }
 
 

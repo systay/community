@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.scalatest.Assertions
-import org.neo4j.cypher.internal.symbols.{SymbolTable, RelationshipType, NodeType}
+import org.neo4j.cypher.internal.symbols.{RelationshipType, NodeType}
 import collection.mutable.{Map => MutableMap}
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PartiallySolvedQuery}
 import org.neo4j.cypher.internal.pipes.{MutableMaps, Pipe, NullPipe, FakePipe}

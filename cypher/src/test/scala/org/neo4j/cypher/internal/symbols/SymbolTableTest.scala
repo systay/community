@@ -19,61 +19,11 @@
  */
 package org.neo4j.cypher.internal.symbols
 
-import org.scalatest.junit.JUnitSuite
 import org.junit.Test
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
 import org.scalatest.Assertions
 import org.neo4j.cypher.internal.commands.expressions.{Expression, Add}
 import collection.Map
-
-class SymbolTableTest extends JUnitSuite {
-  @Test def givenSymbolTableWithIdentifierWhenAskForExistingThenReturnIdentifier() {
-    val symbols = new SymbolTable(Identifier("x", AnyType()))
-    symbols.assertHas(Identifier("x", AnyType()))
-  }
-
-  @Test(expected = classOf[SyntaxException]) def givenEmptySymbolTableWhenAskForNonExistingThenThrows() {
-    val symbols = new SymbolTable()
-    symbols.assertHas(Identifier("x", AnyType()))
-  }
-
-  @Test(expected = classOf[CypherTypeException]) def givenSymbolTableWithStringIdentifierWhenAskForIterableThenThrows() {
-    val symbols = new SymbolTable(Identifier("x", StringType()))
-    symbols.assertHas(Identifier("x", NumberType()))
-  }
-
-  @Test def givenSymbolTableWithIntegerIdentifierWhenAskForNumberThenReturn() {
-    val symbols = new SymbolTable(Identifier("x", IntegerType()))
-    symbols.assertHas(Identifier("x", NumberType()))
-  }
-
-  @Test def givenSymbolTableWithIterableOfStringWhenAskForIterableOfAnyThenReturn() {
-    val symbols = new SymbolTable(Identifier("x", new IterableType(StringType())))
-    symbols.assertHas(Identifier("x", new IterableType(AnyType())))
-  }
-
-  @Test def givenSymbolTableWithStringIdentifierWhenMergedWithNumberIdentifierThenContainsBoth() {
-    val symbols = new SymbolTable(Identifier("x", StringType()))
-    val newSymbol = symbols.add(Identifier("y", NumberType()))
-
-    newSymbol.assertHas(Identifier("x", StringType()))
-    newSymbol.assertHas(Identifier("y", NumberType()))
-  }
-
-  @Test(expected = classOf[SyntaxException]) def shouldNotBeAbleToCreateASymbolTableWithClashingNames() {
-    new SymbolTable(Identifier("x", StringType()), Identifier("x", RelationshipType()))
-  }
-
-
-  @Test def filteringThroughShouldWork() {
-    assert(getPercolatedIdentifier(NodeType(), AnyType()) === NodeType())
-    assert(getPercolatedIdentifier(AnyIterableType(), AnyType()) === AnyIterableType())
-    assert(getPercolatedIdentifier(NodeType(), NodeType()) === NodeType())
-  }
-
-  private def getPercolatedIdentifier(scopeType: CypherType, symbolType: CypherType): CypherType = new SymbolTable(Identifier("x", scopeType)).actualIdentifier(Identifier("x", symbolType)).typ
-
-}
 
 class SymbolTable2Test extends Assertions {
   @Test def anytype_is_ok() {

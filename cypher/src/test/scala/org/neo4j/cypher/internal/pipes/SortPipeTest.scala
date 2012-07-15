@@ -22,10 +22,9 @@ package org.neo4j.cypher.internal.pipes
 import org.junit.Test
 import org.junit.Assert._
 import org.scalatest.junit.JUnitSuite
-import org.neo4j.cypher.internal.symbols._
 import collection.mutable.{Map=>MutableMap}
 import org.neo4j.cypher.internal.commands.expressions.Entity
-import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.symbols.{NumberType, StringType, ScalarType}
 import org.neo4j.cypher.internal.commands.SortItem
 
 class SortPipeTest extends JUnitSuite {
@@ -90,11 +89,4 @@ class SortPipeTest extends JUnitSuite {
       MutableMap("y" -> 2),
       MutableMap("y" -> null)), sortPipe.createResults(QueryState()).toList)
   }
-
-}
-
-
-
-class FakeSymbolTable extends SymbolTable() {
-  override def assertHas(expected: Identifier) {}
 }

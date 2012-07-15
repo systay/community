@@ -26,7 +26,7 @@ import org.neo4j.cypher.internal.Comparer
 import collection.mutable.Map
 
 class SortPipe(source: Pipe, sortDescription: List[SortItem]) extends Pipe with Comparer {
-  val symbols = source.symbols
+//  val symbols = source.symbols
   def symbols2 = source.symbols2
   assertDependenciesAreMet()
 

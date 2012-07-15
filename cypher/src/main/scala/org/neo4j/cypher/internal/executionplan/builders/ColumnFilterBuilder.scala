@@ -21,10 +21,8 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.ColumnFilterPipe
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, SymbolTable}
+import org.neo4j.cypher.internal.symbols.SymbolTable2
 import org.neo4j.cypher.internal.commands.{AllIdentifiers, ReturnItem, ReturnColumn}
-import collection.Map
-import org.neo4j.cypher.internal.commands.expressions.Expression
 
 class ColumnFilterBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {

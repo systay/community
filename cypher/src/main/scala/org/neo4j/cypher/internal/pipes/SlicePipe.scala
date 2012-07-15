@@ -25,7 +25,7 @@ import org.neo4j.helpers.ThisShouldNotHappenError
 import collection.mutable.Map
 
 class SlicePipe(source:Pipe, skip:Option[Expression], limit:Option[Expression]) extends Pipe {
-  val symbols = source.symbols
+//  val symbols = source.symbols
   val symbols2 = source.symbols2
 
   //TODO: Make this nicer. I'm sure it's expensive and silly.

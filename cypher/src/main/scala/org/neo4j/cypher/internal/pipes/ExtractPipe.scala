@@ -32,13 +32,13 @@ class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extend
 
   def getSymbolType(item: ReturnItem): Identifier = item.identifier
 
-  val symbols: SymbolTable = {
-    val seq = expressions.map {
-      case (name, exp) => Identifier(name, exp.getType(source.symbols2))
-    }.toSeq
-
-    source.symbols.add(seq: _*)
-  }
+//  val symbols: SymbolTable = {
+//    val seq = expressions.map {
+//      case (name, exp) => Identifier(name, exp.getType(source.symbols2))
+//    }.toSeq
+//
+//    source.symbols.add(seq: _*)
+//  }
 
   val symbols2: SymbolTable2 = {
     val newIdentifiers = expressions.map {
@@ -56,11 +56,10 @@ class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extend
     subgraph
   })
 
-  override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols.keys.mkString(",") + "] => [" + expressions.keys.mkString(", ") + "])"
+  override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols2.keys.mkString(",") + "] => [" + expressions.keys.mkString(", ") + "])"
 
-  def deps = {
-    val map  = expressions.map(_._2.identifierDependencies(AnyType())).toSeq
-    mergeDeps(map)
+  def assertTypes(symbols: SymbolTable2) {
+    expressions.foreach(_._2.assertTypes(symbols))
   }
 }
 
