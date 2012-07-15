@@ -65,7 +65,7 @@ case class NullablePredicate(inner: Predicate, exp: Seq[(Expression, Boolean)]) 
 
   def filter(f: (Expression) => Boolean) = exp.flatMap { case (e,_) => e.filter(f)  }
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     inner.assertTypes(symbols)
   }
 
@@ -82,7 +82,7 @@ case class And(a: Predicate, b: Predicate) extends Predicate {
   def rewrite(f: (Expression) => Expression) = And(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ b.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     a.assertTypes(symbols)
     b.assertTypes(symbols)
   }
@@ -99,7 +99,7 @@ case class Or(a: Predicate, b: Predicate) extends Predicate {
   def rewrite(f: (Expression) => Expression) = Or(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ b.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     a.assertTypes(symbols)
     b.assertTypes(symbols)
   }
@@ -115,7 +115,7 @@ case class Not(a: Predicate) extends Predicate {
   def containsIsNull = a.containsIsNull
   def rewrite(f: (Expression) => Expression) = Not(a.rewrite(f))
   def filter(f: (Expression) => Boolean) = a.filter(f)
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     a.assertTypes(symbols)
   }
 
@@ -146,7 +146,7 @@ case class HasRelationshipTo(from: Expression, to: Expression, dir: Direction, r
   def rewrite(f: (Expression) => Expression) = HasRelationshipTo(from.rewrite(f), to.rewrite(f), dir, relType)
   def filter(f: (Expression) => Boolean) = from.filter(f) ++ to.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     from.assertTypes(symbols)
     to.assertTypes(symbols)
   }
@@ -173,7 +173,7 @@ case class HasRelationship(from: Expression, dir: Direction, relType: Seq[String
   def containsIsNull = false
   def filter(f: (Expression) => Boolean) = from.filter(f)
   def rewrite(f: (Expression) => Expression) = HasRelationship(from.rewrite(f), dir, relType)
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     from.assertTypes(symbols)
   }
 
@@ -188,7 +188,7 @@ case class IsNull(expression: Expression) extends Predicate {
   def containsIsNull = true
   def rewrite(f: (Expression) => Expression) = IsNull(expression.rewrite(f))
   def filter(f: (Expression) => Boolean) = expression.filter(f)
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     expression.assertTypes(symbols)
   }
   def symbolTableDependencies = expression.symbolTableDependencies
@@ -202,7 +202,7 @@ case class True() extends Predicate {
   def containsIsNull = false
   def rewrite(f: (Expression) => Expression) = True()
   def filter(f: (Expression) => Boolean) = Seq()
-  def assertTypes(symbols: SymbolTable2) {}
+  def assertTypes(symbols: SymbolTable) {}
   def symbolTableDependencies = Set()
 }
 
@@ -223,7 +223,7 @@ case class Has(property: Property) extends Predicate {
     case _ => throw new ThisShouldNotHappenError("Andres", "Something went wrong rewriting a Has(Property)")
   }
   def filter(f: (Expression) => Boolean) = property.filter(f)
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     property.assertTypes(symbols)
   }
 
@@ -243,7 +243,7 @@ case class LiteralRegularExpression(a: Expression, regex: Literal) extends Predi
   }
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ regex.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     a.evaluateType(StringType(), symbols)
     regex.evaluateType(StringType(), symbols)
   }
@@ -269,7 +269,7 @@ case class RegularExpression(a: Expression, regex: Expression) extends Predicate
   }
   def filter(f: (Expression) => Boolean) = a.filter(f) ++ regex.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     a.evaluateType(StringType(), symbols)
     regex.evaluateType(StringType(), symbols)
   }
@@ -292,7 +292,7 @@ case class NonEmpty(collection:Expression) extends Predicate with IterableSuppor
   def rewrite(f: (Expression) => Expression) = NonEmpty(collection.rewrite(f))
   def filter(f: (Expression) => Boolean) = collection.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     collection.evaluateType(AnyIterableType(), symbols)
   }
 

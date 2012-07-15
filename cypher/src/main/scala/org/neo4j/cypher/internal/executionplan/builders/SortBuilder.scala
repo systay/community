@@ -21,14 +21,14 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.SortPipe
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
-import org.neo4j.cypher.internal.commands.expressions.{Entity, CachedExpression, Expression}
+import org.neo4j.cypher.internal.commands.expressions.{Identifier, CachedExpression, Expression}
 import org.neo4j.cypher.CypherTypeException
 
 class SortBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
     val sortExpressionsToExtract: Seq[(String, Expression)] = plan.query.sort.flatMap(x => x.token.expression match {
       case _: CachedExpression => None
-      case _: Entity           => None
+      case _: Identifier       => None
       case e                   => Some("  INTERNAL_SORT" + e.## -> e)
     })
 

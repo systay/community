@@ -62,22 +62,22 @@ trait TypeSafe {
   /*
   Checks if internal type dependencies are met. Throws an exception if it fails
   */
-  def assertTypes(symbols: SymbolTable2)
+  def assertTypes(symbols: SymbolTable)
 
   // Same as assert types, but doesn't throw if it fails
-  def checkTypes(symbols: SymbolTable2): Boolean = try {
+  def checkTypes(symbols: SymbolTable): Boolean = try {
     assertTypes(symbols)
     true
   } catch {
     case _: CypherException => false
   }
 
-  def symbolDependenciesMet(symbols: SymbolTable2): Boolean =
+  def symbolDependenciesMet(symbols: SymbolTable): Boolean =
     symbolTableDependencies.forall(name => check(symbols, name))
 
   def symbolTableDependencies: Set[String]
 
-  private def check(symbols: SymbolTable2, name: String): Boolean = symbols.identifiers.contains(name)
+  private def check(symbols: SymbolTable, name: String): Boolean = symbols.identifiers.contains(name)
 }
 
 /*
@@ -88,10 +88,10 @@ trait Typed {
   Checks if internal type dependencies are met, checks if the expected type is valid,
   and returns the actual type of the expression. Will throw an exception if the check fails
    */
-  def evaluateType(expectedType: CypherType, symbols: SymbolTable2): CypherType
+  def evaluateType(expectedType: CypherType, symbols: SymbolTable): CypherType
 
   /*
   Checks if internal type dependencies are met and returns the actual type of the expression
   */
-  def getType(symbols: SymbolTable2): CypherType = evaluateType(AnyType(), symbols)
+  def getType(symbols: SymbolTable): CypherType = evaluateType(AnyType(), symbols)
 }

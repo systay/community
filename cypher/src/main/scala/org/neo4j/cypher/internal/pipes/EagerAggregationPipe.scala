@@ -31,7 +31,7 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Express
   extends PipeWithSource(source) {
   def oldKeyExpressions = keyExpressions.values.toSeq
 
-  val symbols: SymbolTable2 = createSymbols2()
+  val symbols: SymbolTable = createSymbols2()
 
   private def createSymbols2() = {
     val typeExtractor: ((String, Expression)) => (String, CypherType) = {
@@ -41,7 +41,7 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Express
     val keyIdentifiers = keyExpressions.map(typeExtractor)
     val aggrIdentifiers = aggregations.map(typeExtractor)
 
-    new SymbolTable2(keyIdentifiers ++ aggrIdentifiers)
+    new SymbolTable(keyIdentifiers ++ aggrIdentifiers)
   }
 
   def createResults(state: QueryState): Traversable[ExecutionContext] = {
@@ -90,7 +90,7 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Express
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "EagerAggregation( keys: [" + oldKeyExpressions.mkString(", ") + "], aggregates: [" + aggregations.mkString(", ") + "])"
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     keyExpressions.foreach(_._2.assertTypes(symbols))
     aggregations.foreach(_._2.assertTypes(symbols))
   }

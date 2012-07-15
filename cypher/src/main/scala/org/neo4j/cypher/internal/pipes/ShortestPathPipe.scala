@@ -61,7 +61,7 @@ class ShortestPathPipe(source: Pipe, ast: ShortestPath) extends PipeWithSource(s
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "ShortestPath(" + ast + ")"
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     ast.assertTypes(symbols)
   }
 }

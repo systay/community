@@ -32,9 +32,9 @@ with TypeSafe {
   def subExpressions = filter( _ != this)
   def containsAggregate = exists(_.isInstanceOf[AggregationExpression])
 
-  protected def calculateType(symbols: SymbolTable2): CypherType
+  protected def calculateType(symbols: SymbolTable): CypherType
 
-  def evaluateType(expectedType: CypherType, symbols: SymbolTable2): CypherType = {
+  def evaluateType(expectedType: CypherType, symbols: SymbolTable): CypherType = {
     val t = calculateType(symbols)
 
     if (!expectedType.isAssignableFrom(t) &&
@@ -45,7 +45,7 @@ with TypeSafe {
     t
   }
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     evaluateType(AnyType(), symbols)
   }
 
@@ -58,7 +58,7 @@ case class CachedExpression(key:String, typ:CypherType) extends Expression {
   def rewrite(f: (Expression) => Expression) = f(this)
   def filter(f: (Expression) => Boolean) = if(f(this)) Seq(this) else Seq()
 
-  def calculateType(symbols: SymbolTable2) = typ
+  def calculateType(symbols: SymbolTable) = typ
 
   def symbolTableDependencies = Set(key)
 }
@@ -86,7 +86,7 @@ abstract class Arithmetics(left: Expression, right: Expression)
   else
     left.filter(f) ++ right.filter(f)
 
-  def calculateType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable): CypherType = {
     left.evaluateType(NumberType(), symbols)
     right.evaluateType(NumberType(), symbols)
     NumberType()
@@ -98,7 +98,7 @@ trait ExpressionWInnerExpression extends Expression {
   def myType:CypherType
   def expectedInnerType:CypherType
 
-  def calculateType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable): CypherType = {
     inner.evaluateType(expectedInnerType, symbols)
 
     myType

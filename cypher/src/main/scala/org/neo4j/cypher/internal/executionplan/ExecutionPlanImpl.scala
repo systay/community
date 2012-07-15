@@ -25,7 +25,7 @@ import collection.Seq
 import org.neo4j.cypher.internal.pipes._
 import org.neo4j.cypher._
 import internal.commands._
-import internal.symbols.SymbolTable2
+import internal.symbols.SymbolTable
 
 class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends ExecutionPlan {
   val (executionPlan, executionPlanText) = prepareExecutionPlan()
@@ -74,7 +74,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
     (func, executionPlan)
   }
 
-  private def getQueryResultColumns(q: Query, currentSymbols:SymbolTable2) = {
+  private def getQueryResultColumns(q: Query, currentSymbols:SymbolTable) = {
     var query = q
     while (query.tail.isDefined) {
       query = query.tail.get

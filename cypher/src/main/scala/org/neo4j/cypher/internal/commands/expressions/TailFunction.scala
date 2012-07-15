@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.commands.expressions
 import collection.Map
 import org.neo4j.cypher.internal.commands.IterableSupport
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyIterableType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, AnyIterableType}
 
 case class TailFunction(collection: Expression) extends NullInNullOutExpression(collection) with IterableSupport {
   def compute(value: Any, m: Map[String, Any]) = makeTraversable(value).tail
@@ -32,7 +32,7 @@ case class TailFunction(collection: Expression) extends NullInNullOutExpression(
   else
     collection.filter(f)
 
-  def calculateType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols)
+  def calculateType(symbols: SymbolTable) = collection.evaluateType(AnyIterableType(), symbols)
 
   def symbolTableDependencies = collection.symbolTableDependencies
 }

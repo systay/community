@@ -24,7 +24,7 @@ import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.helpers.ThisShouldNotHappenError
 
-case class Entity(entityName: String) extends Expression with Typed {
+case class Identifier(entityName: String) extends Expression with Typed {
   def apply(m: Map[String, Any]): Any = m.getOrElse(entityName, throw new NotFoundException("Unknown identifier `%s`".format(entityName)))
 
   override def toString(): String = entityName
@@ -36,10 +36,10 @@ case class Entity(entityName: String) extends Expression with Typed {
   else
     Seq()
 
-  def calculateType(symbols: SymbolTable2) =
+  def calculateType(symbols: SymbolTable) =
     throw new ThisShouldNotHappenError("Andres", "This class should override evaluateType, and this method should never be run")
 
-  override def evaluateType(expectedType: CypherType, symbols: SymbolTable2) = symbols.evaluateType(entityName, expectedType)
+  override def evaluateType(expectedType: CypherType, symbols: SymbolTable) = symbols.evaluateType(entityName, expectedType)
 
   def symbolTableDependencies = Set(entityName)
 }

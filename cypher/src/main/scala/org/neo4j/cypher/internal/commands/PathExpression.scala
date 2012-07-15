@@ -33,7 +33,7 @@ case class PathExpression(pathPattern: Seq[Pattern])
   with PatternGraphBuilder {
   val identifiers: Seq[(String, CypherType)] = pathPattern.flatMap(pattern => pattern.possibleStartPoints.filterNot(p => p._1.startsWith("  UNNAMED")))
 
-  val symbols2 = new SymbolTable2(identifiers.toMap)
+  val symbols2 = new SymbolTable(identifiers.toMap)
   val matchingContext = new MatchingContext(symbols2, Seq(), buildPatternGraph(symbols2, pathPattern))
   val interestingPoints: Seq[String] = pathPattern.
     flatMap(_.possibleStartPoints.map(_._1)).
@@ -63,7 +63,7 @@ case class PathExpression(pathPattern: Seq[Pattern])
 
   def rewrite(f: (Expression) => Expression): Expression = f(PathExpression(pathPattern.map(_.rewrite(f))))
 
-  def calculateType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable): CypherType = {
     pathPattern.foreach(_.assertTypes(symbols))
     new IterableType( PathType() )
   }

@@ -19,27 +19,27 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.{Entity, Expression}
+import expressions.{Identifier, Expression}
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
 
 abstract class ReturnColumn {
-  def expressions(symbols: SymbolTable2): Map[String,Expression]
+  def expressions(symbols: SymbolTable): Map[String,Expression]
 
   def name: String
 }
 
 case class AllIdentifiers() extends ReturnColumn {
-  def expressions(symbols: SymbolTable2): Map[String, Expression] = symbols.identifiers.keys.
+  def expressions(symbols: SymbolTable): Map[String, Expression] = symbols.identifiers.keys.
     filterNot(_.startsWith("  UNNAMED")).
-    map(n => n -> Entity(n)).toMap
+    map(n => n -> Identifier(n)).toMap
 
   def name = "*"
 }
 
 case class ReturnItem(expression: Expression, name: String, renamed: Boolean = false)
   extends ReturnColumn {
-  def expressions(symbols: SymbolTable2) = Map(name -> expression)
+  def expressions(symbols: SymbolTable) = Map(name -> expression)
 
   override def toString = name
 

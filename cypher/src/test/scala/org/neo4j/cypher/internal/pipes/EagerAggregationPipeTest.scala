@@ -45,13 +45,13 @@ class EagerAggregationPipeTest extends JUnitSuite {
   }
 
 
-  private def createReturnItemsFor(names: String*): Map[String, Entity] = names.map(x => x -> Entity(x)).toMap
+  private def createReturnItemsFor(names: String*): Map[String, Identifier] = names.map(x => x -> Identifier(x)).toMap
 
   @Test(expected = classOf[SyntaxException]) def shouldThrowSemanticException() {
     val source = new FakePipe(List(), createSymbolTableFor("extractReturnItems"))
 
     val returnItems = createReturnItemsFor("name")
-    val grouping = Map("count(*)" -> Count(Entity("none-existing-identifier")))
+    val grouping = Map("count(*)" -> Count(Identifier("none-existing-identifier")))
     new EagerAggregationPipe(source, returnItems, grouping)
   }
 
@@ -100,7 +100,7 @@ class EagerAggregationPipeTest extends JUnitSuite {
       Map("name" -> "Michael", "age" -> 31)), createSymbolTableFor("name"))
 
     val returnItems = createReturnItemsFor()
-    val grouping = Map("count(name)" -> Count(Entity("name")))
+    val grouping = Map("count(name)" -> Count(Identifier("name")))
     val aggregationPipe = new EagerAggregationPipe(source, returnItems, grouping)
 
     assertEquals(List(Map("count(name)" -> 3)), aggregationPipe.createResults(QueryState()).toList)

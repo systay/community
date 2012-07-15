@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, ScalarType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, CypherType, ScalarType}
 import collection.Map
 
 case class Null() extends Expression {
@@ -29,7 +29,7 @@ case class Null() extends Expression {
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = if (f(this)) Seq(this) else Seq()
 
-  def calculateType(symbols: SymbolTable2): CypherType = ScalarType()
+  def calculateType(symbols: SymbolTable): CypherType = ScalarType()
 
   def symbolTableDependencies = Set()
 }

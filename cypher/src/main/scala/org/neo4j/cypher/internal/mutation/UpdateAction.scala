@@ -32,7 +32,7 @@ import expressions.Expression
 
 trait UpdateAction extends TypeSafe {
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext]
-  def assertTypes(symbols:SymbolTable2)
+  def assertTypes(symbols:SymbolTable)
   def identifier2:Seq[(String,CypherType)]
   def rewrite(f: Expression => Expression):UpdateAction
   def filter(f: Expression => Boolean): Seq[Expression]
@@ -46,7 +46,7 @@ trait GraphElementPropertyFunctions extends IterableSupport {
     }
   }
 
-  def checkTypes(props: Map[String, Expression], symbols:SymbolTable2) {
+  def checkTypes(props: Map[String, Expression], symbols:SymbolTable) {
     props.values.foreach(_.checkTypes(symbols))
   }
 

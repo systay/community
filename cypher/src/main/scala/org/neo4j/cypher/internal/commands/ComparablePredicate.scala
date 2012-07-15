@@ -45,7 +45,7 @@ abstract sealed class ComparablePredicate(left: Expression, right: Expression) e
   def containsIsNull = false
   def filter(f: (Expression) => Boolean): Seq[Expression] = left.filter(f) ++ right.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     left.assertTypes(symbols)
     right.assertTypes(symbols)
   }
@@ -62,7 +62,7 @@ case class Equals(a: Expression, b: Expression) extends Predicate with Comparer 
   def rewrite(f: (Expression) => Expression) = Equals(a.rewrite(f), b.rewrite(f))
   def filter(f: (Expression) => Boolean): Seq[Expression] = a.filter(f) ++ b.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     a.assertTypes(symbols)
     b.assertTypes(symbols)
   }

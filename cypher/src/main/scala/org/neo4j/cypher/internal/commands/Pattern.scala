@@ -84,7 +84,7 @@ case class RelatedTo(left: String,
 
   def rels = Seq(relName)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     predicate.assertTypes(symbols)
   }
 
@@ -163,7 +163,7 @@ case class VarLengthRelatedTo(pathName: String,
 
   def rels = Seq()
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     predicate.assertTypes(symbols)
   }
 }
@@ -204,7 +204,7 @@ case class ShortestPath(pathName: String,
 
   def nodes = Seq(start,end)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     possibleStartPoints.foreach(p => symbols.evaluateType(p._1, p._2))
     predicate.assertTypes(symbols)
   }

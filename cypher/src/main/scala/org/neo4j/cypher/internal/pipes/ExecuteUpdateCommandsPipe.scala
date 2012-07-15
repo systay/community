@@ -23,7 +23,7 @@ import collection.mutable.{HashSet => MutableHashSet}
 import org.neo4j.cypher.internal.mutation.{DeleteEntityAction, UpdateAction}
 import org.neo4j.graphdb.{Relationship, Node, GraphDatabaseService, NotInTransactionException}
 import org.neo4j.cypher.{ParameterWrongTypeException, InternalException}
-import org.neo4j.cypher.internal.symbols.SymbolTable2
+import org.neo4j.cypher.internal.symbols.SymbolTable
 
 class ExecuteUpdateCommandsPipe(source: Pipe, db: GraphDatabaseService, commands: Seq[UpdateAction]) extends PipeWithSource(source) {
   def createResults(state: QueryState) = {
@@ -78,7 +78,7 @@ class ExecuteUpdateCommandsPipe(source: Pipe, db: GraphDatabaseService, commands
 
   def symbols = source.symbols.add(commands.flatMap(_.identifier2).toMap)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     commands.foreach(_.assertTypes(symbols))
   }
 }

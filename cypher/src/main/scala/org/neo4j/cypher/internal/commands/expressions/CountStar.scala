@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, LongType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, CypherType, LongType}
 import org.neo4j.cypher.internal.pipes.aggregation.CountStarFunction
 
 case class CountStar() extends AggregationExpression {
@@ -32,7 +32,7 @@ case class CountStar() extends AggregationExpression {
   else
     Seq()
 
-  def calculateType(symbols: SymbolTable2): CypherType = LongType()
+  def calculateType(symbols: SymbolTable): CypherType = LongType()
 
   def symbolTableDependencies = Set()
 }

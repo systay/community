@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.ExtractPipe
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
-import org.neo4j.cypher.internal.commands.expressions.{Entity, CachedExpression, Expression}
+import org.neo4j.cypher.internal.commands.expressions.{Identifier, CachedExpression, Expression}
 
 class ExtractBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
@@ -45,7 +45,7 @@ object ExtractBuilder {
 
     val expressions = expressionsToExtract.filter {
       case (k, CachedExpression(_, _)) => false
-      case (k, Entity(_))              => false
+      case (k, Identifier(_))              => false
       case _                           => true
     }
 

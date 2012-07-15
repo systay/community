@@ -22,13 +22,13 @@ package org.neo4j.cypher.internal.symbols
 import org.neo4j.cypher.{CypherException, CypherTypeException, SyntaxException}
 import collection.Map
 
-class SymbolTable2(val identifiers: Map[String, CypherType]) {
+class SymbolTable(val identifiers: Map[String, CypherType]) {
   def hasIdentifierNamed(name: String): Boolean = identifiers.contains(name)
   def size: Int = identifiers.size
   def this() = this(Map())
-  def add(key: String, typ: CypherType): SymbolTable2 = new SymbolTable2(identifiers + (key -> typ))
-  def add(value: Map[String, CypherType]): SymbolTable2 = new SymbolTable2(identifiers ++ value)
-  def filter(f: String => Boolean): SymbolTable2 = new SymbolTable2(identifiers.filterKeys(f))
+  def add(key: String, typ: CypherType): SymbolTable = new SymbolTable(identifiers + (key -> typ))
+  def add(value: Map[String, CypherType]): SymbolTable = new SymbolTable(identifiers ++ value)
+  def filter(f: String => Boolean): SymbolTable = new SymbolTable(identifiers.filterKeys(f))
   def keys: Seq[String] = identifiers.map(_._1).toSeq
   def missingSymbolTableDependencies(x: TypeSafe) = x.symbolTableDependencies.filterNot( dep => identifiers.exists(_._1 == dep))
 

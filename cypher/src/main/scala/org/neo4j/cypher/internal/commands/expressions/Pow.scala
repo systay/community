@@ -20,10 +20,6 @@
 package org.neo4j.cypher.internal.commands.expressions
 
 case class Pow(a: Expression, b: Expression) extends Arithmetics(a, b) {
-  def operand = "^"
-
-  def verb = "power"
-
   def calc(a: Number, b: Number) = math.pow(a.doubleValue(), b.doubleValue())
 
   def rewrite(f: (Expression) => Expression) = f(Pow(a.rewrite(f), b.rewrite(f)))

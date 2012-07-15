@@ -25,7 +25,7 @@ import org.neo4j.cypher.internal.mutation.DeleteEntityAction
 import org.neo4j.cypher.{CypherTypeException, ExecutionEngineHelper}
 import collection.mutable.{Map => MutableMap}
 import org.neo4j.graphdb.{Node, NotFoundException}
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, NodeType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, CypherType, NodeType}
 import collection.{Map => CollectionMap}
 import org.neo4j.cypher.internal.commands.{CreateRelationshipStartItem, CreateNodeStartItem}
 import org.neo4j.cypher.internal.commands.expressions.{Expression, Literal}
@@ -139,7 +139,7 @@ case class InjectValue(value:Any, typ:CypherType) extends Expression {
 
   def rewrite(f: (Expression) => Expression) = this
 
-  def calculateType(symbols: SymbolTable2): CypherType = typ
+  def calculateType(symbols: SymbolTable): CypherType = typ
 
   def symbolTableDependencies = Set()
 }

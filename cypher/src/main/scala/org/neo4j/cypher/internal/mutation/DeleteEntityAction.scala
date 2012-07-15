@@ -65,7 +65,7 @@ case class DeleteEntityAction(elementToDelete: Expression)
 
   def filter(f: (Expression) => Boolean) = elementToDelete.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     val elementType = elementToDelete.getType(symbols)
 
     checkTypes(elementType)

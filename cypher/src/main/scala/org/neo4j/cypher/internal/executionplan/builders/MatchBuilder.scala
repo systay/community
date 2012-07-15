@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.neo4j.cypher.internal.pipes.{MatchPipe, Pipe}
 import org.neo4j.cypher.internal.commands._
 import org.neo4j.cypher.internal.executionplan.PlanBuilder
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, NodeType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, NodeType}
 import org.neo4j.cypher.internal.pipes.matching.{PatternRelationship, PatternNode, PatternGraph}
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.cypher.internal.executionplan.ExecutionPlanInProgress
@@ -86,7 +86,7 @@ class MatchBuilder extends PlanBuilder with PatternGraphBuilder {
 }
 
 trait PatternGraphBuilder {
-  def buildPatternGraph(boundIdentifiers: SymbolTable2, patterns: Seq[Pattern]): PatternGraph = {
+  def buildPatternGraph(boundIdentifiers: SymbolTable, patterns: Seq[Pattern]): PatternGraph = {
     val patternNodeMap: scala.collection.mutable.Map[String, PatternNode] = scala.collection.mutable.Map()
     val patternRelMap: scala.collection.mutable.Map[String, PatternRelationship] = scala.collection.mutable.Map()
 

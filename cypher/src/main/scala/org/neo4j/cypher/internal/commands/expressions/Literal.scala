@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, CypherType}
 import collection.Map
 
 case class Literal(v: Any) extends Expression {
@@ -34,7 +34,7 @@ case class Literal(v: Any) extends Expression {
   else
     Seq()
 
-  def calculateType(symbols: SymbolTable2): CypherType = CypherType.fromJava(v)
+  def calculateType(symbols: SymbolTable): CypherType = CypherType.fromJava(v)
 
   def symbolTableDependencies = Set()
 }

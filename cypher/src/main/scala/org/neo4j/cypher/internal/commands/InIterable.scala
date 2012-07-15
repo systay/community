@@ -54,7 +54,7 @@ abstract class InIterable(collection: Expression, id: String, predicate: Predica
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = collection.filter(f) ++ predicate.filter(f)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     val innerType = collection.evaluateType(AnyIterableType(), symbols).iteratedType
     predicate.assertTypes(symbols.add(id, innerType))
   }

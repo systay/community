@@ -24,10 +24,10 @@ import org.neo4j.graphdb.{Relationship, Node, DynamicRelationshipType}
 import org.neo4j.graphmatching.{PatternMatcher => SimplePatternMatcher, PatternNode => SimplePatternNode}
 import collection.JavaConverters._
 import org.neo4j.cypher.internal.commands.{Predicate, True}
-import org.neo4j.cypher.internal.symbols.SymbolTable2
+import org.neo4j.cypher.internal.symbols.SymbolTable
 import org.neo4j.cypher.internal.pipes.MutableMaps
 
-class SimplePatternMatcherBuilder(pattern: PatternGraph, predicates: Seq[Predicate], symbolTable: SymbolTable2) extends MatcherBuilder {
+class SimplePatternMatcherBuilder(pattern: PatternGraph, predicates: Seq[Predicate], symbolTable: SymbolTable) extends MatcherBuilder {
   val patternNodes = pattern.patternNodes.map {
     case (key, pn) => {
       key -> {

@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.Entity
+import expressions.Identifier
 import org.junit.Test
 import org.scalatest.Assertions
 import org.neo4j.cypher.internal.symbols._
@@ -30,22 +30,22 @@ class AllIdentifiersTest extends Assertions {
   @Test def nodes() {
     val symbols = getSymbols("n" -> NodeType())
 
-    assert(x.expressions(symbols) === Map("n" -> Entity("n")))
+    assert(x.expressions(symbols) === Map("n" -> Identifier("n")))
   }
 
   @Test def relationships() {
     val symbols = getSymbols("r" -> RelationshipType())
 
-    assert(x.expressions(symbols) === Map("r" -> Entity("r")))
+    assert(x.expressions(symbols) === Map("r" -> Identifier("r")))
   }
 
   @Test def paths() {
     val symbols = getSymbols("p" -> PathType())
 
-    assert(x.expressions(symbols) === Map("p" -> Entity("p")))
+    assert(x.expressions(symbols) === Map("p" -> Identifier("p")))
   }
 
-  private def getSymbols(k: (String, CypherType)*): SymbolTable2 = {
-    new SymbolTable2(k.toMap)
+  private def getSymbols(k: (String, CypherType)*): SymbolTable = {
+    new SymbolTable(k.toMap)
   }
 }

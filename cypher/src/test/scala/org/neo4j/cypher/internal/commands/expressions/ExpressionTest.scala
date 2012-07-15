@@ -24,6 +24,7 @@ import org.scalatest.Assertions
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.cypher.CypherTypeException
+import org.neo4j.helpers.ThisShouldNotHappenError
 
 class ExpressionTest extends Assertions {
   @Test def replacePropWithCache() {
@@ -87,10 +88,11 @@ class ExpressionTest extends Assertions {
       fail("Wrong keys found: " + keys + " vs. " + expected.keys.toSet)
     }
 
-    val result = keys.toSeq.map( k => (a.get(k), b.get(k)) match {
-      case (Some(x), None) => k->x
-      case (None, Some(x)) => k->x
-      case (Some(x), Some(y)) => k->x.mergeWith(y)
+    val result = keys.toSeq.map(k => (a.get(k), b.get(k)) match {
+      case (Some(x), None)    => k -> x
+      case (None, Some(x))    => k -> x
+      case (Some(x), Some(y)) => k -> x.mergeWith(y)
+      case (None, None)       => throw new ThisShouldNotHappenError("Andres", "only here to stop warnings")
     }).toMap
 
     if (result != expected) {
@@ -110,7 +112,7 @@ class TestExpression extends Expression {
 
   def rewrite(f: (Expression) => Expression): Expression = null
 
-  def calculateType(symbols: SymbolTable2): CypherType = null
+  def calculateType(symbols: SymbolTable): CypherType = null
 
   def symbolTableDependencies = Set()
 

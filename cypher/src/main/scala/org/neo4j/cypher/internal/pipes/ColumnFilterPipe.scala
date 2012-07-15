@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.pipes
 
 import org.neo4j.cypher.internal.symbols._
-import org.neo4j.cypher.internal.commands.expressions.Entity
+import org.neo4j.cypher.internal.commands.expressions.Identifier
 import org.neo4j.cypher.internal.commands.expressions.CachedExpression
 import org.neo4j.cypher.internal.commands.expressions.ParameterValue
 import org.neo4j.cypher.internal.commands.ReturnItem
@@ -28,7 +28,7 @@ import org.neo4j.cypher.internal.commands.ReturnItem
 class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe: Boolean)
   extends PipeWithSource(source) {
   val returnItemNames = returnItems.map(_.name)
-  val symbols = new SymbolTable2(identifiers2.toMap)
+  val symbols = new SymbolTable(identifiers2.toMap)
 
   private lazy val identifiers2: Seq[(String, CypherType)] = returnItems.
     map( ri => ri.name->ri.expression.getType(source.symbols))
@@ -38,7 +38,7 @@ class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe:
       val newMap = MutableMaps.create(ctx.size)
 
       returnItems.foreach {
-        case ReturnItem(Entity(oldName), newName, _)              => newMap.put(newName, ctx(oldName))
+        case ReturnItem(Identifier(oldName), newName, _)              => newMap.put(newName, ctx(oldName))
         case ReturnItem(CachedExpression(oldName, _), newName, _) => newMap.put(newName, ctx(oldName))
         case ReturnItem(_, name, _)                               => newMap.put(name, ctx(name))
       }
@@ -59,7 +59,7 @@ class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe:
 
   def dependencies = Seq()
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     returnItems.foreach(_.expression.assertTypes(symbols))
   }
 }

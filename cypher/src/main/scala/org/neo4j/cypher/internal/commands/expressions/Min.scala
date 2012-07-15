@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{AnyIterableType, CypherType, SymbolTable2, NumberType}
+import org.neo4j.cypher.internal.symbols.{AnyIterableType, CypherType, SymbolTable, NumberType}
 import org.neo4j.cypher.internal.pipes.aggregation.MinFunction
 
 case class Min(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
@@ -29,5 +29,5 @@ case class Min(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def rewrite(f: (Expression) => Expression) = f(Min(anInner.rewrite(f)))
 
-  def calculateType(symbols: SymbolTable2): CypherType = anInner.getType(symbols)
+  def calculateType(symbols: SymbolTable): CypherType = anInner.getType(symbols)
 }

@@ -24,12 +24,12 @@ import org.neo4j.cypher.internal.commands.SortItem
 import java.lang.String
 import org.neo4j.cypher.internal.Comparer
 import collection.mutable.Map
-import org.neo4j.cypher.internal.symbols.SymbolTable2
+import org.neo4j.cypher.internal.symbols.SymbolTable
 
 class SortPipe(source: Pipe, sortDescription: List[SortItem]) extends PipeWithSource(source) with Comparer {
   def symbols = source.symbols
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     sortDescription.foreach {
       case SortItem(e,_) => e.assertTypes(source.symbols)
     }

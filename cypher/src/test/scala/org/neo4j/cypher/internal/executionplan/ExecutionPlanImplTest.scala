@@ -27,11 +27,11 @@ import org.neo4j.graphdb.GraphDatabaseService
 import org.scalatest.Assertions
 import org.neo4j.cypher.InternalException
 import actors.threadpool.{ExecutionException, TimeUnit, Executors}
-import org.neo4j.cypher.internal.commands.expressions.Entity
+import org.neo4j.cypher.internal.commands.expressions.Identifier
 
 class ExecutionPlanImplTest extends Assertions with Timed {
   @Test def should_not_go_into_never_ending_loop() {
-    val q = Query.start(NodeById("x", 0)).returns(ReturnItem(Entity("x"), "x"))
+    val q = Query.start(NodeById("x", 0)).returns(ReturnItem(Identifier("x"), "x"))
 
     val exception = intercept[ExecutionException](timeoutAfter(1) {
       val epi = new FakeEPI(q, null)

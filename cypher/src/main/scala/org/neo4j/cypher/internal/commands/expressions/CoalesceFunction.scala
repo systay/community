@@ -41,7 +41,7 @@ case class CoalesceFunction(expressions: Expression*) extends Expression {
   else
     expressions.flatMap(_.filter(f))
 
-  def calculateType(symbols: SymbolTable2) = {
+  def calculateType(symbols: SymbolTable) = {
     expressions.map(_.getType(symbols)) match {
       case Seq() => ScalarType()
       case types => types.foldLeft(AnyType().asInstanceOf[CypherType])(_ mergeWith _)

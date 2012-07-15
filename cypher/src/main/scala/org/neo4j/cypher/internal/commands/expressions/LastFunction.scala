@@ -32,7 +32,7 @@ case class LastFunction(collection: Expression) extends NullInNullOutExpression(
   else
     collection.filter(f)
 
-  def calculateType(symbols: SymbolTable2) = collection.evaluateType(AnyIterableType(), symbols).iteratedType
+  def calculateType(symbols: SymbolTable) = collection.evaluateType(AnyIterableType(), symbols).iteratedType
 
   def symbolTableDependencies = collection.symbolTableDependencies
 }

@@ -33,7 +33,7 @@ abstract class MathFunction(arg: Expression) extends Expression with NumericHelp
   else
     arg.filter(f)
 
-  def calculateType(symbols: SymbolTable2) = arg.evaluateType(NumberType(), symbols)
+  def calculateType(symbols: SymbolTable) = arg.evaluateType(NumberType(), symbols)
 
   def symbolTableDependencies = arg.symbolTableDependencies
 }
@@ -76,7 +76,7 @@ case class RangeFunction(start: Expression, end: Expression, step: Expression) e
 
   def rewrite(f: (Expression) => Expression) = f(RangeFunction(start.rewrite(f), end.rewrite(f), step.rewrite(f)))
 
-  def calculateType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable): CypherType = {
     start.evaluateType(NumberType(), symbols)
     end.evaluateType(NumberType(), symbols)
     step.evaluateType(NumberType(), symbols)

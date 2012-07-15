@@ -42,7 +42,7 @@ case class ExtractFunction(collection: Expression, id: String, expression: Expre
     collection.filter(f) ++ expression.filter(f)
 
 
-  def calculateType(symbols: SymbolTable2): CypherType = collection.evaluateType(AnyIterableType(), symbols)
+  def calculateType(symbols: SymbolTable): CypherType = collection.evaluateType(AnyIterableType(), symbols)
 
   def symbolTableDependencies = symbolTableDependencies(collection, expression, id)
 }

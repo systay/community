@@ -32,7 +32,7 @@ case class Collection(expressions: Expression*) extends Expression {
   else
     expressions.flatMap(_.filter(f))
 
-  def calculateType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable): CypherType = {
     expressions.map(_.getType(symbols)) match {
 
       case Seq() => AnyIterableType()

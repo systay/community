@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.pipes
 import org.neo4j.graphdb.{Transaction, TransactionFailureException, GraphDatabaseService}
 import org.neo4j.kernel.impl.nioneo.store.InvalidRecordException
 import org.neo4j.cypher.{NodeStillHasRelationshipsException, InternalException}
-import org.neo4j.cypher.internal.symbols.SymbolTable2
+import org.neo4j.cypher.internal.symbols.SymbolTable
 
 class CommitPipe(source: Pipe, graph: GraphDatabaseService) extends PipeWithSource(source) {
   lazy val still_has_relationships = "Node record Node\\[(\\d),.*] still has relationships".r
@@ -74,5 +74,5 @@ class CommitPipe(source: Pipe, graph: GraphDatabaseService) extends PipeWithSour
 
   def deps = Map()
 
-  def assertTypes(symbols: SymbolTable2) {}
+  def assertTypes(symbols: SymbolTable) {}
 }

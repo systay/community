@@ -117,7 +117,7 @@ trait Expressions extends Base with ParserPattern with Predicates {
     Literal(value)
   })
 
-  def entity: Parser[Entity] = identity ^^ (x => Entity(x))
+  def entity: Parser[Identifier] = identity ^^ (x => Identifier(x))
 
   def collectionLiteral: Parser[Expression] = "[" ~> repsep(expression, ",") <~ "]" ^^ (seq => Collection(seq: _*))
 

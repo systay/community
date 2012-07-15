@@ -23,7 +23,7 @@ import expressions.{Expression, Null, Literal, CoalesceFunction}
 import org.scalatest.Assertions
 import collection.Map
 import org.junit.{Assert, Test}
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, CypherType, AnyType}
 
 class CoalesceTest extends Assertions {
   @Test def givenANonNullValueThenReturnsTheValue() {
@@ -56,7 +56,7 @@ case class BreakingExpression() extends Expression {
 
   def filter(f: (Expression) => Boolean) = null
 
-  def calculateType(symbols: SymbolTable2): CypherType = AnyType()
+  def calculateType(symbols: SymbolTable): CypherType = AnyType()
 
   def symbolTableDependencies = Set()
 }

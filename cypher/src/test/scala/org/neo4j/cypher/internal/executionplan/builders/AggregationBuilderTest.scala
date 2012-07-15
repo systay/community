@@ -25,7 +25,7 @@ import org.neo4j.cypher.internal.commands._
 import expressions._
 import expressions.Collect
 import expressions.CountStar
-import expressions.Entity
+import expressions.Identifier
 import expressions.HeadFunction
 import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
 import org.neo4j.cypher.internal.commands.ReturnItem
@@ -39,7 +39,7 @@ class AggregationBuilderTest extends BuilderTest {
     val q = PartiallySolvedQuery().
       copy(
       aggregation = Seq(Unsolved(CountStar())),
-      returns = Seq(Unsolved(ReturnItem(Entity("n"), "n"))),
+      returns = Seq(Unsolved(ReturnItem(Identifier("n"), "n"))),
       aggregateQuery = Unsolved(true)
     )
 
@@ -65,7 +65,7 @@ class AggregationBuilderTest extends BuilderTest {
       copy(
       start = Seq(Unsolved(NodeById("n", 0))),
       aggregation = Seq(Unsolved(CountStar())),
-      returns = Seq(Unsolved(ReturnItem(Entity("n"), "n")))
+      returns = Seq(Unsolved(ReturnItem(Identifier("n"), "n")))
     )
 
     val p = createPipe(nodes = Seq())

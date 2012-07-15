@@ -46,7 +46,7 @@ case class Add(a: Expression, b: Expression) extends Expression {
   else
     a.filter(f) ++ b.filter(f)
 
-  def calculateType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable): CypherType = {
     val aT = a.getType(symbols)
     val bT = a.getType(symbols)
 

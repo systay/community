@@ -21,8 +21,8 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.{Pipe, ExtractPipe, EagerAggregationPipe}
 import org.neo4j.cypher.internal.executionplan.{PartiallySolvedQuery, ExecutionPlanInProgress, PlanBuilder}
-import org.neo4j.cypher.internal.commands.expressions.{Entity, CachedExpression, AggregationExpression, Expression}
-import org.neo4j.cypher.internal.symbols.SymbolTable2
+import org.neo4j.cypher.internal.commands.expressions.{Identifier, CachedExpression, AggregationExpression, Expression}
+import org.neo4j.cypher.internal.symbols.SymbolTable
 
 
 /*
@@ -70,7 +70,7 @@ class AggregationBuilder extends PlanBuilder  {
     planToAggregate.copy(query = rewrittenQuery, pipe = resultPipe)
   }
 
-  def rewriteQuery(namedAggregates: Map[String, AggregationExpression], symbols: SymbolTable2, query: PartiallySolvedQuery): PartiallySolvedQuery = {
+  def rewriteQuery(namedAggregates: Map[String, AggregationExpression], symbols: SymbolTable, query: PartiallySolvedQuery): PartiallySolvedQuery = {
     namedAggregates.foldLeft(query) {
       case (p, (key, aggregate)) => p.rewrite(e =>
         if (e == aggregate)

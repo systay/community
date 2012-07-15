@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.ColumnFilterPipe
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
-import org.neo4j.cypher.internal.symbols.SymbolTable2
+import org.neo4j.cypher.internal.symbols.SymbolTable
 import org.neo4j.cypher.internal.commands.{AllIdentifiers, ReturnItem, ReturnColumn}
 
 class ColumnFilterBuilder extends PlanBuilder {
@@ -69,7 +69,7 @@ class ColumnFilterBuilder extends PlanBuilder {
 
   def priority = PlanBuilder.ColumnFilter
 
-  private def getReturnItems(q: Seq[QueryToken[ReturnColumn]], symbols: SymbolTable2): Seq[ReturnItem] = q.map(_.token).flatMap {
+  private def getReturnItems(q: Seq[QueryToken[ReturnColumn]], symbols: SymbolTable): Seq[ReturnItem] = q.map(_.token).flatMap {
     case x: ReturnItem     => Seq(x)
     case x: AllIdentifiers => x.expressions(symbols).map {
       case (n, e) => ReturnItem(e, n)

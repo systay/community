@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.{Entity, Literal, Expression}
+import expressions.{Identifier, Literal, Expression}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.cypher.internal.mutation.{GraphElementPropertyFunctions, UpdateAction}
 import scala.Long
@@ -85,7 +85,7 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
 
   def rewrite(f: (Expression) => Expression): UpdateAction = CreateNodeStartItem(key, rewrite(props, f))
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     checkTypes(props, symbols)
   }
 
@@ -115,7 +115,7 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
 
   def identifier2 = Seq(key-> RelationshipType())
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     checkTypes(from._2, symbols)
     checkTypes(to._2, symbols)
     checkTypes(props, symbols)

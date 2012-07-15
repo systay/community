@@ -29,7 +29,7 @@ import collection.Map
  * The deciding factor is whether or not the pattern has loops in it. If it does, we have to use the much more
  * expensive pattern matching. If it doesn't, we get away with much simpler methods
  */
-class MatchingContext(boundIdentifiers: SymbolTable2,
+class MatchingContext(boundIdentifiers: SymbolTable,
                       predicates: Seq[Predicate] = Seq(),
                       patternGraph: PatternGraph) {
 

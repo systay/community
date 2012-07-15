@@ -20,10 +20,6 @@
 package org.neo4j.cypher.internal.commands.expressions
 
 case class Modulo(a: Expression, b: Expression) extends Arithmetics(a, b) {
-  def operand = "%"
-
-  def verb = "modulo"
-
   def calc(a: Number, b: Number) = a.doubleValue() % b.doubleValue()
 
   def rewrite(f: (Expression) => Expression) = f(Modulo(a.rewrite(f), b.rewrite(f)))

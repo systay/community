@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.mutation
 
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.graphdb.PropertyContainer
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, ScalarType, MapType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, ScalarType, MapType}
 import org.neo4j.cypher.internal.commands.expressions.Expression
 
 case class DeletePropertyAction(element: Expression, property: String)
@@ -43,7 +43,7 @@ case class DeletePropertyAction(element: Expression, property: String)
 
   def rewrite(f: (Expression) => Expression): UpdateAction = DeletePropertyAction(element.rewrite(f), property: String)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     element.evaluateType(MapType(), symbols)
   }
 

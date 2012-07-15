@@ -73,7 +73,7 @@ case class ShortestPathExpression(ast: ShortestPath) extends Expression with Pat
   else
     new AllShortestPathsFOO(expander, ast.maxDepth.getOrElse(15))
 
-  def calculateType(symbols: SymbolTable2) = {
+  def calculateType(symbols: SymbolTable) = {
     ast.assertTypes(symbols)
     PathType()
   }

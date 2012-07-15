@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.pipes
 
 import org.neo4j.graphdb.GraphDatabaseService
-import org.neo4j.cypher.internal.symbols.SymbolTable2
+import org.neo4j.cypher.internal.symbols.SymbolTable
 
 class TransactionStartPipe(source: Pipe, graph: GraphDatabaseService) extends PipeWithSource(source) {
   def createResults(state:QueryState) = {
@@ -40,5 +40,5 @@ class TransactionStartPipe(source: Pipe, graph: GraphDatabaseService) extends Pi
 
   def symbols = source.symbols
 
-  def assertTypes(symbols: SymbolTable2) {}
+  def assertTypes(symbols: SymbolTable) {}
 }

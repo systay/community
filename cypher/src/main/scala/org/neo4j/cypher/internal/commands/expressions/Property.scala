@@ -44,10 +44,10 @@ case class Property(entity: String, property: String) extends Expression {
   else
     Seq()
 
-  def calculateType(symbols: SymbolTable2) =
+  def calculateType(symbols: SymbolTable) =
     throw new ThisShouldNotHappenError("Andres", "This class should override evaluateType, and this method should never be run")
 
-  override def evaluateType(expectedType: CypherType, symbols: SymbolTable2) = {
+  override def evaluateType(expectedType: CypherType, symbols: SymbolTable) = {
     symbols.evaluateType(entity, MapType())
     expectedType
   }

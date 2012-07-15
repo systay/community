@@ -36,7 +36,7 @@ case class FilterFunction(collection: Expression, id: String, predicate: Predica
   else
     collection.filter(f)
 
-  def calculateType(symbols: SymbolTable2): CypherType = {
+  def calculateType(symbols: SymbolTable): CypherType = {
     val t = collection.evaluateType(AnyIterableType(), symbols)
 
     predicate.assertTypes(symbols.add(id, t.iteratedType))

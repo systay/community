@@ -29,5 +29,5 @@ case class Sum(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def rewrite(f: (Expression) => Expression) = f(Sum(anInner.rewrite(f)))
 
-  def calculateType(symbols: SymbolTable2): CypherType = anInner.evaluateType(NumberType(), symbols)
+  def calculateType(symbols: SymbolTable): CypherType = anInner.evaluateType(NumberType(), symbols)
 }

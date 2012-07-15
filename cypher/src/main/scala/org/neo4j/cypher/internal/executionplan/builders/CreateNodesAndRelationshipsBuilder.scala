@@ -23,10 +23,10 @@ import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBui
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.cypher.internal.pipes.{Pipe, ExecuteUpdateCommandsPipe, TransactionStartPipe}
 import org.neo4j.cypher.internal.mutation.UpdateAction
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, NodeType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, NodeType}
 import org.neo4j.cypher.internal.commands._
 import collection.Map
-import expressions.{Entity, Expression}
+import expressions.{Identifier, Expression}
 
 
 class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanBuilder {
@@ -48,7 +48,7 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
     plan.copy(query = q.copy(start = resultQuery), pipe = resultPipe, containsTransaction = true)
   }
 
-  private def expandCommands(commands: Seq[UpdateAction], symbols: SymbolTable2): Seq[UpdateAction] = {
+  private def expandCommands(commands: Seq[UpdateAction], symbols: SymbolTable): Seq[UpdateAction] = {
     val missingCreateNodeActions = commands.flatMap {
       case createNode: CreateNodeStartItem        => Seq()
       case createRel: CreateRelationshipStartItem =>
@@ -60,8 +60,8 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
     missingCreateNodeActions.distinct ++ commands
   }
 
-  private def alsoCreateNode(e: (Expression, Map[String, Expression]), symbols: SymbolTable2, commands: Seq[UpdateAction]): Seq[UpdateAction] = e._1 match {
-    case Entity(name) =>
+  private def alsoCreateNode(e: (Expression, Map[String, Expression]), symbols: SymbolTable, commands: Seq[UpdateAction]): Seq[UpdateAction] = e._1 match {
+    case Identifier(name) =>
       val nodeFromUnderlyingPipe = symbols.checkType(name, NodeType())
       val nodeFromOtherCommand = commands.exists {
         case CreateNodeStartItem(n, _) => n == name

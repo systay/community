@@ -19,10 +19,10 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import org.neo4j.cypher.internal.symbols.SymbolTable2
+import org.neo4j.cypher.internal.symbols.SymbolTable
 
 abstract class PipeWithSource(val source: Pipe) extends Pipe {
-  def assertTypes(symbols: SymbolTable2)
+  def assertTypes(symbols: SymbolTable)
 
   assertTypes(source.symbols)
 }

@@ -33,7 +33,7 @@ case class RelationshipTypeFunction(relationship: Expression) extends NullInNull
   else
     relationship.filter(f)
 
-  def calculateType(symbols: SymbolTable2) = {
+  def calculateType(symbols: SymbolTable) = {
     relationship.evaluateType(RelationshipType(), symbols)
     StringType()
   }

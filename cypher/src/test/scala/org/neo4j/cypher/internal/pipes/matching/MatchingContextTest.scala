@@ -23,11 +23,11 @@ import org.scalatest.Assertions
 import org.neo4j.cypher.GraphDatabaseTestBase
 import org.neo4j.graphdb.{Node, Direction}
 import org.neo4j.cypher.internal.commands._
-import expressions.Entity
+import expressions.Identifier
 import expressions.Literal
 import expressions.Property
 import expressions.RelationshipFunction
-import expressions.{Entity, RelationshipFunction, Literal, Property}
+import expressions.{Identifier, RelationshipFunction, Literal, Property}
 import org.junit.{Before, Test}
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
@@ -498,7 +498,7 @@ class MatchingContextTest extends GraphDatabaseTestBase with Assertions with Pat
     relate(a, b, "rel", Map("foo" -> "bar"))
     relate(b, c, "rel", Map("foo" -> "notBar"))
 
-    val pred = AllInIterable(RelationshipFunction(Entity("p")), "r", Equals(Property("r", "foo"), Literal("bar")))
+    val pred = AllInIterable(RelationshipFunction(Identifier("p")), "r", Equals(Property("r", "foo"), Literal("bar")))
     val patterns = Seq(VarLengthRelatedTo("p", "a", "b", Some(2), Some(2), Seq(), Direction.OUTGOING, None, true, pred))
     val matchingContext = createMatchingContextWithNodes(patterns, Seq("a"))
 
@@ -522,7 +522,7 @@ class MatchingContextTest extends GraphDatabaseTestBase with Assertions with Pat
     val relIdentifiers2 = rels.map(_ ->RelationshipType())
 
     val identifiers2 = (nodeIdentifiers2++relIdentifiers2).toMap
-    val symbols2 = new SymbolTable2(identifiers2)
+    val symbols2 = new SymbolTable(identifiers2)
     new MatchingContext(symbols2, predicates, buildPatternGraph(symbols2, patterns))
   }
 

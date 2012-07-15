@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{CypherType, SymbolTable2, NumberType}
+import org.neo4j.cypher.internal.symbols.{CypherType, SymbolTable, NumberType}
 import org.neo4j.cypher.internal.pipes.aggregation.AvgFunction
 
 case class Avg(anInner: Expression) extends AggregationWithInnerExpression(anInner) {
@@ -29,5 +29,5 @@ case class Avg(anInner: Expression) extends AggregationWithInnerExpression(anInn
 
   def rewrite(f: (Expression) => Expression) = f(Avg(anInner.rewrite(f)))
 
-  def calculateType(symbols: SymbolTable2): CypherType = NumberType()
+  def calculateType(symbols: SymbolTable): CypherType = NumberType()
 }

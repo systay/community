@@ -19,13 +19,13 @@
  */
 package org.neo4j.cypher.internal.commands
 
-import expressions.{CachedExpression, Entity, Expression}
+import expressions.{CachedExpression, Identifier, Expression}
 import java.lang.String
 import org.neo4j.helpers.ThisShouldNotHappenError
 
 case class SortItem(expression: Expression, ascending: Boolean) {
   def columnName : String = expression match {
-    case Entity(x) => x
+    case Identifier(x) => x
     case CachedExpression(x, _) => x
     case x => throw new ThisShouldNotHappenError("Andres", "ORDER BY should only work already computed values " + x.getClass)
   }

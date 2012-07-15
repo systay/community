@@ -25,7 +25,7 @@ import org.scalatest.Assertions
 import org.neo4j.cypher.internal.commands.expressions.{Expression, Add}
 import collection.Map
 
-class SymbolTable2Test extends Assertions {
+class SymbolTableTest extends Assertions {
   @Test def anytype_is_ok() {
     //given
     val s = createSymbols("p" -> PathType())
@@ -104,8 +104,8 @@ class SymbolTable2Test extends Assertions {
   }
 
 
-  def createSymbols(elems: (String, CypherType)*): SymbolTable2 = {
-    new SymbolTable2(elems.toMap)
+  def createSymbols(elems: (String, CypherType)*): SymbolTable = {
+    new SymbolTable(elems.toMap)
   }
 }
 
@@ -116,7 +116,7 @@ class FakeExpression(typ: CypherType) extends Expression {
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = null
 
-  def calculateType(symbols: SymbolTable2) = typ
+  def calculateType(symbols: SymbolTable) = typ
 
   def symbolTableDependencies = Set()
 }

@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.pipes
 
 import java.lang.String
 import org.neo4j.cypher.internal.commands.Predicate
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable, AnyType}
 
 class FilterPipe(source: Pipe, predicate: Predicate) extends PipeWithSource(source) {
   val symbols = source.symbols
@@ -30,7 +30,7 @@ class FilterPipe(source: Pipe, predicate: Predicate) extends PipeWithSource(sour
 
   override def executionPlan(): String = source.executionPlan() + "\r\n" + "Filter(" + predicate.toString + ")"
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     predicate.assertTypes(symbols)
   }
 }

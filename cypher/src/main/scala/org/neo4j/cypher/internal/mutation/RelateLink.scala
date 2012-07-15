@@ -25,7 +25,7 @@ import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.graphdb._
 import org.neo4j.cypher.internal.commands._
-import expressions.{Entity, Literal, Expression}
+import expressions.{Identifier, Literal, Expression}
 import org.neo4j.cypher.{RelatePathNotUnique, CypherTypeException}
 import org.neo4j.cypher.internal.commands.CreateNodeStartItem
 import org.neo4j.cypher.internal.commands.CreateRelationshipStartItem
@@ -54,7 +54,7 @@ case class NamedExpectation(name: String, properties: Map[String, Expression])
 
   def symbolTableDependencies = symbolTableDependencies(properties)
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     checkTypes(properties, symbols)
   }
 }
@@ -133,9 +133,9 @@ case class RelateLink(start: NamedExpectation, end: NamedExpectation, rel: Named
 
   private def createUpdateActions(dir: Direction, startNode: Node, end: NamedExpectation): Seq[UpdateWrapper] = {
     val createRel = if (dir == Direction.OUTGOING) {
-      CreateRelationshipStartItem(rel.name, (Literal(startNode),Map()), (Entity(end.name),Map()), relType, rel.properties)
+      CreateRelationshipStartItem(rel.name, (Literal(startNode),Map()), (Identifier(end.name),Map()), relType, rel.properties)
     } else {
-      CreateRelationshipStartItem(rel.name, (Entity(end.name),Map()), (Literal(startNode),Map()), relType, rel.properties)
+      CreateRelationshipStartItem(rel.name, (Identifier(end.name),Map()), (Literal(startNode),Map()), relType, rel.properties)
     }
 
     val relUpdate = UpdateWrapper(Seq(end.name), createRel)
@@ -166,7 +166,7 @@ case class RelateLink(start: NamedExpectation, end: NamedExpectation, rel: Named
 
   def filter(f: (Expression) => Boolean) = Seq.empty
 
-  def assertTypes(symbols: SymbolTable2) {
+  def assertTypes(symbols: SymbolTable) {
     checkTypes(start.properties, symbols)
     checkTypes(end.properties, symbols)
     checkTypes(rel.properties, symbols)
