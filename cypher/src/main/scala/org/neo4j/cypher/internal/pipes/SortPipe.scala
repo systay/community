@@ -27,11 +27,11 @@ import collection.mutable.Map
 import org.neo4j.cypher.internal.symbols.SymbolTable2
 
 class SortPipe(source: Pipe, sortDescription: List[SortItem]) extends PipeWithSource(source) with Comparer {
-  def symbols2 = source.symbols2
+  def symbols = source.symbols
 
   def assertTypes(symbols: SymbolTable2) {
     sortDescription.foreach {
-      case SortItem(e,_) => e.assertTypes(source.symbols2)
+      case SortItem(e,_) => e.assertTypes(source.symbols)
     }
   }
 

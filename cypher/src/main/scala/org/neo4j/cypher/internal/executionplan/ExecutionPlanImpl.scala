@@ -61,7 +61,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
       }
     }
 
-    val columns = getQueryResultColumns(inputQuery, planInProgress.pipe.symbols2)
+    val columns = getQueryResultColumns(inputQuery, planInProgress.pipe.symbols)
     val (pipe, func) = if (planInProgress.containsTransaction) {
       val p = new CommitPipe(planInProgress.pipe, graph)
       (p, getEagerReadWriteQuery(p, columns))

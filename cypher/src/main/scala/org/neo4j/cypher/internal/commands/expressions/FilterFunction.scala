@@ -22,7 +22,6 @@ package org.neo4j.cypher.internal.commands.expressions
 import org.neo4j.cypher.internal.commands.{IterableSupport, Predicate}
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
-import org.neo4j.cypher.internal.symbols.Identifier
 
 case class FilterFunction(collection: Expression, id: String, predicate: Predicate)
   extends NullInNullOutExpression(collection)

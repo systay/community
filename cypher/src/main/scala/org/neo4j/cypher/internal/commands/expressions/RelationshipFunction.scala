@@ -23,7 +23,6 @@ import org.neo4j.graphdb.Path
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.cypher.internal.symbols._
 import collection.JavaConverters._
-import org.neo4j.cypher.internal.symbols.Identifier
 
 case class RelationshipFunction(path: Expression) extends NullInNullOutExpression(path) {
   def compute(value: Any, m: Map[String, Any]) = value match {

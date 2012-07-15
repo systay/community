@@ -76,7 +76,7 @@ class ExecuteUpdateCommandsPipe(source: Pipe, db: GraphDatabaseService, commands
 
   def executionPlan() = source.executionPlan() + "\nUpdateGraph(" + commands.mkString + ")"
 
-  def symbols2 = source.symbols2.add(commands.flatMap(_.identifier2).toMap)
+  def symbols = source.symbols.add(commands.flatMap(_.identifier2).toMap)
 
   def assertTypes(symbols: SymbolTable2) {
     commands.foreach(_.assertTypes(symbols))

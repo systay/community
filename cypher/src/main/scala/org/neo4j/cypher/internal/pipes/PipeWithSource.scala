@@ -24,5 +24,5 @@ import org.neo4j.cypher.internal.symbols.SymbolTable2
 abstract class PipeWithSource(val source: Pipe) extends Pipe {
   def assertTypes(symbols: SymbolTable2)
 
-  assertTypes(source.symbols2)
+  assertTypes(source.symbols)
 }

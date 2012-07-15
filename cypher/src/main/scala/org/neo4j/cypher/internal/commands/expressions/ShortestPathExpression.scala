@@ -27,7 +27,6 @@ import scala.collection.JavaConverters._
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.kernel.Traversal
 import org.neo4j.graphdb.{Path, DynamicRelationshipType, Node, Expander}
-import org.neo4j.cypher.internal.symbols.Identifier
 import scala.Some
 import org.neo4j.cypher.internal.commands.{Pattern, PathExtractor, ShortestPath}
 

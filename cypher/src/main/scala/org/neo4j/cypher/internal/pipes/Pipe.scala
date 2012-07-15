@@ -38,8 +38,7 @@ import org.neo4j.kernel.GraphDatabaseAPI
 trait Pipe {
   def createResults(state: QueryState): Traversable[ExecutionContext]
 
-//  def symbols: SymbolTable
-  def symbols2: SymbolTable2
+  def symbols: SymbolTable2
 
   def executionPlan(): String
 }
@@ -47,8 +46,7 @@ trait Pipe {
 class NullPipe extends Pipe {
   def createResults(state: QueryState) = Seq(ExecutionContext.empty)
 
-//  def symbols: SymbolTable = new SymbolTable()
-  def symbols2: SymbolTable2 = new SymbolTable2()
+  def symbols: SymbolTable2 = new SymbolTable2()
 
   def executionPlan(): String = ""
 }

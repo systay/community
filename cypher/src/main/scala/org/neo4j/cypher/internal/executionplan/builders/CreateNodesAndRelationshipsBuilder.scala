@@ -34,7 +34,7 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
     val q = plan.query
     val mutatingQueryTokens = q.start.filter(applicableTo(plan.pipe))
     val commands = mutatingQueryTokens.map(_.token.asInstanceOf[UpdateAction])
-    val allCommands = expandCommands(commands, plan.pipe.symbols2)
+    val allCommands = expandCommands(commands, plan.pipe.symbols)
 
     val p = if (plan.containsTransaction) {
       plan.pipe
@@ -77,14 +77,14 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
   }
 
   def applicableTo(pipe: Pipe)(start: QueryToken[StartItem]):Boolean = start match {
-    case Unsolved(x: CreateNodeStartItem)         => x.checkTypes(pipe.symbols2)
-    case Unsolved(x: CreateRelationshipStartItem) => x.checkTypes(pipe.symbols2)
+    case Unsolved(x: CreateNodeStartItem)         => x.checkTypes(pipe.symbols)
+    case Unsolved(x: CreateRelationshipStartItem) => x.checkTypes(pipe.symbols)
     case _                                        => false
   }
 
   override def missingDependencies(plan: ExecutionPlanInProgress): Seq[String] = plan.query.start.flatMap {
-    case Unsolved(x: CreateNodeStartItem)         => plan.pipe.symbols2.missingSymbolTableDependencies(x)
-    case Unsolved(x: CreateRelationshipStartItem) => plan.pipe.symbols2.missingSymbolTableDependencies(x)
+    case Unsolved(x: CreateNodeStartItem)         => plan.pipe.symbols.missingSymbolTableDependencies(x)
+    case Unsolved(x: CreateRelationshipStartItem) => plan.pipe.symbols.missingSymbolTableDependencies(x)
     case _                                        => Seq()
   }
 

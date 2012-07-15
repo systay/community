@@ -22,9 +22,8 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.junit.Test
 import org.junit.Assert._
 import org.neo4j.cypher.internal.commands.SortItem
-import org.neo4j.cypher.internal.symbols.{AnyType, ScalarType, Identifier}
 import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
-import org.neo4j.cypher.internal.commands.expressions.{CachedExpression, Property}
+import org.neo4j.cypher.internal.commands.expressions.Property
 
 class SortBuilderTest extends BuilderTest {
 

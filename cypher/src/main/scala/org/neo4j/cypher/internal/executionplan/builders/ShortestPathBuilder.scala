@@ -40,7 +40,7 @@ class ShortestPathBuilder extends PlanBuilder {
   def canWorkWith(plan: ExecutionPlanInProgress) = plan.query.patterns.exists(yesOrNo(plan.pipe, _))
 
   private def yesOrNo(p: Pipe, token: QueryToken[_]): Boolean = token match {
-    case Unsolved(sp: ShortestPath) => sp.checkTypes(p.symbols2)
+    case Unsolved(sp: ShortestPath) => sp.checkTypes(p.symbols)
     case _ => false
   }
 
@@ -49,7 +49,7 @@ class ShortestPathBuilder extends PlanBuilder {
 
   override def missingDependencies(plan: ExecutionPlanInProgress) = {
     val querySoFar = plan.query
-    val symbols = plan.pipe.symbols2
+    val symbols = plan.pipe.symbols
 
     val unsolvedShortestPaths: Seq[ShortestPath] = querySoFar.patterns.
       filter(sp => !sp.solved && sp.token.isInstanceOf[ShortestPath]).map(_.token.asInstanceOf[ShortestPath])

@@ -20,7 +20,6 @@
 package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher._
-import internal.pipes.IdentifierDependant
 import internal.symbols._
 import collection.Map
 

@@ -38,7 +38,7 @@ class EmptyResultPipe(source: Pipe)
 
   def deps = Map()
 
-  def symbols2 = new SymbolTable2()
+  def symbols = new SymbolTable2()
 
   def assertTypes(symbols: SymbolTable2) {}
 }

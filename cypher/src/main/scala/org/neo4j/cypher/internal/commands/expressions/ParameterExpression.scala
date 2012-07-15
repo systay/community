@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, AnyType}
 import org.neo4j.cypher.ParameterNotFoundException
 import collection.Map
 

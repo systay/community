@@ -23,8 +23,6 @@ import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.commands.IsIterable
 import org.neo4j.cypher.CypherTypeException
 import collection.Map
-import org.neo4j.cypher.internal.symbols.AnyType
-import org.neo4j.cypher.internal.symbols.Identifier
 
 case class Add(a: Expression, b: Expression) extends Expression {
   def apply(m: Map[String, Any]) = {

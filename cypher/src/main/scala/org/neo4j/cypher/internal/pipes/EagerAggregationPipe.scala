@@ -23,8 +23,6 @@ import aggregation.AggregationFunction
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.commands.expressions.{Expression, AggregationExpression}
 import collection.mutable.{Map => MutableMap}
-import org.neo4j.cypher.internal.symbols.AnyType
-import org.neo4j.cypher.internal.symbols.Identifier
 
 // Eager aggregation means that this pipe will eagerly load the whole resulting sub graphs before starting
 // to emit aggregated results.
@@ -33,11 +31,11 @@ class EagerAggregationPipe(source: Pipe, val keyExpressions: Map[String, Express
   extends PipeWithSource(source) {
   def oldKeyExpressions = keyExpressions.values.toSeq
 
-  val symbols2: SymbolTable2 = createSymbols2()
+  val symbols: SymbolTable2 = createSymbols2()
 
   private def createSymbols2() = {
     val typeExtractor: ((String, Expression)) => (String, CypherType) = {
-      case (id, exp) => id -> exp.getType(source.symbols2)
+      case (id, exp) => id -> exp.getType(source.symbols)
     }
 
     val keyIdentifiers = keyExpressions.map(typeExtractor)

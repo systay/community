@@ -22,10 +22,8 @@ package org.neo4j.cypher.internal.commands.expressions
 import org.junit.Test
 import org.scalatest.Assertions
 import org.neo4j.cypher.internal.symbols._
-import collection.{immutable, Map}
+import collection.Map
 import org.neo4j.cypher.CypherTypeException
-import org.neo4j.cypher.internal.symbols.Identifier
-import java.util.zip.ZipEntry
 
 class ExpressionTest extends Assertions {
   @Test def replacePropWithCache() {

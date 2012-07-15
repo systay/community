@@ -27,7 +27,7 @@ class ExtractBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
 
     val expressions: Map[String, Expression] =
-      plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols2)).toMap
+      plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols)).toMap
 
     ExtractBuilder.extractIfNecessary(plan, expressions)
   }
@@ -55,7 +55,7 @@ object ExtractBuilder {
     if (expressions.nonEmpty) {
       val newPsq = expressions.foldLeft(query)((psq, exp) => psq.rewrite(fromQueryExpression =>
         if (exp._2 == fromQueryExpression)
-          CachedExpression(exp._1, fromQueryExpression.getType(plan.pipe.symbols2))
+          CachedExpression(exp._1, fromQueryExpression.getType(plan.pipe.symbols))
         else
           fromQueryExpression
       ))

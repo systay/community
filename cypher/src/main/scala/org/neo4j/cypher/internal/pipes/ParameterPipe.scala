@@ -34,7 +34,7 @@ class ParameterPipe() extends Pipe {
 
   val identifiers = Seq()
 //  val symbols = new SymbolTable()
-  val symbols2 = new SymbolTable2()
+  val symbols = new SymbolTable2()
 
   override def executionPlan(): String = "Parameters()"
 }

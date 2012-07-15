@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands.expressions
 
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType, Identifier}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType}
 import collection.Map
 
 case class Literal(v: Any) extends Expression {

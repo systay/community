@@ -36,7 +36,7 @@ class MatchBuilder extends PlanBuilder with PatternGraphBuilder {
     val items = q.patterns.filter(yesOrNo(_, p, q.start))
     val patterns = items.map(_.token)
     val predicates = q.where.filter(!_.solved).map(_.token)
-    val graph = buildPatternGraph(p.symbols2, patterns)
+    val graph = buildPatternGraph(p.symbols, patterns)
 
     val mandatoryGraph = graph.mandatoryGraph
 
@@ -75,7 +75,7 @@ class MatchBuilder extends PlanBuilder with PatternGraphBuilder {
 
       val resolvedStartPoints =  apa.foldLeft(true)(_ && _)
 
-      val pipeSatisfied = x.predicate.checkTypes(p.symbols2)
+      val pipeSatisfied = x.predicate.checkTypes(p.symbols)
 
       resolvedStartPoints && pipeSatisfied
     }

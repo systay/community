@@ -26,7 +26,7 @@ class FakePipe(data: Seq[Map[String, Any]], identifiers: (String, CypherType)*) 
 //  val symbols: SymbolTable = new SymbolTable(identifiers.map {
 //    case (name, typ) => Identifier(name, typ)
 //  }: _*)
-  val symbols2: SymbolTable2 = new SymbolTable2(identifiers.toMap)
+  val symbols: SymbolTable2 = new SymbolTable2(identifiers.toMap)
 
   def createResults(state: QueryState): Traversable[ExecutionContext] = data.map(m => ExecutionContext(collection.mutable.Map(m.toSeq: _*)))
 

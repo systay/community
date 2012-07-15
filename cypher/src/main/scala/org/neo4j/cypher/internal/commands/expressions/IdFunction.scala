@@ -22,7 +22,6 @@ package org.neo4j.cypher.internal.commands.expressions
 import org.neo4j.graphdb.{Relationship, Node}
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
-import org.neo4j.cypher.internal.symbols.Identifier
 import org.neo4j.cypher.CypherTypeException
 
 case class IdFunction(inner: Expression) extends NullInNullOutExpression(inner) {

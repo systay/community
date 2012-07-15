@@ -23,7 +23,6 @@ import org.neo4j.graphdb.{NotFoundException, PropertyContainer}
 import org.neo4j.cypher.EntityNotFoundException
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
-import org.neo4j.cypher.internal.symbols.Identifier
 import org.neo4j.helpers.ThisShouldNotHappenError
 
 case class Property(entity: String, property: String) extends Expression {

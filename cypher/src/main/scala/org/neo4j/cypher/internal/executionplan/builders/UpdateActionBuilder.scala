@@ -32,7 +32,7 @@ class UpdateActionBuilder(db: GraphDatabaseService) extends PlanBuilder {
       new TransactionStartPipe(plan.pipe, db)
     }
 
-    val commands = plan.query.updates.filter(cmd => cmd.unsolved && cmd.token.symbolDependenciesMet(p.symbols2))
+    val commands = plan.query.updates.filter(cmd => cmd.unsolved && cmd.token.symbolDependenciesMet(p.symbols))
     val resultPipe = new ExecuteUpdateCommandsPipe(p, db, commands.map(_.token))
 
     plan.copy(
@@ -44,14 +44,14 @@ class UpdateActionBuilder(db: GraphDatabaseService) extends PlanBuilder {
 
   def canWorkWith(plan: ExecutionPlanInProgress) = plan.query.updates.exists(cmd => {
     val a = cmd.unsolved
-    val b = cmd.token.symbolDependenciesMet(plan.pipe.symbols2)
+    val b = cmd.token.symbolDependenciesMet(plan.pipe.symbols)
     a && b
   })
 
   def priority = PlanBuilder.Mutation
 
   override def missingDependencies(plan: ExecutionPlanInProgress): Seq[String] = plan.query.updates.flatMap {
-    case Unsolved(cmd) => plan.pipe.symbols2.missingSymbolTableDependencies(cmd)
+    case Unsolved(cmd) => plan.pipe.symbols.missingSymbolTableDependencies(cmd)
     case _ => None
   }
 }

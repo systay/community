@@ -22,7 +22,6 @@ package org.neo4j.cypher.internal.commands.expressions
 import org.neo4j.graphdb.NotFoundException
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
-import org.neo4j.cypher.internal.symbols.Identifier
 import org.neo4j.helpers.ThisShouldNotHappenError
 
 case class Entity(entityName: String) extends Expression with Typed {

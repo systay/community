@@ -23,7 +23,6 @@ import org.neo4j.cypher.internal.commands.IterableSupport
 import org.neo4j.graphdb.Path
 import org.neo4j.cypher.internal.symbols._
 import collection.Map
-import org.neo4j.cypher.internal.symbols.Identifier
 
 case class LengthFunction(inner: Expression)
   extends NullInNullOutExpression(inner)

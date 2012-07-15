@@ -21,7 +21,6 @@ package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher.internal.commands.IterableSupport
 import org.neo4j.cypher.internal.symbols._
-import org.neo4j.cypher.internal.symbols.Identifier
 import collection.Map
 
 case class ExtractFunction(collection: Expression, id: String, expression: Expression)

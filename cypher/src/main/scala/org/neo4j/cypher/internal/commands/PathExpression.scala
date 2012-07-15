@@ -26,7 +26,6 @@ import collection.Map
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.graphdb.Path
 import org.neo4j.cypher.internal.executionplan.builders.PatternGraphBuilder
-import org.neo4j.cypher.internal.symbols.Identifier
 
 case class PathExpression(pathPattern: Seq[Pattern])
   extends Expression

@@ -22,7 +22,6 @@ package org.neo4j.cypher.internal.commands.expressions
 import org.neo4j.graphdb.Path
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.cypher.internal.symbols._
-import org.neo4j.cypher.internal.symbols.Identifier
 import collection.Map
 import collection.JavaConverters._
 

@@ -24,7 +24,6 @@ import java.lang.String
 import collection.Seq
 import scala.collection.JavaConverters._
 import org.neo4j.graphdb.{DynamicRelationshipType, Node, Direction, PropertyContainer}
-import org.neo4j.cypher.internal.pipes.{IdentifierDependant, Dependant}
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.helpers.ThisShouldNotHappenError
 import collection.Map

@@ -65,7 +65,7 @@ class AggregationBuilder extends PlanBuilder  {
     )
 
     //Rewrite the remainder of the query to use cached expression instead of the aggregate expressions
-    val rewrittenQuery = rewriteQuery(namedAggregates, planToAggregate.pipe.symbols2, resultQ)
+    val rewrittenQuery = rewriteQuery(namedAggregates, planToAggregate.pipe.symbols, resultQ)
 
     planToAggregate.copy(query = rewrittenQuery, pipe = resultPipe)
   }
@@ -83,7 +83,7 @@ class AggregationBuilder extends PlanBuilder  {
 
   private def getExpressions(plan: ExecutionPlanInProgress): ExtractedExpressions = {
     val keys: Seq[(String, Expression)] =
-      plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols2)).
+      plan.query.returns.flatMap(_.token.expressions(plan.pipe.symbols)).
       filterNot(_._2.containsAggregate)
 
     ExtractedExpressions(keys.toMap, plan.query.aggregation.map(_.token))

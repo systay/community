@@ -26,8 +26,6 @@ import collection.Map
 import java.lang.{Iterable => JavaIterable}
 import java.util.{Map => JavaMap}
 import collection.JavaConverters._
-import org.neo4j.cypher.internal.symbols.AnyType
-import org.neo4j.cypher.internal.symbols.Identifier
 
 abstract class InIterable(collection: Expression, id: String, predicate: Predicate)
   extends Predicate

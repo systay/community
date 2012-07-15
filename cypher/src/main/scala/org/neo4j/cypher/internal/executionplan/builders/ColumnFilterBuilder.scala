@@ -36,7 +36,7 @@ class ColumnFilterBuilder extends PlanBuilder {
       plan.copy(query = resultQ)
     } else {
 
-      val returnItems = getReturnItems(q.returns, p.symbols2)
+      val returnItems = getReturnItems(q.returns, p.symbols)
 
       val expressionsToExtract = returnItems.map {
         case ReturnItem(e, k, _) => k -> e
@@ -46,7 +46,7 @@ class ColumnFilterBuilder extends PlanBuilder {
 
       val filterPipe = new ColumnFilterPipe(newPlan.pipe, returnItems, isLastPipe)
 
-      val resultPipe = if (filterPipe.symbols2 != p.symbols2 || isLastPipe) {
+      val resultPipe = if (filterPipe.symbols != p.symbols || isLastPipe) {
         filterPipe
       } else {
         p

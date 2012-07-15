@@ -42,7 +42,7 @@ class NamedPathBuilder extends PlanBuilder {
   private def yesOrNo(q: QueryToken[_], p: Pipe) = q match {
     case Unsolved(np: NamedPath) =>
       val pathPoints = np.pathPattern.flatMap(_.possibleStartPoints)
-      pathPoints.forall(x => p.symbols2.checkType(x._1, x._2))
+      pathPoints.forall(x => p.symbols.checkType(x._1, x._2))
 
     case _                       => false
   }

@@ -33,8 +33,6 @@ import org.neo4j.cypher.internal.symbols._
 import collection.Map
 import org.neo4j.cypher.internal.executionplan.builders.PatternGraphBuilder
 import org.neo4j.cypher.internal.commands.True
-import org.neo4j.cypher.internal.symbols.Identifier
-import scala.Some
 import org.neo4j.cypher.internal.commands.Equals
 import org.neo4j.cypher.internal.commands.AllInIterable
 

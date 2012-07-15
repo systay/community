@@ -22,18 +22,16 @@ package org.neo4j.cypher.internal.pipes
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.commands.expressions.Entity
 import org.neo4j.cypher.internal.commands.expressions.CachedExpression
-import org.neo4j.cypher.internal.symbols.AnyType
 import org.neo4j.cypher.internal.commands.expressions.ParameterValue
 import org.neo4j.cypher.internal.commands.ReturnItem
-import org.neo4j.cypher.internal.symbols.Identifier
 
 class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe: Boolean)
   extends PipeWithSource(source) {
   val returnItemNames = returnItems.map(_.name)
-  val symbols2 = new SymbolTable2(identifiers2.toMap)
+  val symbols = new SymbolTable2(identifiers2.toMap)
 
   private lazy val identifiers2: Seq[(String, CypherType)] = returnItems.
-    map( ri => ri.name->ri.expression.getType(source.symbols2))
+    map( ri => ri.name->ri.expression.getType(source.symbols))
 
   def createResults(state: QueryState) = {
     source.createResults(state).map(ctx => {
@@ -57,7 +55,7 @@ class ColumnFilterPipe(source: Pipe, val returnItems: Seq[ReturnItem], lastPipe:
   }
 
   override def executionPlan(): String =
-    "%s\r\nColumnFilter([%s] => [%s])".format(source.executionPlan(), source.symbols2.keys, returnItemNames.mkString(","))
+    "%s\r\nColumnFilter([%s] => [%s])".format(source.executionPlan(), source.symbols.keys, returnItemNames.mkString(","))
 
   def dependencies = Seq()
 

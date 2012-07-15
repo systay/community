@@ -23,7 +23,7 @@ import expressions.{Expression, Null, Literal, CoalesceFunction}
 import org.scalatest.Assertions
 import collection.Map
 import org.junit.{Assert, Test}
-import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, Identifier, AnyType}
+import org.neo4j.cypher.internal.symbols.{SymbolTable2, CypherType, AnyType}
 
 class CoalesceTest extends Assertions {
   @Test def givenANonNullValueThenReturnsTheValue() {

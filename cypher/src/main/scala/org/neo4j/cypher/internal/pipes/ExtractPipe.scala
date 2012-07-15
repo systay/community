@@ -21,17 +21,14 @@ package org.neo4j.cypher.internal.pipes
 
 import org.neo4j.cypher.internal.symbols._
 import org.neo4j.cypher.internal.commands.expressions.Expression
-import org.neo4j.cypher.internal.symbols.AnyType
-import org.neo4j.cypher.internal.commands.ReturnItem
-import org.neo4j.cypher.internal.symbols.Identifier
 
 class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extends PipeWithSource(source) {
-  val symbols2: SymbolTable2 = {
+  val symbols: SymbolTable2 = {
     val newIdentifiers = expressions.map {
-      case (name, expression) => name -> expression.getType(source.symbols2)
+      case (name, expression) => name -> expression.getType(source.symbols)
     }
 
-    source.symbols2.add(newIdentifiers)
+    source.symbols.add(newIdentifiers)
   }
 
   def createResults(state: QueryState) = source.createResults(state).map(subgraph => {
@@ -42,7 +39,7 @@ class ExtractPipe(source: Pipe, val expressions: Map[String, Expression]) extend
     subgraph
   })
 
-  override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols2.keys.mkString(",") + "] => [" + expressions.keys.mkString(", ") + "])"
+  override def executionPlan(): String = source.executionPlan() + "\r\nExtract([" + source.symbols.keys.mkString(",") + "] => [" + expressions.keys.mkString(", ") + "])"
 
   def assertTypes(symbols: SymbolTable2) {
     expressions.foreach(_._2.assertTypes(symbols))

@@ -41,7 +41,7 @@ class EagerAggregationPipeTest extends JUnitSuite {
 
     assertEquals(
       Map("name" -> NodeType(), "count(*)" -> LongType()),
-      aggregationPipe.symbols2.identifiers)
+      aggregationPipe.symbols.identifiers)
   }
 
 
