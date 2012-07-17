@@ -41,7 +41,7 @@ case class ReturnItem(expression: Expression, name: String, renamed: Boolean = f
   extends ReturnColumn {
   def expressions(symbols: SymbolTable) = Map(name -> expression)
 
-  override def toString = name
+  override def toString = expression + " as `"+ name + "`"
 
   def rename(newName: String) = ReturnItem(expression, newName, renamed = true)
 }

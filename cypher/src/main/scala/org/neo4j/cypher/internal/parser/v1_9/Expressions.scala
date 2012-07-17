@@ -83,21 +83,35 @@ trait Expressions extends Base with ParserPattern with Predicates {
         var result: Option[ParseResult[Expression]] = None
 
         while (!ls.isEmpty && result.isEmpty) {
-          val (pref, suf) = ls span { c => c != '\\' && c != startChar }
+          val (pref, suf) = ls span {
+            c => c != '\\' && c != startChar
+          }
           idx += pref.length
           sb ++= pref
 
-          if (suf.isEmpty)
+          if (suf.isEmpty) {
             result = Some(Failure("end of string missing", in))
+          } else {
 
-          val first: Char = suf(0)
-          first match {
-            case c if c == startChar         =>
+            val first: Char = suf(0)
+            if (first == startChar) {
               result = Some(Success(Literal(sb.result()), in.drop(idx - in.offset + 2)))
-            case '\\' if suf(1) == '\''||suf(1)=='\"' =>
-              sb.append(suf(1))
-              idx += 2
-              ls = suf.drop(2)
+            } else {
+              val (escChars, afterEscape) = suf.splitAt(2)
+
+              if (escChars.size == 1) {
+                result = Some(Failure("invalid escape sequence", in))
+              } else {
+
+                ls = afterEscape
+                idx += 2
+
+                parseEscapeChars(escChars.tail, in) match {
+                  case Left(c)        => sb.append(c)
+                  case Right(failure) => result = Some(failure)
+                }
+              }
+            }
           }
         }
 
@@ -106,6 +120,22 @@ trait Expressions extends Base with ParserPattern with Predicates {
           case None    => Failure("end of string missing", in)
         }
       }
+  }
+
+  case class EscapeProduct(result: Option[ParseResult[Expression]])
+
+  private def parseEscapeChars(suf: List[Char], in:Input): Either[Char, Failure] = suf match {
+    case '\\' :: tail => Left('\\')
+    case 'a' :: tail  => Left('\u0007')
+    case 'b' :: tail  => Left('\b')
+    case 'f' :: tail  => Left('\f')
+    case 'n' :: tail  => Left('\n')
+    case 'r' :: tail  => Left('\r')
+    case 't' :: tail  => Left('\t')
+    case 'v' :: tail  => Left('\u000b')
+    case '\'' :: tail => Left('\'')
+    case '"' :: tail  => Left('"')
+    case _            => Right(Failure("invalid escape sequence", in))
   }
 
   def numberLiteral: Parser[Expression] = number ^^ (x => {

@@ -45,11 +45,18 @@ class CypherParserTest extends JUnitSuite with Assertions {
         returns(ReturnItem(Literal("apa"), "\"apa\"")))
   }
 
-  @Test def should_return_string_literal_with_escaped_quote_in() {
+  @Test def should_return_string_literal_with_escaped_quote_in1_8() {
     testFrom_1_8("start s = node(1) return \"ap\\\"a\"",
       Query.
         start(NodeById("s", 1)).
         returns(ReturnItem(Literal("ap\"a"), "\"ap\\\"a\"")))
+  }
+
+  @Test def should_return_string_literal_with_escaped_quote_in() {
+    testFrom_1_9("start s = node(1) return \"a\\tp\\\"a\"",
+      Query.
+        start(NodeById("s", 1)).
+        returns(ReturnItem(Literal("a\tp\"a"), "\"a\\tp\\\"a\"")))
   }
 
   @Test def allTheNodes() {
@@ -1794,6 +1801,10 @@ foreach(x in [1,2,3] :
     test_1_9(query, expectedQuery)
   }
 
+  def testFrom_1_9(query: String, expectedQuery: Query) {
+    test_1_9(query, expectedQuery)
+  }
+
   def testAll(query: String, expectedQuery: Query) {
     test_1_7(query, expectedQuery)
     test_1_8(query, expectedQuery)
@@ -1802,6 +1813,14 @@ foreach(x in [1,2,3] :
 
   def testOlderParsers(queryText: String, queryAst: Query) {
     test_1_7(queryText, queryAst)
+  }
+
+  @Test
+  def special_should_not_exists() {
+    val parser = new CypherParser()
+    val v18 = parser.parse("cypher 1.8 start s = node(1) return \"ap\\\"a\"")
+    val v19 = parser.parse("cypher 1.9 start s = node(1) return \"ap\\\"a\"")
+    assertEquals(v18, v19)
   }
 
   def testQuery(version: Option[String], query: String, expectedQuery: Query) {

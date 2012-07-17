@@ -37,4 +37,6 @@ case class Literal(v: Any) extends Expression {
   def calculateType(symbols: SymbolTable): CypherType = CypherType.fromJava(v)
 
   def symbolTableDependencies = Set()
+
+  override def toString() = "Literal(" + v.toString + ")"
 }

@@ -16,3 +16,21 @@ An expression in Cypher can be:
 * An aggregate function -- `avg(x.prop)`, `count(*)`
 * Relationship types -- `:REL_TYPE`, +:\`REL TYPE`+, `:REL1|REL2`
 * A path-pattern: `a-->()<--b`
+
+= Note on string literals =
+Strings can contain escape sequences such as the ones defined for Java:
+
+[options="header", cols=">,<", width="50%"]
+|===================
+|Escape seq|Character
+|`\t`|Tab
+|`\b`|Backspace
+|`\n`|Newline
+|`\r`|Carriage return
+|`\f`|Form feed
+|`\'`|Single quote
+|`\"`|Double quote
+|`\\`|Backslash
+|===================
+
+
