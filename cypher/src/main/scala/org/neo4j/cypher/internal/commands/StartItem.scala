@@ -19,6 +19,7 @@
  */
 package org.neo4j.cypher.internal.commands
 
+import expressions.{Identifier, Literal, Expression}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.cypher.internal.mutation.{GraphElementPropertyFunctions, UpdateAction}
 import scala.Long
@@ -78,13 +79,17 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
     }
   }
 
-  def dependencies = propDependencies(props)
-
-  def identifier = Seq(Identifier(key, NodeType()))
+  def identifier2 = Seq(key -> NodeType())
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = props.values.flatMap(_.filter(f)).toSeq
 
   def rewrite(f: (Expression) => Expression): UpdateAction = CreateNodeStartItem(key, rewrite(props, f))
+
+  def assertTypes(symbols: SymbolTable) {
+    checkTypes(props, symbols)
+  }
+
+  def symbolTableDependencies = symbolTableDependencies(props)
 }
 
 case class CreateRelationshipStartItem(key: String, from: (Expression, Map[String, Expression]), to: (Expression, Map[String, Expression]), typ: String, props: Map[String, Expression])
@@ -93,18 +98,6 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
   with UpdateAction
   with GraphElementPropertyFunctions {
   private lazy val relationshipType = DynamicRelationshipType.withName(typ)
-
-  def dependencies = {
-    val fromDeps = nodeDependencies(from._1)
-    val toDeps = nodeDependencies(to._1)
-    val propDeps = propDependencies(props)
-    fromDeps ++ toDeps ++ propDeps
-  }
-
-  private def nodeDependencies(e:Expression):Seq[Identifier] = e match {
-    case Entity(_) => Seq()
-    case x => x.dependencies(NodeType())
-  }
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = from._1.filter(f) ++ props.values.flatMap(_.filter(f))
 
@@ -120,7 +113,17 @@ case class CreateRelationshipStartItem(key: String, from: (Expression, Map[Strin
     Stream(context)
   }
 
-  def identifier = Seq(Identifier(key, RelationshipType()))
+  def identifier2 = Seq(key-> RelationshipType())
+
+  def assertTypes(symbols: SymbolTable) {
+    checkTypes(from._2, symbols)
+    checkTypes(to._2, symbols)
+    checkTypes(props, symbols)
+  }
+
+  def symbolTableDependencies = (from._2.flatMap(_._2.symbolTableDependencies) ++
+                                to._2.flatMap(_._2.symbolTableDependencies) ++
+                                props.flatMap(_._2.symbolTableDependencies)).toSet
 }
 
 trait Mutator extends StartItem {

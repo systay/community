@@ -21,6 +21,7 @@ package org.neo4j.cypher.internal.parser.v1_8
 
 import org.neo4j.cypher.internal.mutation._
 import org.neo4j.cypher.internal.commands._
+import expressions.{Property, Identifier}
 import org.neo4j.cypher.SyntaxException
 
 trait Updates extends Base with Expressions with StartClause {
@@ -41,7 +42,7 @@ trait Updates extends Base with Expressions with StartClause {
 
   def delete: Parser[(Seq[UpdateAction], Seq[NamedPath])] = ignoreCase("delete") ~> commaList(expression) ^^ {
     case expressions => val updateActions: List[UpdateAction with Product] = expressions.map {
-      case Property(entity, property) => DeletePropertyAction(Entity(entity), property)
+      case Property(entity, property) => DeletePropertyAction(Identifier(entity), property)
       case x => DeleteEntityAction(x)
     }
       (updateActions, Seq())
@@ -56,15 +57,14 @@ trait Updates extends Base with Expressions with StartClause {
 
       startItems match {
         case No(msg) => No(msg)
-        case Yes(stuff) => namedPathPatterns.seqMap(p => {
+        case Yes(links) => namedPathPatterns.seqMap(p => {
           val namedPath = NamedPath(name, p.map(_.asInstanceOf[Pattern]): _*)
-          val links = stuff.map(_.asInstanceOf[PathAndRelateLink])
 
           Seq(PathAndRelateLink(Some(namedPath), links.flatMap(_.links)))
         })
       }
 
-    case ParsedRelation(name, props, ParsedEntity(Entity(startName), startProps, True()), ParsedEntity(Entity(endName), endProps, True()), typ, dir, map, True()) if typ.size == 1 =>
+    case ParsedRelation(name, props, ParsedEntity(Identifier(startName), startProps, True()), ParsedEntity(Identifier(endName), endProps, True()), typ, dir, map, True()) if typ.size == 1 =>
       val link = RelateLink(
         start = NamedExpectation(startName, startProps),
         end = NamedExpectation(endName, endProps),

@@ -19,15 +19,15 @@
  */
 package org.neo4j.cypher.internal.mutation
 
-import org.neo4j.cypher.internal.symbols.Identifier
+import org.neo4j.cypher.internal.symbols.{CypherType, SymbolTable}
 import org.neo4j.cypher.internal.pipes.{QueryState, ExecutionContext}
 import org.neo4j.helpers.ThisShouldNotHappenError
-import org.neo4j.cypher.internal.commands.{StartItem, Expression}
+import org.neo4j.cypher.internal.commands.expressions.Expression
 import org.neo4j.cypher.RelatePathNotUnique
 import org.neo4j.graphdb.{Lock, PropertyContainer}
+import org.neo4j.cypher.internal.commands.StartItem
 
 case class RelateAction(links: RelateLink*) extends UpdateAction {
-  def dependencies: Seq[Identifier] = links.flatMap(_.dependencies)
 
   def exec(context: ExecutionContext, state: QueryState): Traversable[ExecutionContext] = {
     var linksToDo: Seq[RelateLink] = links
@@ -75,7 +75,6 @@ case class RelateAction(links: RelateLink*) extends UpdateAction {
     } else {                                                            // let's build one
       throw new ThisShouldNotHappenError("Andres", "There was something in that result list I don't know how to handle.")
     }
-
   }
 
   private def traverseNextStep(nextSteps: Seq[(String, PropertyContainer)], oldContext: ExecutionContext): ExecutionContext = {
@@ -136,9 +135,13 @@ case class RelateAction(links: RelateLink*) extends UpdateAction {
 
   def filter(f: (Expression) => Boolean): Seq[Expression] = links.flatMap(_.filter(f)).distinct
 
-  def identifier: Seq[Identifier] = links.flatMap(_.identifier).distinct
+  def identifier2: Seq[(String,CypherType)] = links.flatMap(_.identifier2).distinct
 
   def rewrite(f: (Expression) => Expression): UpdateAction = RelateAction(links.map(_.rewrite(f)): _*)
+
+  def assertTypes(symbols: SymbolTable) {links.foreach(l=>l.assertTypes(symbols))}
+
+  def symbolTableDependencies = links.flatMap(_.symbolTableDependencies).toSet
 }
 
 sealed abstract class RelateResult
