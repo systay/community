@@ -61,7 +61,7 @@ class GraphDatabaseTestBase extends JUnitSuite {
 
       props.foreach((kv) => node.setProperty(kv._1, kv._2))
       node
-    }).asInstanceOf[Node]
+    })
   }
 
   def createNode(values: (String, Any)*): Node = createNode(values.toMap)
