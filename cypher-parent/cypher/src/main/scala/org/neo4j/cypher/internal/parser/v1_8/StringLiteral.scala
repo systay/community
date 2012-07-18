@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.parser.v1_8
 
-import org.neo4j.cypher.internal.commands.{Expression, Literal}
+import org.neo4j.cypher.internal.commands.expressions.{Expression, Literal}
 
 trait StringLiteral extends Base {
   def stringLit: Parser[Expression] = Parser {

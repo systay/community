@@ -15,17 +15,21 @@
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.neo4j</groupId>
-    <artifactId>neo4j-cypher</artifactId>
-    <packaging>jar</packaging>
+    <groupId>org.neo4j.build</groupId>
+    <artifactId>neo4j-cypher-parent</artifactId>
+    <packaging>pom</packaging>
     <version>1.9-SNAPSHOT</version>
-    <name>Neo4j - Cypher</name>
-    <description>Neo4j query language</description>
+    <name>Neo4j - Cypher - Parent</name>
+    <description>Cypher parent pom</description>
     <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
     <scm>
         <url>https://github.com/neo4j/community/tree/master/cypher</url>
     </scm>
+
+    <modules>
+        <module>cypher</module>
+    </modules>
 
     <licenses>
         <license>
@@ -142,13 +146,6 @@
                 <report>javadoc</report>
               </reports>
             </plugin>
-            <!-- Scala API Documentation if we want it -->
-            <!-- 
-            <plugin>
-              <groupId>org.scala-tools</groupId>
-              <artifactId>maven-scala-plugin</artifactId>
-            </plugin>
-            -->
           </reportPlugins>
         </configuration>
         <executions>
