@@ -30,6 +30,7 @@
     <modules>
 	   <module>engine</module>
        <module>parser1_7</module>
+       <module>parser1_8</module>
        <module>cypher</module>
     </modules>
 
