@@ -21,6 +21,7 @@ package org.neo4j.cypher
 
 import internal.commands._
 import expressions._
+import internal.PathImpl
 import org.junit.Assert._
 import java.lang.String
 import scala.collection.JavaConverters._

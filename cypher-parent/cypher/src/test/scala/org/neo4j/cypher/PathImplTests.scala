@@ -19,6 +19,7 @@
  */
 package org.neo4j.cypher
 
+import internal.PathImpl
 import org.junit.Test
 import java.lang.Iterable
 import org.neo4j.graphdb.Traverser.Order

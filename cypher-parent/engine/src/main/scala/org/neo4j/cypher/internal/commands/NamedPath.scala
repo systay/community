@@ -21,9 +21,9 @@ package org.neo4j.cypher.internal.commands
 
 import expressions.Expression
 import org.neo4j.graphdb.{Path, PropertyContainer}
-import org.neo4j.cypher.PathImpl
 import scala.collection.JavaConverters._
 import collection.Map
+import org.neo4j.cypher.internal.PathImpl
 
 case class NamedPath(pathName: String, pathPattern: Pattern*) extends Traversable[Pattern] with PathExtractor {
   def foreach[U](f: (Pattern) => U) {

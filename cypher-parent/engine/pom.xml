@@ -9,9 +9,9 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.neo4j</groupId>
-    <artifactId>neo4j-cypher</artifactId>
+    <artifactId>neo4j-cypher-engine</artifactId>
     <packaging>jar</packaging>
-    <name>Neo4j - Cypher</name>
+    <name>Neo4j - Cypher Engine</name>
     <description>Neo4j query language</description>
     <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
@@ -38,14 +38,6 @@
             </comments>
         </license>
     </licenses>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-cypher-engine</artifactId>
-            <version>1.9-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
 
     <distributionManagement>
         <site>

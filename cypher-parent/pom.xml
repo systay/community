@@ -28,6 +28,7 @@
     </scm>
 
     <modules>
+	<module>engine</module>
         <module>cypher</module>
     </modules>
 
