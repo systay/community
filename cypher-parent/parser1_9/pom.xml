@@ -9,10 +9,10 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.neo4j</groupId>
-    <artifactId>neo4j-cypher</artifactId>
+    <artifactId>neo4j-cypher-parser1_9</artifactId>
     <packaging>jar</packaging>
-    <name>Neo4j - Cypher</name>
-    <description>Neo4j query language</description>
+    <name>Neo4j - Cypher Parser v1.9</name>
+    <description>Neo4j query language parser for v1.9</description>
     <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
     <scm>
@@ -39,34 +39,19 @@
         </license>
     </licenses>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-cypher-engine</artifactId>
-            <version>1.9-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-cypher-parser1_7</artifactId>
-            <version>1.9-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-cypher-parser1_8</artifactId>
-            <version>1.9-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-cypher-parser1_9</artifactId>
-            <version>1.9-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
-
     <distributionManagement>
         <site>
             <id>neo4j-site</id>
             <url>scpexe://static.neo4j.org/var/www/components.neo4j.org/${project.artifactId}/${project.version}</url>
         </site>
     </distributionManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-cypher-engine</artifactId>
+            <version>1.9-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
 </project>
