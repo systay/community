@@ -492,6 +492,11 @@ return distinct center""")
     intercept[SyntaxException](parseAndExecute("create a-[:test]->b, (a {name:'a'})-[:test2]->c"))
   }
 
+  @Test
+  def cant_set_properties_after_node_is_already_created2() {
+    intercept[SyntaxException](parseAndExecute("create a-[:test]->b create unique (a {name:'a'})-[:test2]->c"))
+  }
+
 }
 trait StatisticsChecker extends Assertions {
   def assertStats(result: ExecutionResult,

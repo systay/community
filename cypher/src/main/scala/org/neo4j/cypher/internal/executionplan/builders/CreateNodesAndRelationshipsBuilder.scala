@@ -66,7 +66,9 @@ class CreateNodesAndRelationshipsBuilder(db: GraphDatabaseService) extends PlanB
       case CreateNodeStartItem(key, props)
         if createdNodes.contains(key) && props.nonEmpty              =>
         throw new SyntaxException("Node `%s` has already been created. Can't assign properties to it again.".format(key))
+
       case CreateNodeStartItem(key, _) if createdNodes.contains(key) => None
+
       case x@CreateNodeStartItem(key, _)                             =>
         createdNodes += key
         Some(x)
