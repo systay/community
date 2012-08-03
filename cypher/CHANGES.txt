@@ -2,6 +2,7 @@
 --------------------
 o Added escape characters to string literals
 o Renamed `RELATE` to `CREATE UNIQUE`
+o Predicates can now be returned and used to set properties
 
 1.8.M06 (2012-07-06)
 --------------------
