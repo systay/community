@@ -19,11 +19,11 @@
  */
 package org.neo4j.cypher.internal.symbols
 
-import org.scalatest.junit.JUnitSuite
 import org.junit.Test
 import org.neo4j.cypher.{CypherTypeException, SyntaxException}
+import org.scalatest.Assertions
 
-class SymbolTableTest extends JUnitSuite {
+class SymbolTableTest extends Assertions {
   @Test def givenSymbolTableWithIdentifierWhenAskForExistingThenReturnIdentifier() {
     val symbols = new SymbolTable(Identifier("x", AnyType()))
     symbols.assertHas(Identifier("x", AnyType()))

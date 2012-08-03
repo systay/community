@@ -20,14 +20,15 @@
 package org.neo4j.cypher
 
 import org.junit.{After, Before}
+import org.junit.Assert
 import scala.collection.JavaConverters._
-import org.scalatest.junit.JUnitSuite
 import collection.Map
 import org.neo4j.graphdb._
 import org.neo4j.test.ImpermanentGraphDatabase
 import org.neo4j.kernel.GraphDatabaseAPI
 
-class GraphDatabaseTestBase extends JUnitSuite {
+
+class GraphDatabaseTestBase  {
   var graph: GraphDatabaseAPI with Snitch = null
   var refNode: Node = null
   var nodes: List[Node] = null

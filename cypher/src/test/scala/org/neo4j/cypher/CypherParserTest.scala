@@ -24,13 +24,12 @@ import internal.mutation._
 import internal.parser.v1_6.ConsoleCypherParser
 import org.junit.Assert._
 import org.neo4j.graphdb.Direction
-import org.scalatest.junit.JUnitSuite
 import org.junit.Test
 import org.junit.Ignore
 import org.scalatest.Assertions
 import org.hamcrest.CoreMatchers.equalTo
 
-class CypherParserTest extends JUnitSuite with Assertions {
+class CypherParserTest extends Assertions {
   @Test def shouldParseEasiestPossibleQuery() {
     testAll("start s = NODE(1) return s",
       Query.
@@ -1894,7 +1893,6 @@ create a-[r:REL]->b
     testFrom_1_8("start a=node(1), b=node(2) create a-[r1:KNOWS]->()<-[r2:LOVES]->b", q)
   }
 
-
   @Test def create_and_assign_to_path_identifier() {
     testFrom_1_8(
       "create p = a-[r:KNOWS]->() return p",
@@ -1929,6 +1927,9 @@ foreach(x in [1,2,3] :
       start(CreateRelationshipStartItem("r", (Entity("a"), Map()), (Entity("  UNNAMED1"), Map()), "KNOWS", Map())).
       namedPaths(NamedPath("p", RelatedTo("a", "  UNNAMED1", "r", "KNOWS", Direction.OUTGOING, optional = false, predicate = True()))).
       returns(ReturnItem(Entity("p"), "p")))
+  }
+
+  @Test def with_is_not_always_neccessary() {
   }
 
   def test_1_8(query: String, expectedQuery: Query) {
@@ -1966,7 +1967,6 @@ foreach(x in [1,2,3] :
 
   def testQuery(version: Option[String], query: String, expectedQuery: Query) {
     val parser = new CypherParser()
-
     val (qWithVer, message) = version match {
       case None => (query, "Using the default parser")
       case Some(ver) => ("cypher %s %s".format(ver, query), "Using parser version " + ver)

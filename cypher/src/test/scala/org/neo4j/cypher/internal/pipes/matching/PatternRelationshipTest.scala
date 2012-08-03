@@ -19,13 +19,12 @@
  */
 package org.neo4j.cypher.internal.pipes.matching
 
-import org.scalatest.junit.JUnitSuite
 import org.scalatest.Assertions
 import org.junit.Test
 import org.neo4j.graphdb.Direction
 import org.neo4j.cypher.internal.commands.True
 
-class PatternRelationshipTest extends JUnitSuite with Assertions {
+class PatternRelationshipTest extends Assertions {
   @Test def returnsTheOtherNode() {
     val a = new PatternNode("a")
     val b = new PatternNode("b")

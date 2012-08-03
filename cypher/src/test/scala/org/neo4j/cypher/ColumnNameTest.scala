@@ -20,8 +20,9 @@
 package org.neo4j.cypher
 
 import org.junit.Test
+import org.scalatest.Assertions
 
-class ColumnNameTest extends ExecutionEngineHelper {
+class ColumnNameTest extends ExecutionEngineHelper with Assertions {
   @Test def shouldKeepUsedExpression1() {
     val result = parseAndExecute("start n=node(0) return cOuNt( * )")
     assert(result.columns === List("cOuNt( * )"))

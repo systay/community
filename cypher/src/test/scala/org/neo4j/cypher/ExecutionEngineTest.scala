@@ -28,8 +28,9 @@ import org.neo4j.graphdb.{Path, Relationship, Direction, Node}
 import org.junit.{Ignore, Test}
 import org.neo4j.index.lucene.ValueContext
 import org.neo4j.test.ImpermanentGraphDatabase
+import org.scalatest.Assertions
 
-class ExecutionEngineTest extends ExecutionEngineHelper {
+class ExecutionEngineTest extends ExecutionEngineHelper with Assertions {
 
   @Test def shouldGetReferenceNode() {
     val query = Query.

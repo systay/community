@@ -21,12 +21,11 @@ package org.neo4j.cypher.internal.pipes
 
 import org.junit.Test
 import org.junit.Assert._
-import org.scalatest.junit.JUnitSuite
 import org.neo4j.cypher.internal.commands.{Entity, SortItem}
 import org.neo4j.cypher.internal.symbols.{Identifier, SymbolTable}
 import collection.mutable.Map
 
-class SortPipeTest extends JUnitSuite {
+class SortPipeTest {
   @Test def emptyInIsEmptyOut() {
     val source = new FakePipe(List())
     val sortPipe = new SortPipe(source, List(SortItem(Entity("x"), true)))

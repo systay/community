@@ -24,13 +24,12 @@ import org.junit.Assert._
 import org.junit.matchers.JUnitMatchers._
 import scala.collection.JavaConverters._
 import org.neo4j.cypher.internal.commands._
-import org.scalatest.junit.JUnitSuite
 import org.neo4j.cypher.SyntaxException
 import org.neo4j.cypher.internal.symbols._
 import collection.mutable.Map
 import java.lang.{Iterable => JIterable}
 
-class EagerAggregationPipeTest extends JUnitSuite {
+class EagerAggregationPipeTest  {
   @Test def shouldReturnColumnsFromReturnItems() {
     val source = new FakePipe(List(), createSymbolTableFor("name"))
 

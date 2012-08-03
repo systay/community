@@ -21,9 +21,10 @@ package org.neo4j.cypher
 
 import internal.commands.Query
 import org.junit.Before
+import org.scalatest.Assertions
 
 
-trait ExecutionEngineHelper extends GraphDatabaseTestBase {
+trait ExecutionEngineHelper extends GraphDatabaseTestBase with Assertions {
 
   var engine: ExecutionEngine = null
 

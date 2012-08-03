@@ -21,12 +21,11 @@ package org.neo4j.cypher.internal.pipes
 
 import org.junit.Assert
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
 import org.neo4j.cypher.internal.commands.{Entity, ReturnItem}
 import org.neo4j.cypher.internal.symbols.{Identifier, NodeType, SymbolTable}
 import collection.mutable.Map
 
-class ColumnFilterPipeTest extends JUnitSuite {
+class ColumnFilterPipeTest {
   @Test def shouldReturnColumnsFromReturnItems() {
     val col = "extractReturnItems"
     val returnItems = List(ReturnItem(Entity(col), col))
