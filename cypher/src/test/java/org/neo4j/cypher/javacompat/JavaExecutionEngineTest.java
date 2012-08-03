@@ -42,7 +42,7 @@ import static org.neo4j.cypher.javacompat.RegularExpressionMatcher.matchesPatter
 import static org.neo4j.helpers.collection.IteratorUtil.asIterable;
 import static org.neo4j.helpers.collection.IteratorUtil.count;
 
-public class JavaExecutionEngineTests
+public class JavaExecutionEngineTest
 {
 
     private GraphDatabaseService db;
