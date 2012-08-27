@@ -23,12 +23,9 @@ import scala.util.parsing.combinator._
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.cypher.internal.commands.expressions.{ParameterExpression, Expression, Literal}
 
-abstract class Base extends JavaTokenParsers {
+abstract class Base extends JavaTokenParsers with Keywords {
   var namer = new NodeNamer
-  val keywords = List("start", "create", "set", "delete", "foreach", "match", "where",
-    "with", "return", "skip", "limit", "order", "by", "asc", "ascending", "desc", "descending")
 
-  def ignoreCase(str: String): Parser[String] = ("""(?i)\b""" + str + """\b""").r ^^ (x => x.toLowerCase)
 
   def onlyOne[T](msg: String, inner: Parser[List[T]]): Parser[T] = Parser {
     in => inner.apply(in) match {
@@ -42,13 +39,6 @@ abstract class Base extends JavaTokenParsers {
 
   def reduce[A,B](in:Seq[(Seq[A], Seq[B])]):(Seq[A], Seq[B]) = if (in.isEmpty) (Seq(),Seq()) else in.reduce((a, b) => (a._1 ++ b._1, a._2 ++ b._2))
 
-  def ignoreCases(strings: String*): Parser[String] = ignoreCases(strings.toList)
-
-  def ignoreCases(strings: List[String]): Parser[String] = strings match {
-    case List(x) => ignoreCase(x)
-    case first :: rest => ignoreCase(first) | ignoreCases(rest)
-    case _ => throw new ThisShouldNotHappenError("Andres", "Something went wrong if we get here.")
-  }
 
   def commaList[T](inner: Parser[T]): Parser[List[T]] =
     rep1sep(inner, ",") |
@@ -67,8 +57,8 @@ abstract class Base extends JavaTokenParsers {
   }
 
   def nonKeywordIdentifier: Parser[String] =
-    not(ignoreCases(keywords: _*)) ~> ident |
-      ignoreCases(keywords: _*) ~> failure("reserved keyword")
+    not(keywords) ~> ident |
+      keywords ~> failure("reserved keyword")
 
   def lowerCaseIdent = ident ^^ (c => c.toLowerCase)
 

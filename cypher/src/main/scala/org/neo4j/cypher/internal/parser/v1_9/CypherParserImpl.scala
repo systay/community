@@ -79,7 +79,7 @@ Thank you, the Neo4j Team.
     }
   }
 
-  def bodyWith: Parser[Body] = opt(matching) ~ opt(where) ~ WITH ~ opt(start) ~ updates ~ body ^^ {
+  def bodyWith: Parser[Body] = opt(matching) ~ opt(where) ~ with_clause ~ opt(start) ~ updates ~ body ^^ {
     case matching ~ where ~ returns ~ start ~ updates ~ nextQ => {
       val (pattern, matchPaths) = extractMatches(matching)
       val startItems = start.toSeq.flatMap(_._1)

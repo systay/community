@@ -54,9 +54,9 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
   }
 
   @Test def shouldFilterOnGreaterThan() {
-    val result = parseAndExecute("start node=node(0) where 0<1 return node")
+    val result = parseAndExecute("start n=node(0) where 0<1 return n")
 
-    assertEquals(List(refNode), result.columnAs[Node]("node").toList)
+    assertEquals(List(refNode), result.columnAs[Node]("n").toList)
   }
 
   @Test def shouldFilterOnRegexp() {
@@ -1794,9 +1794,9 @@ RETURN x0.name?
   @Test def listing_rel_types_multiple_times_should_not_give_multiple_returns() {
     val a = createNode()
     val b = createNode()
-    relate(a, b, "REL")
+    relate(a, b, "RELX")
 
-    val result = parseAndExecute("start a=node(1) match a-[:REL|REL]-b return b").toList
+    val result = parseAndExecute("start a=node(1) match a-[:RELX|RELX]-b return b").toList
 
     assert(List(Map("b" -> b)) === result)
   }

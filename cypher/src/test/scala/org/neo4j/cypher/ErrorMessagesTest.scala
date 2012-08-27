@@ -166,13 +166,6 @@ class ErrorMessagesTest extends ExecutionEngineHelper with Assertions with Strin
       15)
   }
 
-  @Test def startExpressionWithoutIdentifier() {
-    expectSyntaxError(
-      "start a = node:node_auto_index(name=\"magnus\"),node:node_auto_index(name=\"sebastian) return b,c",
-      "expected identifier assignment",
-      50)
-  }
-
   @Test def functions_and_stuff_have_to_be_renamed_when_sent_through_with() {
     expectError(
       "START a=node(0) with a, count(*) return a",

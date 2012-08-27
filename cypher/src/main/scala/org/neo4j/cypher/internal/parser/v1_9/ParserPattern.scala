@@ -133,7 +133,7 @@ trait ParserPattern extends Base {
 
   private def patternForShortestPath: Parser[AbstractPattern] = onlyOne("expected single path segment", relationship)
 
-  private def shortestPath: Parser[List[AbstractPattern]] = (ignoreCase("shortestPath") | ignoreCase("allShortestPaths")) ~ parens(patternForShortestPath) ^^ {
+  private def shortestPath: Parser[List[AbstractPattern]] = (SHORTESTPATH | ALLSHORTESTPATHS) ~ parens(patternForShortestPath) ^^ {
     case algo ~ relInfo =>
       val single = algo match {
         case "shortestpath" => true

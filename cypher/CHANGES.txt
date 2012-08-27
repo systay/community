@@ -3,6 +3,7 @@
 o Predicates can now be returned and used to set properties
 o Fixes #797: CREATE UNIQUE now makes sure used identifiers have the same properties even if 
   they are re-used without the properties
+o Extracted keywords into a single code file, to keep the list of keywords always up to date
 
 1.8
 --------------------

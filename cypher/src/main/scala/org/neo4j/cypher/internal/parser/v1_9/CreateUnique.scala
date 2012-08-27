@@ -31,7 +31,7 @@ import org.neo4j.cypher.internal.commands.True
 trait CreateUnique extends Base with ParserPattern {
   case class PathAndRelateLink(path:Option[NamedPath], links:Seq[UniqueLink])
 
-  def relate: Parser[(Seq[StartItem], Seq[NamedPath])] = ignoreCase("create unique") ~> usePattern(translate) ^^ (patterns => {
+  def relate: Parser[(Seq[StartItem], Seq[NamedPath])] = CREATE ~> UNIQUE ~> usePattern(translate) ^^ (patterns => {
     val (links, path)= reduce(patterns.map {
       case PathAndRelateLink(p, l) => (l, p.toSeq)
     })

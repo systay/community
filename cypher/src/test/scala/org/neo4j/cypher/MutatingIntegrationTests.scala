@@ -74,7 +74,7 @@ class MutatingIntegrationTests extends ExecutionEngineHelper with Assertions wit
 
   @Test
   def create_two_nodes_and_a_relationship_between_them() {
-    val result = parseAndExecute("create a, b, a-[r:REL]->b")
+    val result = parseAndExecute("create a, b, a-[r:RELX]->b")
 
     assertStats(result, nodesCreated = 2, relationshipsCreated = 1)
   }
@@ -133,7 +133,7 @@ class MutatingIntegrationTests extends ExecutionEngineHelper with Assertions wit
     val b = createNode()
     val c = createNode()
 
-    val result = parseAndExecute("create n with n start x = node(1,2,3) create n-[:REL]->x")
+    val result = parseAndExecute("create n with n start x = node(1,2,3) create n-[:RELX]->x")
     assertStats(result,
       nodesCreated = 1,
       relationshipsCreated = 3
@@ -215,7 +215,7 @@ class MutatingIntegrationTests extends ExecutionEngineHelper with Assertions wit
     createNode()
     createNode()
 
-    val r = parseAndExecute("start a = node(1), b = node(2) create a-[r:REL {param}]->b return r", "param" -> Map("name" -> "Andres", "age" -> 66)).
+    val r = parseAndExecute("start a = node(1), b = node(2) create a-[r:RELX {param}]->b return r", "param" -> Map("name" -> "Andres", "age" -> 66)).
       toList.head("r").asInstanceOf[Relationship]
 
     assert(r.getProperty("name") === "Andres")
@@ -316,7 +316,7 @@ foreach(n in nodes(p) :
     relate(root, b)
     relate(root, c)
 
-    parseAndExecute("start root=node(1) match root-->other create (new {name:other.name}), root-[:REL]->new")
+    parseAndExecute("start root=node(1) match root-->other create (new {name:other.name}), root-[:RELX]->new")
 
     val result = parseAndExecute("start root=node(1) match root-->other return other.name order by other.name").columnAs[String]("other.name").toList
     assert(result === List("Alfa", "Alfa", "Beta", "Beta", "Gamma", "Gamma"))

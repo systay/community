@@ -23,7 +23,7 @@ import org.neo4j.cypher.internal.commands._
 import expressions.{Identifier, Expression}
 
 trait MatchClause extends Base with ParserPattern {
-  def matching: Parser[(Seq[Pattern], Seq[NamedPath])] = ignoreCase("match") ~> usePattern(matchTranslator) ^^ {
+  def matching: Parser[(Seq[Pattern], Seq[NamedPath])] = MATCH ~> usePattern(matchTranslator) ^^ {
     case matching =>
       val namedPaths = matching.filter(_.isInstanceOf[NamedPath]).map(_.asInstanceOf[NamedPath])
       val unnamedPaths = matching.filter(_.isInstanceOf[List[Pattern]]).map(_.asInstanceOf[List[Pattern]]).flatten ++ matching.filter(_.isInstanceOf[Pattern]).map(_.asInstanceOf[Pattern])

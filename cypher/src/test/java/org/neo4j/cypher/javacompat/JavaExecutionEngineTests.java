@@ -217,8 +217,8 @@ public class JavaExecutionEngineTests
     {
         // START SNIPPET: exampleWithParameterForNodeObject
         Map<String, Object> params = new HashMap<String, Object>();
-        params.put( "node", andreasNode );
-        ExecutionResult result = engine.execute( "start n=node({node}) return n.name", params );
+        params.put( "n", andreasNode );
+        ExecutionResult result = engine.execute( "start n=node({n}) return n.name", params );
         // END SNIPPET: exampleWithParameterForNodeObject
 
         assertThat( result.columns(), hasItem( "n.name" ) );

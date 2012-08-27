@@ -447,11 +447,11 @@ class CypherParserTest extends JUnitSuite with Assertions {
 
   @Test def relatedToWithRelationOutput() {
     testAll(
-      "start a = NODE(1) match a -[rel:KNOWS]-> (b) return rel",
+      "start a = NODE(1) match a -[r:KNOWS]-> (b) return r",
       Query.
         start(NodeById("a", 1)).
-        matches(RelatedTo("a", "b", "rel", Seq("KNOWS"), Direction.OUTGOING, false, True())).
-        returns(ReturnItem(Identifier("rel"), "rel")))
+        matches(RelatedTo("a", "b", "r", Seq("KNOWS"), Direction.OUTGOING, false, True())).
+        returns(ReturnItem(Identifier("r"), "r")))
   }
 
   @Test def relatedToWithoutEndName() {
@@ -1383,7 +1383,7 @@ class CypherParserTest extends JUnitSuite with Assertions {
 
   @Test def start_with_two_nodes_and_create_relationship() {
     val secondQ = Query.
-      start(CreateRelationshipStartItem("r", (Identifier("a"), Map()), (Identifier("b"),Map()), "REL", Map())).
+      start(CreateRelationshipStartItem("r", (Identifier("a"), Map()), (Identifier("b"), Map()), "RELTYPE", Map())).
       returns()
 
     val q = Query.
@@ -1392,12 +1392,12 @@ class CypherParserTest extends JUnitSuite with Assertions {
       returns(ReturnItem(Identifier("a"), "a"), ReturnItem(Identifier("b"), "b"))
 
 
-    testFrom_1_8("start a=node(0), b=node(1) with a,b create a-[r:REL]->b", q)
+    testFrom_1_8("start a=node(0), b=node(1) with a,b create a-[r:RELTYPE]->b", q)
   }
 
   @Test def start_with_two_nodes_and_create_relationship_using_alternative_with_syntax() {
     val secondQ = Query.
-      start(CreateRelationshipStartItem("r", (Identifier("a"),Map()), (Identifier("b"),Map()), "REL", Map())).
+      start(CreateRelationshipStartItem("r", (Identifier("a"),Map()), (Identifier("b"),Map()), "RELTYPE", Map())).
       returns()
 
     val q = Query.
@@ -1409,13 +1409,13 @@ class CypherParserTest extends JUnitSuite with Assertions {
     testFrom_1_8("""
 start a=node(0), b=node(1)
 ========= a,b ============
-create a-[r:REL]->b
+create a-[r:RELTYPE]->b
 """, q)
   }
 
   @Test def create_relationship_with_properties() {
     val secondQ = Query.
-      start(CreateRelationshipStartItem("r", (Identifier("a"),Map()), (Identifier("b"),Map()), "REL",
+      start(CreateRelationshipStartItem("r", (Identifier("a"),Map()), (Identifier("b"),Map()), "RELTYPE",
       Map("why" -> Literal(42), "foo" -> Literal("bar"))
     )).
       returns()
@@ -1426,27 +1426,27 @@ create a-[r:REL]->b
       returns(ReturnItem(Identifier("a"), "a"), ReturnItem(Identifier("b"), "b"))
 
 
-    testFrom_1_8("start a=node(0), b=node(1) with a,b create a-[r:REL {why : 42, foo : 'bar'}]->b", q)
+    testFrom_1_8("start a=node(0), b=node(1) with a,b create a-[r:RELTYPE {why : 42, foo : 'bar'}]->b", q)
   }
 
   @Test def create_relationship_without_identifier() {
-    testFrom_1_8("create ({a})-[:REL]->({a})",
+    testFrom_1_8("create ({a})-[:RELTYPE]->({a})",
       Query.
-        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map())).
+        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "RELTYPE", Map())).
         returns())
   }
 
   @Test def create_relationship_with_properties_from_map() {
-    testFrom_1_8("create ({a})-[:REL {param}]->({a})",
+    testFrom_1_8("create ({a})-[:RELTYPE {param}]->({a})",
       Query.
-        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map("*" -> ParameterExpression("param")))).
+        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "RELTYPE", Map("*" -> ParameterExpression("param")))).
         returns())
   }
 
   @Test def create_relationship_without_identifier2() {
-    testFrom_1_8("create ({a})-[:REL]->({a})",
+    testFrom_1_8("create ({a})-[:RELTYPE]->({a})",
       Query.
-        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map())).
+        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "RELTYPE", Map())).
         returns())
   }
 
@@ -1496,11 +1496,11 @@ create a-[r:REL]->b
 
     val q = Query.
       start(NodeById("a", 0)).
-      namedPaths(NamedPath("p", RelatedTo("a", "b", "r", "REL", Direction.OUTGOING))).
+      namedPaths(NamedPath("p", RelatedTo("a", "b", "r", "RELTYPE", Direction.OUTGOING))).
       tail(secondQ).
       returns(ReturnItem(Identifier("p"), "p"))
 
-    testFrom_1_8("start a=node(0) match p = a-[r:REL]->b with p foreach(n in nodes(p) : set n.touched = true ) ", q)
+    testFrom_1_8("start a=node(0) match p = a-[r:RELTYPE]->b with p foreach(n in nodes(p) : set n.touched = true ) ", q)
   }
 
   @Test def simple_read_first_and_update_next() {
@@ -1519,7 +1519,7 @@ create a-[r:REL]->b
 
   @Test def simple_start_with_two_nodes_and_create_relationship() {
     val secondQ = Query.
-      start(CreateRelationshipStartItem("r", (Identifier("a"), Map()), (Identifier("b"), Map()), "REL", Map())).
+      start(CreateRelationshipStartItem("r", (Identifier("a"), Map()), (Identifier("b"), Map()), "RELTYPE", Map())).
       returns()
 
     val q = Query.
@@ -1528,12 +1528,12 @@ create a-[r:REL]->b
       returns(AllIdentifiers())
 
 
-    testFrom_1_8("start a=node(0), b=node(1) create a-[r:REL]->b", q)
+    testFrom_1_8("start a=node(0), b=node(1) create a-[r:RELTYPE]->b", q)
   }
 
   @Test def simple_create_relationship_with_properties() {
     val secondQ = Query.
-      start(CreateRelationshipStartItem("r", (Identifier("b"), Map()), (Identifier("a"), Map()), "REL",
+      start(CreateRelationshipStartItem("r", (Identifier("b"), Map()), (Identifier("a"), Map()), "RELTYPE",
       Map("why" -> Literal(42), "foo" -> Literal("bar"))
     )).
       returns()
@@ -1544,7 +1544,7 @@ create a-[r:REL]->b
       returns(AllIdentifiers())
 
 
-    testFrom_1_8("start a=node(0), b=node(1) create a<-[r:REL {why : 42, foo : 'bar'}]-b", q)
+    testFrom_1_8("start a=node(0), b=node(1) create a<-[r:RELTYPE {why : 42, foo : 'bar'}]-b", q)
   }
 
   @Test def simple_delete_node() {
@@ -1593,11 +1593,11 @@ create a-[r:REL]->b
 
     val q = Query.
       start(NodeById("a", 0)).
-      namedPaths(NamedPath("p", RelatedTo("a", "b", "r", "REL", Direction.OUTGOING))).
+      namedPaths(NamedPath("p", RelatedTo("a", "b", "r", "RELTYPE", Direction.OUTGOING))).
       tail(secondQ).
       returns(AllIdentifiers())
 
-    testFrom_1_8("start a=node(0) match p = a-[r:REL]->b foreach(n in nodes(p) : set n.touched = true ) ", q)
+    testFrom_1_8("start a=node(0) match p = a-[r:RELTYPE]->b foreach(n in nodes(p) : set n.touched = true ) ", q)
   }
 
   @Test def returnAll() {

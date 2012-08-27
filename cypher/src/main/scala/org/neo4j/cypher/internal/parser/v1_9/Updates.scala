@@ -27,7 +27,7 @@ import org.neo4j.cypher.SyntaxException
 trait Updates extends Base with Expressions with StartClause {
   def updates: Parser[(Seq[UpdateAction], Seq[NamedPath])] = rep(delete | set | foreach) ^^ (cmds => reduce(cmds))
 
-  def foreach: Parser[(Seq[UpdateAction], Seq[NamedPath])] = ignoreCase("foreach") ~> "(" ~> identity ~ ignoreCase("in") ~ expression ~ ":" ~ opt(createStart) ~ opt(updates) <~ ")" ^^ {
+  def foreach: Parser[(Seq[UpdateAction], Seq[NamedPath])] = FOREACH ~> "(" ~> identity ~ IN ~ expression ~ ":" ~ opt(createStart) ~ opt(updates) <~ ")" ^^ {
     case id ~ in ~ collection ~ ":" ~ creates ~ innerUpdates => {
       val createCmds = creates.toSeq.map(_._1.map(_.asInstanceOf[UpdateAction])).flatten
       val reducedItems: (Seq[UpdateAction], Seq[NamedPath]) = reduce(innerUpdates.toSeq)
@@ -38,7 +38,7 @@ trait Updates extends Base with Expressions with StartClause {
     }
   }
 
-  def delete: Parser[(Seq[UpdateAction], Seq[NamedPath])] = ignoreCase("delete") ~> commaList(expression) ^^ {
+  def delete: Parser[(Seq[UpdateAction], Seq[NamedPath])] = DELETE ~> commaList(expression) ^^ {
     case expressions => val updateActions: List[UpdateAction with Product] = expressions.map {
       case Property(entity, property) => DeletePropertyAction(Identifier(entity), property)
       case x => DeleteEntityAction(x)
@@ -46,7 +46,7 @@ trait Updates extends Base with Expressions with StartClause {
       (updateActions, Seq())
   }
 
-  def set: Parser[(Seq[UpdateAction], Seq[NamedPath])] = ignoreCase("set") ~> commaList(propertySet) ^^ ((_,Seq()))
+  def set: Parser[(Seq[UpdateAction], Seq[NamedPath])] = SET ~> commaList(propertySet) ^^ ((_,Seq()))
 
   def propertySet = property ~ "=" ~ expressionOrPredicate ^^ {
     case p ~ "=" ~ e => PropertySetAction(p.asInstanceOf[Property], e)

@@ -86,7 +86,7 @@ class CreateTest extends DocumentingTestBase with StatisticsChecker {
       title = "Using expressions for nodes end points",
       text = "You can use any expression as a node, as long as it returns a node. Just make sure to encase your " +
         "expression in parenthesis.",
-      queryText = "start a=node(" + aId + ") with collect(a) as nodes start b=node(" + bId + ") create (head(nodes))-[r:REL]->b return r",
+      queryText = "start a=node(" + aId + ") with collect(a) as nodes start b=node(" + bId + ") create (head(nodes))-[r:RELX]->b return r",
       returns = "The created relationship is returned.",
       assertions = (p) => assert(p.size === 1)
     )

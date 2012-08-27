@@ -29,8 +29,8 @@ class SemanticErrorTest extends ExecutionEngineHelper {
   }
 
   @Test def throwOnDisconnectedPattern() {
-    expectedError("start x=node(0) match a-[rel]->b return x",
-      "All parts of the pattern must either directly or indirectly be connected to at least one bound entity. These identifiers were found to be disconnected: a, b, rel")
+    expectedError("start x=node(0) match a-[FRIEND]->b return x",
+      "All parts of the pattern must either directly or indirectly be connected to at least one bound entity. These identifiers were found to be disconnected: a, b, FRIEND")
   }
 
   @Test def defineNodeAndTreatItAsARelationship() {
