@@ -19,6 +19,7 @@
  */
 package org.neo4j.kernel.info;
 
+import static java.net.NetworkInterface.getNetworkInterfaces;
 import static org.neo4j.helpers.Format.bytes;
 
 import java.io.BufferedReader;
@@ -32,15 +33,21 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.neo4j.helpers.collection.Visitor;
 import org.neo4j.kernel.impl.util.StringLogger;
@@ -105,12 +112,20 @@ enum SystemDiagnostics implements DiagnosticsProvider
             OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
             RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
             logger.logLine( String.format( "Operating System: %s; version: %s; arch: %s; cpus: %s", os.getName(),
-                    os.getVersion(), os.getArch(), Integer.valueOf( os.getAvailableProcessors() ) ) );
+                    os.getVersion(), os.getArch(), os.getAvailableProcessors() ) );
             logBeanProperty( logger, "Max number of file descriptors: ", os, SUN_UNIX_BEAN, "getMaxFileDescriptorCount" );
             logBeanProperty( logger, "Number of open file descriptors: ", os, SUN_UNIX_BEAN, "getOpenFileDescriptorCount" );
             logger.logLine( "Process id: " + runtime.getName() );
             logger.logLine( "Byte order: " + ByteOrder.nativeOrder() );
+            logger.logLine( "Local timezone: " + getLocalTimeZone() );
         }
+
+        private String getLocalTimeZone()
+        {
+            TimeZone tz = Calendar.getInstance().getTimeZone();
+            return tz.getID();
+        }
+
 
         private void logBeanProperty( StringLogger.LineLogger logger, String message, Object bean, String type, String method )
         {
@@ -270,6 +285,42 @@ enum SystemDiagnostics implements DiagnosticsProvider
                 }
             }
         }
+    },
+    NETWORK( "Network information:" )
+    {
+        @Override
+        void dump( LineLogger logger )
+        {
+            logger.logLine( getIPAddresses() );
+        }
+
+        private String getIPAddresses()
+        {
+            StringBuilder mess = new StringBuilder();
+            try
+            {
+                Enumeration<NetworkInterface> networkInterfaces = getNetworkInterfaces();
+
+                while ( networkInterfaces.hasMoreElements() )
+                {
+                    NetworkInterface iface = networkInterfaces.nextElement();
+                    mess.append( String.format( "Interface %s:\n", iface.getDisplayName() ) );
+
+                    Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                    while ( addresses.hasMoreElements() )
+                    {
+                        InetAddress address = addresses.nextElement();
+                        String hostAddress = address.getHostAddress();
+                        mess.append( String.format( "    address: %s\n", hostAddress ) );
+                    }
+                }
+                return mess.toString();
+            } catch ( SocketException e )
+            {
+                return "ERROR: failed to inspect network interfaces and addresses: " + e.getMessage();
+            }
+        }
+
     },
     ;
     
