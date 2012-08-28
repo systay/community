@@ -18,26 +18,37 @@ public class DiagnosticsLoggingTest
     {
         FakeDatabase db = new FakeDatabase();
         FakeLogger logger = db.getLogger();
-        assertThat( logger.messages, containsString( "Network information" ) );
-        assertThat( logger.messages, containsString( "Disk space on partition" ) );
-        assertThat( logger.messages, containsString( "Local timezone" ) );
+        String messages = logger.getMessages();
+        assertThat( messages, containsString( "Network information" ) );
+        assertThat( messages, containsString( "Disk space on partition" ) );
+        assertThat( messages, containsString( "Local timezone" ) );
         db.shutdown();
     }
 
     private class FakeLogger extends StringLogger implements Logging
     {
-        public String messages = "";
+        private StringBuilder messages = new StringBuilder();
+
+        public String getMessages()
+        {
+            return messages.toString();
+        }
+
+        private void appendLine( String mess )
+        {
+            messages.append( mess ).append( "\n" );
+        }
 
         @Override
         public void logLongMessage( String msg, Visitor<LineLogger> source, boolean flush )
         {
-            messages = messages + msg + "\n";
+            appendLine( msg );
             source.visit( new LineLogger()
             {
                 @Override
                 public void logLine( String line )
                 {
-                    messages = messages + line + "\n";
+                    appendLine( line );
                 }
             } );
         }
@@ -45,13 +56,13 @@ public class DiagnosticsLoggingTest
         @Override
         public void logMessage( String msg, boolean flush )
         {
-            messages = messages + msg + "\n";
+            appendLine( msg );
         }
 
         @Override
         public void logMessage( String msg, Throwable cause, boolean flush )
         {
-            messages = messages + msg + "\n";
+            appendLine( msg );
         }
 
         @Override
@@ -72,7 +83,7 @@ public class DiagnosticsLoggingTest
         @Override
         protected void logLine( String line )
         {
-            messages = messages + line;
+            appendLine( line );
         }
 
         @Override

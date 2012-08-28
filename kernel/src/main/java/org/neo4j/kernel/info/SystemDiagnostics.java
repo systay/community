@@ -291,12 +291,6 @@ enum SystemDiagnostics implements DiagnosticsProvider
         @Override
         void dump( LineLogger logger )
         {
-            logger.logLine( getIPAddresses() );
-        }
-
-        private String getIPAddresses()
-        {
-            StringBuilder mess = new StringBuilder();
             try
             {
                 Enumeration<NetworkInterface> networkInterfaces = getNetworkInterfaces();
@@ -304,23 +298,21 @@ enum SystemDiagnostics implements DiagnosticsProvider
                 while ( networkInterfaces.hasMoreElements() )
                 {
                     NetworkInterface iface = networkInterfaces.nextElement();
-                    mess.append( String.format( "Interface %s:\n", iface.getDisplayName() ) );
+                    logger.logLine( String.format( "Interface %s:", iface.getDisplayName() ) );
 
                     Enumeration<InetAddress> addresses = iface.getInetAddresses();
                     while ( addresses.hasMoreElements() )
                     {
                         InetAddress address = addresses.nextElement();
                         String hostAddress = address.getHostAddress();
-                        mess.append( String.format( "    address: %s\n", hostAddress ) );
+                        logger.logLine( String.format( "    address: %s", hostAddress ) );
                     }
                 }
-                return mess.toString();
             } catch ( SocketException e )
             {
-                return "ERROR: failed to inspect network interfaces and addresses: " + e.getMessage();
+                logger.logLine( "ERROR: failed to inspect network interfaces and addresses: " + e.getMessage() );
             }
         }
-
     },
     ;
     

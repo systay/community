@@ -124,8 +124,8 @@ abstract class KernelDiagnostics implements DiagnosticsProvider
 
                 String fileModificationDate = getFileModificationDate( file );
                 String bytes = Format.bytes( size );
-                String format = String.format( "%s%s: %s - %s", prefix, filename, fileModificationDate, bytes );
-                logger.logLine( format );
+                String fileInformation = String.format( "%s%s: %s - %s", prefix, filename, fileModificationDate, bytes );
+                logger.logLine( fileInformation );
 
                 total += size;
             }
