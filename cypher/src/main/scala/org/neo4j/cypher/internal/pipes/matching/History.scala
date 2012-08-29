@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.pipes.matching
 import collection.Map
 import collection.Set
 import collection.mutable.{Map => MutableMap}
-import org.neo4j.graphdb.{Relationship, Path, Node}
+import org.neo4j.graphdb.{PropertyContainer, Relationship, Path, Node}
 import scala.Option
 
 /**
@@ -31,66 +31,81 @@ import scala.Option
  *
  * It's also used to emit the subgraph when the whole pattern has been matched (that's the toMap method)
  */
-abstract class History {
-  val seen : Set[MatchingPair]
+trait History {
+  def seen: Set[MatchingPair]
 
   def filter(relationships: Set[PatternRelationship]): Set[PatternRelationship] = relationships.filterNot(r => matches(r))
 
   def filter(relationships: Seq[GraphRelationship]): Seq[GraphRelationship] = relationships.filterNot(gr => gr match {
-    case SingleGraphRelationship(r) => matches(r)
+    case SingleGraphRelationship(r)         => matches(r)
     case VariableLengthGraphRelationship(p) => matches(p)
   })
 
-  def matches(p : Any) : Boolean
+  def matches(p: Any): Boolean
 
   def add(pair: MatchingPair): History
 
-  val toMap: Map[String, Any]
+  def toMap: Map[String, Any]
 
-  def contains(p : MatchingPair) : Boolean
+  def contains(p: MatchingPair): Boolean
+
+  def containsElementWithDifferentName(name:String, element: PropertyContainer): Boolean
+
   override def toString: String = "History(%s)".format(seen.mkString("[", "], [", "]"))
 }
 
-class InitialHistory(source : Map[String,Any]) extends History {
+case class InitialHistory(source: Map[String, Any]) extends History {
   lazy val seen = Set[MatchingPair]()
 
   def matches(p: Any) = false
 
-  def contains(p : MatchingPair) = false
+  def contains(p: MatchingPair) = false
 
-  def add(pair: MatchingPair) = new AddedHistory(this,pair)
+  def add(pair: MatchingPair) = new AddedHistory(this, pair)
 
   val toMap = source
+
+  def containsElementWithDifferentName(name: String, element: PropertyContainer): Boolean = source.exists {
+    case (k, v: PropertyContainer)       => name != k && v == element
+    case (k, SingleGraphRelationship(r)) => (name != k && r == element)
+    case _                               => false
+  }
 }
 
-class AddedHistory(val parent : History, val pair : MatchingPair) extends History {
+case class AddedHistory(parent: History, pair: MatchingPair) extends History {
   lazy val seen = parent.seen + pair
 
   def matches(p: Any) = pair.matches(p) || parent.matches(p)
 
-  def contains(p : MatchingPair) = pair == p || parent.contains(p)
+  def contains(p: MatchingPair) = pair == p || parent.contains(p)
 
-  def add(pair: MatchingPair) = if (contains(pair)) this else new AddedHistory(this,pair)
+  def containsElementWithDifferentName(name:String, element: PropertyContainer): Boolean = (pair.patternElement.key,pair.entity) match {
+    case (k, v: Node)                    => (name != k && v == element) || parent.containsElementWithDifferentName(name, element)
+    case (k, v: SingleGraphRelationship) => (name != k && v.rel == element) || parent.containsElementWithDifferentName(name, element)
+    case _                               => parent.containsElementWithDifferentName(name, element)
+  }
+
+  def add(pair: MatchingPair) = if (contains(pair)) this else new AddedHistory(this, pair)
 
   lazy val toMap = {
     parent.toMap ++ toSeq(pair)
   }
 
-  def toSeq(p: MatchingPair) : Seq[(String,Any)] = {
+  def toSeq(p: MatchingPair): Seq[(String, Any)] = {
     p match {
-      case MatchingPair(pe: PatternNode, entity: Node) => Seq(pe.key -> entity)
-      case MatchingPair(pe: PatternRelationship, entity: SingleGraphRelationship) => Seq(pe.key -> entity.rel)
-      case MatchingPair(pe: VariableLengthPatternRelationship, null) => Seq(pe.key -> null) ++ pe.relIterable.map( _ -> null)
-      case MatchingPair(pe: PatternRelationship, null) => Seq(pe.key -> null)
+      case MatchingPair(pe: PatternNode, entity: Node)                                                  => Seq(pe.key -> entity)
+      case MatchingPair(pe: PatternRelationship, entity: SingleGraphRelationship)                       => Seq(pe.key -> entity.rel)
+      case MatchingPair(pe: VariableLengthPatternRelationship, null)                                    => Seq(pe.key -> null) ++ pe.relIterable.map(_ -> null)
+      case MatchingPair(pe: PatternRelationship, null)                                                  => Seq(pe.key -> null)
       case MatchingPair(pe: VariableLengthPatternRelationship, entity: VariableLengthGraphRelationship) => {
         relationshipIterable(pe, entity) match {
           case Some(aPair) => Seq(pe.key -> entity.path, aPair)
-          case None => Seq(pe.key -> entity.path)
+          case None        => Seq(pe.key -> entity.path)
         }
 
       }
     }
   }
 
-  private def relationshipIterable(pe: VariableLengthPatternRelationship, entity: VariableLengthGraphRelationship):Option[(String, Any)] = pe.relIterable.map(_->entity.relationships)
+  private def relationshipIterable(pe: VariableLengthPatternRelationship, entity: VariableLengthGraphRelationship): Option[(String, Any)] = pe.relIterable.map(_ -> entity.relationships)
 }

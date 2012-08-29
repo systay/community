@@ -2248,4 +2248,18 @@ RETURN x0.name?
     assert(result.toList === List(3,4,5))
   }
 
+  @Test
+  def unnamed_nodes_can_point_to_nodes_already_in_context() {
+    val a = createNode()
+    relate(refNode, a)
+    relate(refNode, a)
+
+
+    val result = parseAndExecute("DECLARE x,r1,r2 NON-UNIQUE START n=node(0) MATCH n-[]->()<-[r2]-x RETURN count(*)")
+
+    parseAndExecute("NON UNIQUE x START n=node:person(name='A') MATCH (n)-[:LIKES]->(x) RETURN x.name")
+
+    println(result.dumpToString())
+  }
+
 }

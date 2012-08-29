@@ -54,11 +54,11 @@ class MatchingContext(boundIdentifiers: SymbolTable,
   }
 
   private def decideWhichMatcherToUse(): MatcherBuilder = {
-    if(SimplePatternMatcherBuilder.canHandle(patternGraph)) {
-      new SimplePatternMatcherBuilder(patternGraph, predicates, symbols)
-    } else {
+//    if(SimplePatternMatcherBuilder.canHandle(patternGraph)) {
+//      new SimplePatternMatcherBuilder(patternGraph, predicates, symbols)
+//    } else {
       new PatterMatchingBuilder(patternGraph, predicates)
-    }
+//    }
   }
 }
 

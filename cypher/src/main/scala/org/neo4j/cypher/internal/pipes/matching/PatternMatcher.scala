@@ -19,7 +19,7 @@
  */
 package org.neo4j.cypher.internal.pipes.matching
 
-import org.neo4j.graphdb.Node
+import org.neo4j.graphdb.{PropertyContainer, Node}
 import org.neo4j.cypher.internal.commands.{True, Predicate}
 import collection.Map
 
@@ -46,11 +46,11 @@ class PatternMatcher(bindings: Map[String, MatchingPair], predicates: Seq[Predic
       return false
     }
 
-    val newHistory = history.add(current)
-    if (!isMatchSoFar(newHistory)) {
+    if (!isMatchSoFar(history,current)) {
       debug("failed subgraph because of predicate")
       return false
     }
+    val newHistory = history.add(current)
 
     val notYetVisited: List[PatternRelationship] = getPatternRelationshipsNotYetVisited(current.patternNode, history)
 
@@ -80,20 +80,21 @@ class PatternMatcher(bindings: Map[String, MatchingPair], predicates: Seq[Predic
       false
     } else {
 
-      val newHistory = history.add(current)
+      if (isMatchSoFar(history, current)) {
+        val newHistory = history.add(current)
 
-      currentRel.predicate match {
-        case True() =>
-        case p => if(!p.isMatch(newHistory.toMap)) return false
-      }
+        currentRel.predicate match {
+          case True() =>
+          case p      => if (!p.isMatch(newHistory.toMap)) return false
+        }
 
-      if (isMatchSoFar(newHistory)) {
+
         val nextNode = rel.getOtherNode(gNode)
 
         val nextPair = MatchingPair(nextPNode, nextNode)
 
         remaining.find(_.patternElement.key == nextPNode.key) match {
-          case None => traverseNode(remaining ++ Set(nextPair), newHistory, yielder)
+          case None    => traverseNode(remaining ++ Set(nextPair), newHistory, yielder)
           case Some(x) => if (x.entity == nextNode)
             traverseNode(remaining ++ Set(nextPair), newHistory, yielder)
           else {
@@ -130,7 +131,7 @@ class PatternMatcher(bindings: Map[String, MatchingPair], predicates: Seq[Predic
 
     val relationships = currentNode.getGraphRelationships(currentRel)
     val step1 = history.filter(relationships)
-    val notVisitedRelationships: Seq[GraphRelationship] = step1.
+    val notVisitedRelationships: Seq[GraphRelationship] = relationships.
       filter(x => alreadyPinned(currentRel, x))
 
     val nextPNode = currentRel.getOtherNode(pNode)
@@ -154,10 +155,33 @@ class PatternMatcher(bindings: Map[String, MatchingPair], predicates: Seq[Predic
     false
   }
 
-  private def isMatchSoFar(history: History): Boolean = {
-    val m = history.toMap
-    val predicate = predicates.filter(predicate=> !predicate.containsIsNull && predicate.dependencies.map(_.name).forall(m contains))
-    predicate.forall(_.isMatch(m))
+  private def isMatchSoFar(history: History, next:MatchingPair): Boolean = {
+    lazy val m = history.toMap
+    val key = next.patternElement.key
+
+    val predicate = predicates.filter(predicate=> {
+
+      lazy val containsNull = predicate.containsIsNull
+      lazy val dependenciesMet = predicate.dependencies.map(_.name).forall(m contains)
+      lazy val currentDependency = predicate.dependencies.exists(_.name == key)
+
+      !containsNull && currentDependency && dependenciesMet
+    })
+
+    val a: Boolean = !key.startsWith("  UNNAMED")
+    val b: Boolean = next.entity.isInstanceOf[PropertyContainer] || next.entity.isInstanceOf[SingleGraphRelationship]
+
+    val elementAlreadyExists = if (a&&b) {
+      val propContainer: PropertyContainer = next.entity match {
+        case n: Node                    => n
+        case SingleGraphRelationship(r) => r
+      }
+      history.containsElementWithDifferentName(key, propContainer)
+    } else {
+      false
+    }
+
+    !elementAlreadyExists && predicate.forall(_.isMatch(m))
   }
 
   private def traverseNextNodeOrYield[U](remaining: Set[MatchingPair], history: History, yielder: Map[String, Any] => U): Boolean = {
