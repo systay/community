@@ -77,4 +77,10 @@ public class TraversalBranchWithState extends TraversalBranchImpl implements Bra
     {
         return expander.expand( this, this ).iterator();
     }
+    
+    @Override
+    public Object state()
+    {
+        return getState();
+    }
 }

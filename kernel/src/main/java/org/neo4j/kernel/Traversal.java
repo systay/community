@@ -33,6 +33,7 @@ import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
 import org.neo4j.graphdb.traversal.BranchOrderingPolicy;
 import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.graphdb.traversal.Evaluators;
+import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.InitialStateFactory;
 import org.neo4j.graphdb.traversal.BranchCollisionDetector;
 import org.neo4j.graphdb.traversal.SideSelectorPolicy;
@@ -597,5 +598,48 @@ public class Traversal
     public static PathDescription path()
     {
         return new PathDescription();
+    }
+    
+    /**
+     * Wraps an {@link InitialStateFactory} in a {@link InitialBranchState}
+     * (which has got {@link InitialBranchState#reverse() reverse method}).
+     * @param state the {@link InitialStateFactory} to wrap.
+     * @return state as an {@link InitialBranchState} object.
+     * @deprecated together with {@link InitialStateFactory}.
+     */
+    public static <STATE> InitialBranchState<STATE> wrapInitialStateFactory( final InitialStateFactory<STATE> state )
+    {
+        return new InitialBranchState<STATE>()
+        {
+            @Override
+            public STATE initialState( Path path )
+            {
+                return state.initialState( path );
+            }
+
+            @Override
+            public InitialBranchState<STATE> reverse()
+            {
+                return this;
+            }
+        };
+    }
+    
+    public static <STATE> InitialBranchState<STATE> initialState( final STATE initialState, final STATE reversedInitialState )
+    {
+        return new InitialBranchState<STATE>()
+        {
+            @Override
+            public STATE initialState( Path path )
+            {
+                return initialState;
+            }
+
+            @Override
+            public InitialBranchState<STATE> reverse()
+            {
+                return Traversal.initialState( reversedInitialState, initialState );
+            }
+        };
     }
 }

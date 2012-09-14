@@ -41,7 +41,7 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.BranchState;
-import org.neo4j.graphdb.traversal.InitialStateFactory;
+import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.kernel.Traversal;
 
 import common.Neo4jAlgoTestCase;
@@ -210,12 +210,18 @@ public class TestDijkstra extends Neo4jAlgoTestCase
         setWeight( "b", "c", 2 );
         setWeight( "c", "d", 5 );
         
-        InitialStateFactory<Integer> state = new InitialStateFactory<Integer>()
+        InitialBranchState<Integer> state = new InitialBranchState<Integer>()
         {
             @Override
             public Integer initialState( Path path )
             {
                 return 0;
+            }
+
+            @Override
+            public InitialBranchState<Integer> reverse()
+            {
+                return this;
             }
         };
         final Map<Node, Integer> encounteredState = new HashMap<Node, Integer>();

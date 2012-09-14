@@ -19,6 +19,8 @@
  */
 package org.neo4j.kernel.impl.traversal;
 
+import static org.neo4j.kernel.Traversal.wrapInitialStateFactory;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -33,6 +35,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.BranchOrderingPolicy;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
+import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.InitialStateFactory;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Traverser;
@@ -46,11 +49,11 @@ public final class TraversalDescriptionImpl implements TraversalDescription
     public TraversalDescriptionImpl()
     {
         this( Traversal.emptyPathExpander(), Uniqueness.NODE_GLOBAL, null,
-                Evaluators.all(), InitialStateFactory.NO_STATE, Traversal.preorderDepthFirst(), null, null );
+                Evaluators.all(), InitialBranchState.NO_STATE, Traversal.preorderDepthFirst(), null, null );
     }
 
     final PathExpander expander;
-    final InitialStateFactory initialState;
+    final InitialBranchState initialState;
     final UniquenessFactory uniqueness;
     final Object uniquenessParameter;
     final Evaluator evaluator;
@@ -60,7 +63,7 @@ public final class TraversalDescriptionImpl implements TraversalDescription
 
     private TraversalDescriptionImpl( PathExpander expander,
             UniquenessFactory uniqueness, Object uniquenessParameter,
-            Evaluator evaluator, InitialStateFactory<?> initialState, BranchOrderingPolicy branchOrdering,
+            Evaluator evaluator, InitialBranchState initialState, BranchOrderingPolicy branchOrdering,
             Comparator<? super Path> sorting, Collection<Node> endNodes )
     {
         this.expander = expander;
@@ -204,10 +207,16 @@ public final class TraversalDescriptionImpl implements TraversalDescription
                 uniquenessParameter, evaluator, initialState, branchOrdering, sorting, endNodes );
     }
     
-    public <STATE> TraversalDescription expand( PathExpander<STATE> expander, InitialStateFactory<STATE> initialState )
+    public <STATE> TraversalDescription expand( PathExpander<STATE> expander, InitialBranchState<STATE> initialState )
     {
         return new TraversalDescriptionImpl( expander, uniqueness,
                 uniquenessParameter, evaluator, initialState, branchOrdering, sorting, endNodes );
+    }
+    
+    public <STATE> TraversalDescription expand( PathExpander<STATE> expander, InitialStateFactory<STATE> initialState )
+    {
+        return new TraversalDescriptionImpl( expander, uniqueness,
+                uniquenessParameter, evaluator, wrapInitialStateFactory( initialState ), branchOrdering, sorting, endNodes );
     }
     
     @Override
@@ -221,6 +230,6 @@ public final class TraversalDescriptionImpl implements TraversalDescription
     public TraversalDescription reverse()
     {
         return new TraversalDescriptionImpl( expander.reverse(), uniqueness, uniquenessParameter,
-                evaluator, initialState, branchOrdering, sorting, endNodes );
+                evaluator, initialState.reverse(), branchOrdering, sorting, endNodes );
     }
 }

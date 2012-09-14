@@ -27,6 +27,7 @@ import static org.neo4j.graphdb.traversal.Evaluators.includeIfContainsAll;
 import static org.neo4j.helpers.collection.IteratorUtil.count;
 import static org.neo4j.helpers.collection.IteratorUtil.single;
 import static org.neo4j.kernel.Traversal.bidirectionalTraversal;
+import static org.neo4j.kernel.Traversal.initialState;
 import static org.neo4j.kernel.Traversal.pathExpanderForTypes;
 import static org.neo4j.kernel.Traversal.traversal;
 import static org.neo4j.kernel.Uniqueness.NODE_PATH;
@@ -39,9 +40,13 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
+import org.neo4j.graphdb.traversal.BranchCollisionDetector;
+import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
+import org.neo4j.graphdb.traversal.TraversalBranch;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.SideSelectorPolicies;
+import org.neo4j.kernel.StandardBranchCollisionDetector;
 import org.neo4j.kernel.Traversal;
 import org.neo4j.kernel.Uniqueness;
 
@@ -170,5 +175,37 @@ public class TestBidirectionalTraversal extends AbstractTestBase
         assertEquals( a, path.startNode() );
         assertEquals( b, path.endNode() );
         assertEquals( r, path.lastRelationship() );
+    }
+    
+    @Test
+    public void mirroredTraversalReversesInitialState() throws Exception
+    {
+        /*
+         * (a)-->(b)-->(c)-->(d)
+         */
+        createGraph( "a TO b", "b TO c", "c TO d" );
+        
+        BranchCollisionPolicy collisionPolicy = new BranchCollisionPolicy()
+        {
+            @Override
+            public BranchCollisionDetector create( Evaluator evaluator )
+            {
+                return new StandardBranchCollisionDetector( null )
+                {
+                    @Override
+                    protected boolean includePath( Path path, TraversalBranch startPath, TraversalBranch endPath )
+                    {
+                        assertEquals( 0, startPath.state() );
+                        assertEquals( 10, endPath.state() );
+                        return true;
+                    }
+                };
+            }
+        };
+        count( bidirectionalTraversal()
+            // Just make up a number bigger than the path length (in this case 10) so that we can assert it in the collision policy later
+            .mirroredSides( traversal( NODE_PATH ).expand( pathExpanderForTypes( to ), initialState( (Object)0, (Object)10 ) ) )
+            .collisionPolicy( collisionPolicy )
+            .traverse( getNodeWithName( "a" ), getNodeWithName( "d" ) ) );
     }
 }
