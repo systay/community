@@ -22,19 +22,21 @@ package org.neo4j.kernel.impl.traversal;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.traversal.InitialStateFactory;
+import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.TraversalBranch;
 import org.neo4j.graphdb.traversal.TraversalContext;
 
 class StartNodeTraversalBranch extends TraversalBranchWithState
 {
-    private final InitialStateFactory initialState;
+    private final InitialBranchState initialState;
+    private final Object state;
     
     StartNodeTraversalBranch( TraversalContext context, TraversalBranch parent, Node source,
-            InitialStateFactory initialState )
+            InitialBranchState initialState )
     {
         super( context, parent, source );
         this.initialState = initialState;
+        this.state = initialState.initialState( this );
         context.isUniqueFirst( this );
     }
 
@@ -52,7 +54,7 @@ class StartNodeTraversalBranch extends TraversalBranchWithState
     @Override
     protected TraversalBranch newNextBranch( Node node, Relationship relationship )
     {
-        return initialState != InitialStateFactory.NO_STATE ?
+        return state != null ?
             new TraversalBranchWithState( this, 1, node, relationship ) :
             new TraversalBranchImpl( this, 1, node, relationship );
     }
@@ -60,6 +62,6 @@ class StartNodeTraversalBranch extends TraversalBranchWithState
     @Override
     protected Object retrieveStateFromParent()
     {
-        return initialState.initialState( this );
+        return state;
     }
 }

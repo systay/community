@@ -20,40 +20,33 @@
 package org.neo4j.graphdb.traversal;
 
 import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.PathExpander;
 
 /**
  * Factory for initial state of {@link TraversalBranch}es in a traversal.
  *
  * @param <STATE> type of initial state to produce.
- * 
- * @deprecated use {@link InitialBranchState} instead, which has got
- * {@link InitialBranchState#reverse()} as well.
  */
-public interface InitialStateFactory<STATE>
+public interface InitialBranchState<STATE> extends InitialStateFactory<STATE>
 {
-    /**
-     * An {@link InitialStateFactory} which returns {@code null} as state.
-     */
     @SuppressWarnings( "rawtypes" )
-    public static final InitialStateFactory NO_STATE = new InitialStateFactory()
+    public static final InitialBranchState NO_STATE = new InitialBranchState()
     {
         @Override
         public Object initialState( Path path )
         {
             return null;
         }
+        
+        public InitialBranchState reverse()
+        {
+            return this;
+        }
     };
     
     /**
-     * Returns an initial state for a {@link Path}. All paths entering this method
-     * are start paths(es) of a traversal. State is passed down along traversal
-     * branches as the traversal progresses and can be changed at any point by a
-     * {@link PathExpander} to becomes the new state from that point in that branch
-     * and downwards.
-     * 
-     * @param branch the start branch to return the initial state for.
-     * @return an initial state for the traversal branch.
+     * Creates a version of this state factory which produces reversed initial state,
+     * used in bidirectional traversals.
+     * @return an instance which produces reversed initial state.
      */
-    STATE initialState( Path path );
+    InitialBranchState<STATE> reverse();
 }

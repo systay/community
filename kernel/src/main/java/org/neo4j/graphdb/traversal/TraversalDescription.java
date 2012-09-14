@@ -180,6 +180,22 @@ public interface TraversalDescription
     <STATE> TraversalDescription expand( PathExpander<STATE> expander, InitialStateFactory<STATE> initialState );
     
     /**
+     * Sets the {@link PathExpander} as the expander of relationships,
+     * discarding all previous calls to
+     * {@link #relationships(RelationshipType)} and
+     * {@link #relationships(RelationshipType, Direction)} or any other expand method.
+     * The supplied {@link InitialBranchState} will provide the initial traversal branches
+     * with state values which flows down throughout the traversal and can be changed
+     * for child branches by the {@link PathExpander} at any level.
+     *
+     * @param expander the {@link PathExpander} to use.
+     * @param initialState factory for supplying the initial traversal branches with
+     * state values potentially used by the {@link PathExpander}.
+     * @return a new traversal description with the new modifications.
+     */
+    <STATE> TraversalDescription expand( PathExpander<STATE> expander, InitialBranchState<STATE> initialState );
+    
+    /**
      * Sets the {@link RelationshipExpander} as the expander of relationships,
      * discarding all previous calls to
      * {@link #relationships(RelationshipType)} and

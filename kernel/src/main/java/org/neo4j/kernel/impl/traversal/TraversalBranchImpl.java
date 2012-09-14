@@ -390,4 +390,10 @@ class TraversalBranchImpl implements TraversalBranch
     {
         return Traversal.defaultPathToString( this );
     }
+    
+    @Override
+    public Object state()
+    {
+        return null;
+    }
 }
