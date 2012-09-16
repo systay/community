@@ -21,12 +21,20 @@ package org.neo4j.cypher.internal.pipes.matching
 
 import org.junit.Test
 import org.neo4j.cypher.GraphDatabaseTestBase
-import org.neo4j.graphdb.{Path, Direction}
-import org.neo4j.cypher.internal.commands.True
+import org.neo4j.graphdb.Path
 import org.neo4j.cypher.internal.pipes.{MutableMaps, QueryState}
+import org.neo4j.graphdb.DynamicRelationshipType.withName
+import org.neo4j.graphdb.Direction.OUTGOING
 
 
 class TraversalMatcherTests extends GraphDatabaseTestBase {
+
+  val A = withName("A")
+  val B = withName("B")
+
+  val pr2 = ExpanderStep(0, Seq(B), OUTGOING, None)
+  val pr1 = ExpanderStep(1, Seq(A), OUTGOING, Some(pr2))
+
   @Test def basic() {
     //Data nodes and rels
     val a = createNode("a")
@@ -38,18 +46,11 @@ class TraversalMatcherTests extends GraphDatabaseTestBase {
     val start = () => Seq(a)
     val end = () => Seq(c)
 
-    //Pattern nodes and relationships
-    val pa = new PatternNode("a")
-    val pb = new PatternNode("b")
-    val pc = new PatternNode("c")
-    val pr1 = pa.relateTo("pr1", pb, Seq("A"), Direction.OUTGOING, optional = false, predicate = True())
-    val pr2 = pb.relateTo("pr2", pc, Seq("B"), Direction.OUTGOING, optional = false, predicate = True())
-
-    val matcher = new TraversalMatcher(Seq(pr1, pr2), start, end)
+    val matcher = new TraversalMatcher(pr1, start, end)
 
     val queryState = new QueryState(graph, MutableMaps.create)
 
-    val result: Seq[Path] = matcher.matchThatShit(queryState).toSeq
+    val result: Seq[Path] = matcher.findMatchingPaths(queryState).toSeq
 
     assert(result.size === 1)
     assert(result.head.startNode() === a)
@@ -83,17 +84,12 @@ class TraversalMatcherTests extends GraphDatabaseTestBase {
     val end = () => Seq(c, c2)
 
     //Pattern nodes and relationships
-    val pa = new PatternNode("a")
-    val pb = new PatternNode("b")
-    val pc = new PatternNode("c")
-    val pr1 = pa.relateTo("pr1", pb, Seq("A"), Direction.OUTGOING, optional = false, predicate = True())
-    val pr2 = pb.relateTo("pr2", pc, Seq("B"), Direction.OUTGOING, optional = false, predicate = True())
 
-    val matcher = new TraversalMatcher(Seq(pr1, pr2), start, end)
+    val matcher = new TraversalMatcher(pr1, start, end)
 
     val queryState = new QueryState(graph, MutableMaps.create)
 
-    val result: Seq[Path] = matcher.matchThatShit(queryState).toSeq
+    val result: Seq[Path] = matcher.findMatchingPaths(queryState).toSeq
 
     assert(result.size === 3)
 

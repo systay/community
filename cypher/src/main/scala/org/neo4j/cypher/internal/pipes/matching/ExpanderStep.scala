@@ -23,33 +23,68 @@ import org.neo4j.graphdb.{Node, Relationship, Direction, RelationshipType}
 import collection.mutable
 import collection.JavaConverters._
 
-case class ExpanderStep(id:Int, typ: Seq[RelationshipType], direction: Direction, next: Option[ExpanderStep]) {
+case class ExpanderStep(id: Int, typ: Seq[RelationshipType], direction: Direction, next: Option[ExpanderStep]) {
   def pop() = next
 
   def reverse(): ExpanderStep = {
-    var l = mutable.Seq[ExpanderStep]()
+    val allSteps = getAllStepsAsSeq()
+
+    val reversed = allSteps.foldLeft[Option[ExpanderStep]](None) {
+      case (last, step) => Some(ExpanderStep(step.id, step.typ, step.direction.reverse(), last))
+    }
+
+    assert(reversed.nonEmpty, "The reverse of an expander should never be empty")
+
+    reversed.get
+  }
+
+  def expand(node: Node): Iterable[Relationship] = typ match {
+    case Seq() => node.getRelationships(direction).asScala
+    case x     => node.getRelationships(direction, x: _*).asScala
+  }
+
+  private def getAllStepsAsSeq():Seq[ExpanderStep] = {
+    var allSteps = mutable.Seq[ExpanderStep]()
     var current: Option[ExpanderStep] = Some(this)
 
     while (current.nonEmpty) {
       val step = current.get
-      l = l :+ step
+      allSteps = allSteps :+ step
       current = step.next
     }
 
-    val x: Option[ExpanderStep] = l.foldLeft[Option[ExpanderStep]](None) {
-      case (last, step) => Some(ExpanderStep(step.id, step.typ, step.direction.reverse(), last))
-    }
-
-    assert(x.nonEmpty, "The reverse of an expander should never be empty")
-
-    x.get
+    allSteps.toSeq
   }
 
-  def expand(node: Node): Iterable[Relationship] = {
-    val s = typ match {
-      case Seq() => node.getRelationships(direction).asScala
-      case x     => node.getRelationships(direction, x: _*).asScala
-    }
-    s
+  private def shape = "(%s)%s-%s-%s".format(id, left, relInfo, right)
+
+  private def left =
+    if (direction == Direction.OUTGOING) ""
+    else
+      "<"
+
+  private def right =
+    if (direction == Direction.INCOMING) ""
+    else
+      ">"
+
+  private def relInfo = typ.toList match {
+    case List() => ""
+    case _ => "[:%s]".format(typ.map(_.name()).mkString("|"))
+  }
+
+  override def toString = next match {
+    case None    => shape + "()"
+    case Some(x) => shape + x.toString
+  }
+
+  override def equals(p1: Any) = p1 match {
+    case null                => false
+    case other: ExpanderStep =>
+      id == other.id &&
+      direction == other.direction &&
+      next == other.next &&
+      typ.map(_.name()) == other.typ.map(_.name())
+    case _                   => false
   }
 }

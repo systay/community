@@ -28,9 +28,8 @@ import org.neo4j.kernel.{StandardBranchCollisionDetector, Uniqueness, Traversal}
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.kernel.impl.traversal.BranchCollisionPolicy
 
-class TraversalMatcher(path: Seq[PatternRelationship], start: () => Iterable[Node], end: () => Iterable[Node]) {
+class TraversalMatcher(steps: ExpanderStep, start: () => Iterable[Node], end: () => Iterable[Node]) {
 
-  lazy val steps = makeSteps()
   lazy val reversedSteps = steps.reverse()
 
   val initialStartStep = new InitialStateFactory[Option[ExpanderStep]] {
@@ -43,10 +42,10 @@ class TraversalMatcher(path: Seq[PatternRelationship], start: () => Iterable[Nod
   val baseTraversal: TraversalDescription = Traversal.traversal(Uniqueness.RELATIONSHIP_PATH)
   val collisionDetector = new StepCollisionDetector
 
-  def matchThatShit(state: QueryState): Iterable[Path] = {
+  def findMatchingPaths(state: QueryState): Iterable[Path] = {
     val result: JIterable[Path] = Traversal.bidirectionalTraversal()
-      .startSide(baseTraversal.expand(new OurPathExpander, initialStartStep))
-      .endSide(baseTraversal.expand(new OurPathExpander, initialEndStep))
+      .startSide(baseTraversal.expand(new TraversalPathExpander, initialStartStep))
+      .endSide(baseTraversal.expand(new TraversalPathExpander, initialEndStep))
       .collisionPolicy(collisionDetector)
       .traverse(start().asJava, end().asJava)
 
@@ -83,34 +82,13 @@ class TraversalMatcher(path: Seq[PatternRelationship], start: () => Iterable[Nod
     def create(evaluator: Evaluator) = this
   }
 
-  class OurPathExpander extends PathExpander[Option[ExpanderStep]] {
-    def expand(path: Path, state: BranchState[Option[ExpanderStep]]): JIterable[Relationship] = {
-
-      val result: Iterable[Relationship] = state.getState match {
-        case None => Seq()
-
-        case Some(step) =>
-          val node = path.endNode()
-          val rels: Iterable[Relationship] = step.expand(node)
-          state.setState(step.next)
-          rels
-      }
-
-      result.asJava
-    }
-
-    def reverse(): PathExpander[Option[ExpanderStep]] = this
-  }
-
   //Creates the steps given a path of PatternRelationships
-  type foldType = (Int, Option[ExpanderStep])
-
-  private def makeSteps(): ExpanderStep = {
-    path.reverse.foldLeft[foldType]((0, None)) {
-      case (last, pr) =>
-        val relTypes = pr.relTypes.map(DynamicRelationshipType.withName)
-        val id = last._1
-        (id + 1, Some(ExpanderStep(id, relTypes, pr.dir, last._2)))
-    }._2.get
-  }
+//  private def makeSteps(): ExpanderStep = {
+//    path.reverse.foldLeft[(Int, Option[ExpanderStep])]((0, None)) {
+//      case (last, pr) =>
+//        val relTypes = pr.relTypes.map(DynamicRelationshipType.withName)
+//        val id = last._1
+//        (id + 1, Some(ExpanderStep(id, relTypes, pr.direction, last._2)))
+//    }._2.get
+//  }
 }

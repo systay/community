@@ -42,11 +42,11 @@ class IndexQueryBuilder(graph: GraphDatabaseService) extends PlanBuilder {
   def canWorkWith(plan: ExecutionPlanInProgress) = plan.query.start.exists(filter)
 
   private def filter(q: QueryToken[_]): Boolean = q match {
-    case Unsolved(NodeByIndexQuery(_, _, _)) => true
-    case Unsolved(NodeByIndex(_, _, _, _)) => true
+    case Unsolved(NodeByIndexQuery(_, _, _))         => true
+    case Unsolved(NodeByIndex(_, _, _, _))           => true
     case Unsolved(RelationshipByIndexQuery(_, _, _)) => true
-    case Unsolved(RelationshipByIndex(_, _, _, _)) => true
-    case _ => false
+    case Unsolved(RelationshipByIndex(_, _, _, _))   => true
+    case _                                           => false
   }
 
   private def checkNodeIndex(idxName: String) {
