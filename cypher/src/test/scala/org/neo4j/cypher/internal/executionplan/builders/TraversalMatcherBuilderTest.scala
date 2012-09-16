@@ -27,45 +27,62 @@ import org.neo4j.graphdb.Direction._
 import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
 import org.neo4j.cypher.internal.commands.True
+import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.LongestPathResult
 
 class TraversalMatcherBuilderTest extends Assertions {
   val builder = new TraversalMatcherBuilder
   val A = withName("A")
   val B = withName("B")
+  val C = withName("C")
+  val D = withName("D")
 
   /*
-      (b2)
-        ^
-        |
- (a)-->(b)-->(c)-->(d)
+          (b2)
+            ^
+            |
+          [:D]
+            |
+ (a)-[:A]->(b)-[:B]->(c)-[:C]->(d)
   */
   val AtoB = RelatedTo("a", "b", "pr1", Seq("A"), Direction.OUTGOING, optional = false, predicate = True())
   val BtoC = RelatedTo("b", "c", "pr2", Seq("B"), Direction.OUTGOING, optional = false, predicate = True())
-  val CtoD = RelatedTo("c", "d", "pr3", Seq("B"), Direction.OUTGOING, optional = false, predicate = True())
-  val BtoB2 = RelatedTo("b", "b2", "pr4", Seq("B"), Direction.OUTGOING, optional = false, predicate = True())
+  val CtoD = RelatedTo("c", "d", "pr3", Seq("C"), Direction.OUTGOING, optional = false, predicate = True())
+  val BtoB2 = RelatedTo("b", "b2", "pr4", Seq("D"), Direction.OUTGOING, optional = false, predicate = True())
 
 
   @Test def find_longest_path_for_single_pattern() {
     val expected = ExpanderStep(0, Seq(A), Direction.INCOMING, None)
 
-    val step = TraversalMatcherBuilder.findLongestPath(Seq(AtoB), Seq("a", "b"))
 
-    assert(step === Some(expected))
+    TraversalMatcherBuilder.findLongestPath(Seq(AtoB), Seq("a", "b")) match {
+      case Some(LongestPathResult(step, "a", Some("b"), remains)) => assert(step === expected.reverse())
+      case Some(LongestPathResult(step, "b", Some("a"), remains)) => assert(step === expected)
+      case _                                                      => fail("Didn't find any paths")
+    }
   }
 
   @Test def find_longest_path_between_two_points() {
-    val step2 = ExpanderStep(0, Seq(B), Direction.OUTGOING, None)
-    val step1 = ExpanderStep(1, Seq(A), Direction.OUTGOING, Some(step2))
+    val forward2 = ExpanderStep(0, Seq(A), Direction.INCOMING, None)
+    val forward1 = ExpanderStep(1, Seq(B), Direction.INCOMING, Some(forward2))
 
-    assert(TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2), Seq("a", "c")) === Some(step1))
+    val backward2 = ExpanderStep(0, Seq(B), Direction.OUTGOING, None)
+    val backward1 = ExpanderStep(1, Seq(A), Direction.OUTGOING, Some(backward2))
+
+    TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2), Seq("a", "c")) match {
+      case Some(LongestPathResult(step, "a", Some("c"), remains)) => assert(step === backward1)
+      case Some(LongestPathResult(step, "c", Some("a"), remains)) => assert(step === forward1)
+      case _                                                      => fail("Didn't find any paths")
+    }
   }
 
   @Test def find_longest_path_with_single_start() {
-    val pr2 = ExpanderStep(0, Seq(B), OUTGOING, None)
-    val pr1 = ExpanderStep(1, Seq(A), OUTGOING, Some(pr2))
+    val pr3 = ExpanderStep(0, Seq(C), OUTGOING, None)
+    val pr2 = ExpanderStep(1, Seq(B), OUTGOING, Some(pr3))
+    val pr1 = ExpanderStep(2, Seq(A), OUTGOING, Some(pr2))
 
-    val path = TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2), Seq("a"))
-
-    assert(path  === Some(pr1))
+    TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a")) match {
+      case Some(LongestPathResult(step, "a", None, Seq(BtoB2))) => assert(step === pr1)
+      case _                                                    => fail("Didn't find any paths")
+    }
   }
 }

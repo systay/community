@@ -81,14 +81,4 @@ class TraversalMatcher(steps: ExpanderStep, start: () => Iterable[Node], end: ()
 
     def create(evaluator: Evaluator) = this
   }
-
-  //Creates the steps given a path of PatternRelationships
-//  private def makeSteps(): ExpanderStep = {
-//    path.reverse.foldLeft[(Int, Option[ExpanderStep])]((0, None)) {
-//      case (last, pr) =>
-//        val relTypes = pr.relTypes.map(DynamicRelationshipType.withName)
-//        val id = last._1
-//        (id + 1, Some(ExpanderStep(id, relTypes, pr.direction, last._2)))
-//    }._2.get
-//  }
 }

@@ -24,13 +24,14 @@ import org.neo4j.cypher.internal.commands.{NodeByIndex, NodeByIndexQuery, Relate
 import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
 import org.neo4j.graphdb.Direction
 import org.neo4j.graphdb.DynamicRelationshipType.withName
+import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.LongestPathResult
 
 class TraversalMatcherBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = null
 
   def canWorkWith(plan: ExecutionPlanInProgress) = extractExpanderStepsFromQuery(plan).isEmpty
 
-  private def extractExpanderStepsFromQuery(plan: ExecutionPlanInProgress): Option[(ExpanderStep, Seq[RelatedTo])] = {
+  private def extractExpanderStepsFromQuery(plan: ExecutionPlanInProgress): Option[LongestPathResult] = {
     val startPoints = plan.query.start.flatMap {
       case Unsolved(NodeByIndexQuery(id, _, _)) => Some(id)
       case Unsolved(NodeByIndex(id, _, _, _))   => Some(id)
@@ -55,8 +56,9 @@ object TraversalMatcherBuilder {
     def start: String
     def end: String
     def size: Int
-    def toSteps(id:Int): Option[ExpanderStep]
-    def relNames:Seq[String]
+    def toSteps(id: Int): Option[ExpanderStep]
+    def relNames: Seq[String]
+    override def toString: String = pathDescription.toString()
   }
 
   case class BoundPoint(name: String) extends Path {
@@ -65,7 +67,7 @@ object TraversalMatcherBuilder {
     def start = name
     def size = 0
     def relNames = Seq()
-    def toSteps(id:Int) = None
+    def toSteps(id: Int) = None
   }
 
   case class WrappingPath(s: Path, dir: Direction, rel: String, typ: Seq[String], end: String) extends Path {
@@ -76,45 +78,58 @@ object TraversalMatcherBuilder {
     def size = s.size + 1
   }
 
-  private def internalFindLongestPath(done: Seq[Path], patterns: Seq[RelatedTo]): Seq[Path] = {
-    val (nextSteps, left) = patterns.partition(rel => done.exists(p => p.end == rel.left || p.end == rel.right))
+  private def internalFindLongestPath(doneSeq: Seq[(Path, Seq[RelatedTo])]): Seq[(Path, Seq[RelatedTo])] = {
+    val result: Seq[(Path, Seq[RelatedTo])] = doneSeq.flatMap {
+      case (done: Path, patterns: Seq[RelatedTo]) =>
+        val relatedToes = patterns.filter(rel => done.end == rel.left || done.end == rel.right)
 
-    if (nextSteps.isEmpty)
-      done
-    else {
-      val newDone = done.flatMap {
-        case p => val x = nextSteps.filter(rel => rel.left == p.end || rel.right == p.end)
-
-        val z = x.map {
-          rel => if (rel.left == p.end) {
-            WrappingPath(p, rel.direction.reverse(), rel.relName, rel.relTypes, rel.right)
-          } else {
-            WrappingPath(p, rel.direction, rel.relName, rel.relTypes, rel.left)
+        if (relatedToes.isEmpty)
+          Seq((done, patterns))
+        else {
+          relatedToes.map {
+            case rel if rel.left == done.end => (WrappingPath(done, rel.direction.reverse(), rel.relName, rel.relTypes, rel.right), patterns.filterNot(_==rel))
+            case rel                         => (WrappingPath(done, rel.direction, rel.relName, rel.relTypes, rel.left), patterns.filterNot(_==rel))
           }
         }
-
-        z
-      }
-
-      internalFindLongestPath(newDone, left)
     }
+
+    if (result == doneSeq)
+      result
+    else
+      internalFindLongestPath(result)
   }
 
-  def findLongestPath(patterns: Seq[RelatedTo], boundPoints: Seq[String]): Option[(ExpanderStep, Seq[RelatedTo])] = {
-    val foundPaths: Seq[Path] = internalFindLongestPath(boundPoints.map(BoundPoint(_)), patterns)
-    val pathsBetweenBoundPoints: Seq[Path] = foundPaths.filter(p => boundPoints.contains(p.start) || boundPoints.contains(p.end))
+  case class LongestPathResult(step:ExpanderStep, start:String, end:Option[String], remainingPattern:Seq[RelatedTo])
+
+  def findLongestPath(patterns: Seq[RelatedTo], boundPoints: Seq[String]): Option[LongestPathResult] = {
+    val foundPaths: Seq[(Path, Seq[RelatedTo])] = internalFindLongestPath(boundPoints.map(point => (BoundPoint(point), patterns)))
+
+    val pathsBetweenBoundPoints: Seq[(Path, Seq[RelatedTo])] = findCompatiblePaths(foundPaths, boundPoints)
 
     if (pathsBetweenBoundPoints.isEmpty)
       None
     else {
-      val longestPath: Path = pathsBetweenBoundPoints.sortBy(_.size).last
+      val almost = pathsBetweenBoundPoints.sortBy(_._1.size)
+      val (longestPath,remainingPattern) = almost.last
+
+      val start = longestPath.start
+      val end = if (boundPoints.contains(longestPath.end)) Some(longestPath.end) else None
 
       val longestPathSteps = longestPath.toSteps(0).get.reverse()
-
-      val relNames = longestPath.relNames
-      val remainingPattern = patterns.filterNot(r => relNames.contains(r.relName))
-
-      Some((longestPathSteps, remainingPattern))
+      Some(LongestPathResult(longestPathSteps, start, end, remainingPattern))
     }
+  }
+
+  def findCompatiblePaths(foundPaths: Seq[(Path, Seq[RelatedTo])], boundPoints: scala.Seq[String]): Seq[(Path, Seq[RelatedTo])] = {
+    val boundInTwoPoints = foundPaths.filter {
+      case (p, left) => boundPoints.contains(p.start) && boundPoints.contains(p.end)
+    }
+
+    if (boundInTwoPoints.nonEmpty)
+      boundInTwoPoints
+    else
+      foundPaths.filter {
+        case (p, left) => boundPoints.contains(p.start) || boundPoints.contains(p.end)
+      }
   }
 }
