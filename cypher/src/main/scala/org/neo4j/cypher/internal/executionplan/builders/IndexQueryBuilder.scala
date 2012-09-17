@@ -20,12 +20,14 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.commands._
-import org.neo4j.cypher.internal.pipes.{RelationshipStartPipe, NodeStartPipe, Pipe}
-import org.neo4j.graphdb.{Relationship, Node, GraphDatabaseService}
+import org.neo4j.cypher.internal.pipes.{ExecutionContext, RelationshipStartPipe, NodeStartPipe, Pipe}
+import org.neo4j.graphdb.{PropertyContainer, Relationship, Node, GraphDatabaseService}
 import collection.JavaConverters._
 import java.lang.{Iterable => JIterable}
 import org.neo4j.cypher.MissingIndexException
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import collection.Iterable
+
 
 class IndexQueryBuilder(graph: GraphDatabaseService) extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
@@ -49,50 +51,76 @@ class IndexQueryBuilder(graph: GraphDatabaseService) extends PlanBuilder {
     case _                                           => false
   }
 
-  private def checkNodeIndex(idxName: String) {
-    if (!graph.index.existsForNodes(idxName)) throw new MissingIndexException(idxName)
-  }
-
-  private def checkRelIndex(idxName: String) {
-    if (!graph.index.existsForRelationships(idxName)) throw new MissingIndexException(idxName)
-  }
 
   private def createStartPipe(lastPipe: Pipe, item: StartItem): Pipe = item match {
     case NodeByIndex(varName, idxName, key, value) =>
-      checkNodeIndex(idxName)
-      new NodeStartPipe(lastPipe, varName, m => {
-        val keyVal = key(m).toString
-        val valueVal = value(m)
-        val indexHits: JIterable[Node] = graph.index.forNodes(idxName).get(keyVal, valueVal)
-        indexHits.asScala
-      })
+      new NodeStartPipe(lastPipe, varName, IndexQueryBuilder.getNodeGetter(item, graph))
 
     case RelationshipByIndex(varName, idxName, key, value) =>
-      checkRelIndex(idxName)
-      new RelationshipStartPipe(lastPipe, varName, m => {
-        val keyVal = key(m).toString
-        val valueVal = value(m)
-        val indexHits: JIterable[Relationship] = graph.index.forRelationships(idxName).get(keyVal, valueVal)
-        indexHits.asScala
-      })
+      new RelationshipStartPipe(lastPipe, varName, IndexQueryBuilder.getRelationshipGetter(item, graph))
 
     case NodeByIndexQuery(varName, idxName, query) =>
-      checkNodeIndex(idxName)
-      new NodeStartPipe(lastPipe, varName, m => {
-        val queryText = query(m)
-        val indexHits: JIterable[Node] = graph.index.forNodes(idxName).query(queryText)
-        indexHits.asScala
-      })
+      new NodeStartPipe(lastPipe, varName, IndexQueryBuilder.getNodeGetter(item, graph))
 
     case RelationshipByIndexQuery(varName, idxName, query) =>
-      checkRelIndex(idxName)
-      new RelationshipStartPipe(lastPipe, varName, m => {
-        val queryText = query(m)
-        val indexHits: JIterable[Relationship] = graph.index.forRelationships(idxName).query(queryText)
-        indexHits.asScala
-      })
+      new RelationshipStartPipe(lastPipe, varName, IndexQueryBuilder.getRelationshipGetter(item, graph))
   }
 
 
   def priority: Int = PlanBuilder.IndexQuery
+}
+
+object IndexQueryBuilder {
+  def getNodeGetter(startItem: StartItem, graph: GraphDatabaseService): ExecutionContext => Iterable[Node] =
+    startItem match {
+
+      case NodeByIndex(varName, idxName, key, value) =>
+        checkNodeIndex(idxName, graph)
+        m => {
+          val keyVal = key(m).toString
+          val valueVal = value(m)
+          val indexHits: JIterable[Node] = graph.index.forNodes(idxName).get(keyVal, valueVal)
+          val r = indexHits.asScala.toList
+          r
+        }
+
+      case NodeByIndexQuery(varName, idxName, query) =>
+        checkNodeIndex(idxName, graph)
+        m => {
+          val queryText = query(m)
+          val indexHits: JIterable[Node] = graph.index.forNodes(idxName).query(queryText)
+          val r = indexHits.asScala.toList
+          r
+        }
+    }
+
+  def getRelationshipGetter(startItem: StartItem, graph: GraphDatabaseService): ExecutionContext => Iterable[Relationship] =
+    startItem match {
+
+      case RelationshipByIndex(varName, idxName, key, value) =>
+        checkRelIndex(idxName, graph)
+        m => {
+          val keyVal = key(m).toString
+          val valueVal = value(m)
+          val indexHits: JIterable[Relationship] = graph.index.forRelationships(idxName).get(keyVal, valueVal)
+          indexHits.asScala
+        }
+
+      case RelationshipByIndexQuery(varName, idxName, query) =>
+        checkRelIndex(idxName, graph)
+        m => {
+          val queryText = query(m)
+          val indexHits: JIterable[Relationship] = graph.index.forRelationships(idxName).query(queryText)
+          indexHits.asScala
+        }
+    }
+
+  private def checkNodeIndex(idxName: String, graph: GraphDatabaseService) {
+    if (!graph.index.existsForNodes(idxName)) throw new MissingIndexException(idxName)
+  }
+
+  private def checkRelIndex(idxName: String, graph: GraphDatabaseService) {
+    if (!graph.index.existsForRelationships(idxName)) throw new MissingIndexException(idxName)
+  }
+
 }

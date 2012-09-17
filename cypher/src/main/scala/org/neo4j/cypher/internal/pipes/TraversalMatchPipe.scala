@@ -19,18 +19,32 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import matching.{PatternGraph, MatchingContext}
-import java.lang.String
-import org.neo4j.cypher.internal.commands.Predicate
+import matching.TraversalMatcher
+import org.neo4j.cypher.internal.symbols.SymbolTable
+import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.Trail
+import collection.JavaConverters._
 
-class MatchPipe(source: Pipe, predicates: Seq[Predicate], patternGraph: PatternGraph) extends Pipe {
-  val matchingContext = new MatchingContext(source.symbols, predicates, patternGraph)
-  val symbols = matchingContext.symbols
+class TraversalMatchPipe(source: Pipe, matcher:TraversalMatcher, trail:Trail) extends PipeWithSource(source) {
+  def createResults(state: QueryState) = {
+    val result = source.createResults(state).flatMap {
+      context => val paths = matcher.findMatchingPaths(state, context)
 
-  def createResults(state: QueryState) =
-    source.createResults(state).flatMap(ctx => {
-      matchingContext.getMatches(ctx.toMap).map(pm => ctx.newWith(pm))
-    })
+      paths.map {
+        path => val seq = path.iterator().asScala.toSeq
+        val m = trail.decompose(seq)
+        context.newWith(m)
+      }
+    }
+    println(result)
 
-  override def executionPlan(): String = source.executionPlan() + "\r\nPatternMatch(" + patternGraph + ")"
+    result
+  }
+
+  def symbols = trail.symbols(source.symbols)
+
+  def executionPlan() = "TraversalMatcher()"
+
+  def assertTypes(symbols: SymbolTable) {
+
+  }
 }

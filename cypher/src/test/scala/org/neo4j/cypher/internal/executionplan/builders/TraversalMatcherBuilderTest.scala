@@ -19,18 +19,26 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.junit.Test
-import org.neo4j.cypher.internal.commands.RelatedTo
+import org.junit.{Ignore, Before, Test}
+import org.neo4j.cypher.internal.commands._
 import org.neo4j.graphdb.Direction
 import org.scalatest.Assertions
 import org.neo4j.graphdb.Direction._
 import org.neo4j.graphdb.DynamicRelationshipType.withName
-import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
-import org.neo4j.cypher.internal.commands.True
+import org.neo4j.cypher.GraphDatabaseTestBase
+import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
+import org.junit.Assert._
+import org.neo4j.cypher.internal.commands.expressions.Literal
 import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.LongestPathResult
+import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
+import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.BoundPoint
+import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.WrappingTrail
+import org.neo4j.cypher.internal.commands.True
+import org.neo4j.cypher.internal.pipes.NullPipe
+import org.neo4j.cypher.internal.parser.v1_9.CypherParserImpl
 
-class TraversalMatcherBuilderTest extends Assertions {
-  val builder = new TraversalMatcherBuilder
+class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
+  var builder:TraversalMatcherBuilder = null
   val A = withName("A")
   val B = withName("B")
   val C = withName("C")
@@ -49,14 +57,17 @@ class TraversalMatcherBuilderTest extends Assertions {
   val CtoD = RelatedTo("c", "d", "pr3", Seq("C"), Direction.OUTGOING, optional = false, predicate = True())
   val BtoB2 = RelatedTo("b", "b2", "pr4", Seq("D"), Direction.OUTGOING, optional = false, predicate = True())
 
+  @Before def init() {
+    builder = new TraversalMatcherBuilder(graph)
+  }
 
   @Test def find_longest_path_for_single_pattern() {
     val expected = ExpanderStep(0, Seq(A), Direction.INCOMING, None)
 
 
     TraversalMatcherBuilder.findLongestPath(Seq(AtoB), Seq("a", "b")) match {
-      case Some(LongestPathResult(step, "a", Some("b"), remains)) => assert(step === expected.reverse())
-      case Some(LongestPathResult(step, "b", Some("a"), remains)) => assert(step === expected)
+      case Some(lpr@LongestPathResult("a", Some("b"), remains, lp)) => assert(lpr.step === expected.reverse())
+      case Some(lpr@LongestPathResult("b", Some("a"), remains, lp)) => assert(lpr.step === expected)
       case _                                                      => fail("Didn't find any paths")
     }
   }
@@ -69,20 +80,93 @@ class TraversalMatcherBuilderTest extends Assertions {
     val backward1 = ExpanderStep(1, Seq(A), Direction.OUTGOING, Some(backward2))
 
     TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2), Seq("a", "c")) match {
-      case Some(LongestPathResult(step, "a", Some("c"), remains)) => assert(step === backward1)
-      case Some(LongestPathResult(step, "c", Some("a"), remains)) => assert(step === forward1)
-      case _                                                      => fail("Didn't find any paths")
+      case Some(lpr@LongestPathResult("a", Some("c"), remains, lp)) => assert(lpr.step === backward1)
+      case Some(lpr@LongestPathResult("c", Some("a"), remains, lp)) => assert(lpr.step === forward1)
+      case _                                                        => fail("Didn't find any paths")
     }
   }
 
-  @Test def find_longest_path_with_single_start() {
+  @Ignore @Test def find_longest_path_with_single_start() {
     val pr3 = ExpanderStep(0, Seq(C), OUTGOING, None)
     val pr2 = ExpanderStep(1, Seq(B), OUTGOING, Some(pr3))
     val pr1 = ExpanderStep(2, Seq(A), OUTGOING, Some(pr2))
 
     TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a")) match {
-      case Some(LongestPathResult(step, "a", None, Seq(BtoB2))) => assert(step === pr1)
-      case _                                                    => fail("Didn't find any paths")
+      case Some(lpr@LongestPathResult("a", None, Seq(BtoB2), lp)) => assert(lpr.step === pr1)
+      case _                                                      => fail("Didn't find any paths")
     }
   }
+
+  @Test def decompose_simple_path() {
+    val nodeA    = createNode("A")
+    val nodeB    = createNode("B")
+    val rel      = relate(nodeA, nodeB, "LINK_T")
+
+    val kernPath = Seq(nodeA, rel, nodeB).reverse
+    val path     = WrappingTrail(BoundPoint("a"), Direction.OUTGOING, "link", Seq("LINK_T"), "b")
+
+    val resultMap = path.decompose(kernPath)
+    assert(resultMap === Map("a" -> nodeA, "b" -> nodeB, "link" -> rel))
+  }
+
+  @Test def decompose_little_longer_path() {
+    val nodeA    = createNode("A")
+    val nodeB    = createNode("B")
+    val nodeC    = createNode("C")
+    val rel1      = relate(nodeA, nodeB, "LINK_T")
+    val rel2      = relate(nodeB, nodeC, "LINK_T")
+
+    val kernPath = Seq(nodeA, rel1, nodeB, rel2, nodeC).reverse
+    val path     =
+      WrappingTrail(
+        WrappingTrail(BoundPoint("a"), Direction.OUTGOING, "link1", Seq("LINK_T"), "b"),
+        Direction.OUTGOING, "link2", Seq("LINK_T"), "c")
+
+    val resultMap = path.decompose(kernPath)
+    assert(resultMap === Map("a" -> nodeA, "b" -> nodeB, "c" -> nodeC,
+                             "link1" -> rel1, "link2" -> rel2))
+  }
+
+  @Test def should_not_accept_queries_without_patterns() {
+    val q = PartiallySolvedQuery().
+      copy(start = Seq(Unsolved(NodeByIndex("n", "index", Literal("key"), Literal("expression"))))
+    )
+
+    assertFalse("This query should not be accepted", builder.canWorkWith(plan(new NullPipe, q)))
+  }
+
+  @Test def should_not_accept_queries_with_single_start_point() {
+    val q = query("START me=node:node_auto_index(name = 'Jane') " +
+      "MATCH me-[:jane_knows]->friend-[:has]->status " +
+      "RETURN me")
+
+    assertFalse("This query should not be accepted", builder.canWorkWith(plan(new NullPipe, q)))
+  }
+
+  @Test def should_not_crash() {
+    val q = query("START me=node:node_auto_index(name = 'Jane') " +
+      "MATCH me-[:jane_knows*]->friend-[:has]->status " +
+      "RETURN me")
+
+    assertFalse("This query should not be accepted", builder.canWorkWith(plan(new NullPipe, q)))
+  }
+
+  @Test def should_not_accept_queries_with_varlength_paths() {
+    val q = query("START me=node:node_auto_index(name = 'Tarzan'), you=node:node_auto_index(name = 'Jane') " +
+      "MATCH me-[:LOVES*]->banana-[:LIKES]->you " +
+      "RETURN me")
+
+    assertFalse("This query should not be accepted", builder.canWorkWith(plan(new NullPipe, q)))
+  }
+
+  @Test def should_handle_loops() {
+    val q = query("START me=node:node_auto_index(name = 'Tarzan'), you=node:node_auto_index(name = 'Jane') " +
+      "MATCH me-[:LIKES]->(u1)<-[:LIKES]->you, me-[:HATES]->(u2)<-[:HATES]->you " +
+      "RETURN me")
+
+    assertTrue("This query should be accepted", builder.canWorkWith(plan(new NullPipe, q)))
+  }
+
+  val parser = new CypherParserImpl
+  private def query(text:String):PartiallySolvedQuery=PartiallySolvedQuery(parser.parse(text))
 }

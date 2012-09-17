@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.pipes.matching
 import org.junit.Test
 import org.neo4j.cypher.GraphDatabaseTestBase
 import org.neo4j.graphdb.Path
-import org.neo4j.cypher.internal.pipes.{MutableMaps, QueryState}
+import org.neo4j.cypher.internal.pipes.{ExecutionContext, MutableMaps, QueryState}
 import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.graphdb.Direction.OUTGOING
 
@@ -43,14 +43,14 @@ class TraversalMatcherTests extends GraphDatabaseTestBase {
     val r1 = relate(a, b, "A")
     val r2 = relate(b, c, "B")
 
-    val start = () => Seq(a)
-    val end = () => Seq(c)
+    val start = (_:ExecutionContext) => Seq(a)
+    val end = (_:ExecutionContext) => Seq(c)
 
-    val matcher = new TraversalMatcher(pr1, start, end)
+    val matcher = new BidirectionalTraversalMatcher(pr1, start, end)
 
     val queryState = new QueryState(graph, MutableMaps.create)
 
-    val result: Seq[Path] = matcher.findMatchingPaths(queryState).toSeq
+    val result: Seq[Path] = matcher.findMatchingPaths(queryState, null).toSeq
 
     assert(result.size === 1)
     assert(result.head.startNode() === a)
@@ -80,16 +80,16 @@ class TraversalMatcherTests extends GraphDatabaseTestBase {
     relate(b, c, "B")
     relate(b3, c, "B")
 
-    val start = () => Seq(a)
-    val end = () => Seq(c, c2)
+    val start = (_:ExecutionContext) => Seq(a)
+    val end = (_:ExecutionContext) => Seq(c, c2)
 
     //Pattern nodes and relationships
 
-    val matcher = new TraversalMatcher(pr1, start, end)
+    val matcher = new BidirectionalTraversalMatcher(pr1, start, end)
 
     val queryState = new QueryState(graph, MutableMaps.create)
 
-    val result: Seq[Path] = matcher.findMatchingPaths(queryState).toSeq
+    val result: Seq[Path] = matcher.findMatchingPaths(queryState, null).toSeq
 
     assert(result.size === 3)
 
