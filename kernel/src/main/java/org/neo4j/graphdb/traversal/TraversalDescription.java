@@ -96,6 +96,8 @@ public interface TraversalDescription
      * @return a new traversal description with the new modifications.
      */
     TraversalDescription evaluator( Evaluator evaluator );
+    
+    TraversalDescription evaluator( PathEvaluator evaluator );
 
     /**
      * Sets the {@link BranchOrderingPolicy} to use. A {@link BranchSelector}

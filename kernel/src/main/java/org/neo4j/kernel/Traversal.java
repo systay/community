@@ -32,15 +32,18 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
 import org.neo4j.graphdb.traversal.BranchOrderingPolicy;
 import org.neo4j.graphdb.traversal.BranchState;
+import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.InitialStateFactory;
 import org.neo4j.graphdb.traversal.BranchCollisionDetector;
+import org.neo4j.graphdb.traversal.PathEvaluator;
 import org.neo4j.graphdb.traversal.SideSelectorPolicy;
 import org.neo4j.graphdb.traversal.TraversalBranch;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.UniquenessFactory;
 import org.neo4j.kernel.impl.traversal.BidirectionalTraversalDescriptionImpl;
+import org.neo4j.kernel.impl.traversal.EvaluatorAsPathEvaluator;
 import org.neo4j.kernel.impl.traversal.FinalTraversalBranch;
 import org.neo4j.kernel.impl.traversal.TraversalDescriptionImpl;
 
@@ -641,5 +644,10 @@ public class Traversal
                 return Traversal.initialState( reversedInitialState, initialState );
             }
         };
+    }
+    
+    public static PathEvaluator wrapEvaluator( Evaluator evaluator )
+    {
+        return new EvaluatorAsPathEvaluator( evaluator );
     }
 }

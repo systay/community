@@ -34,9 +34,9 @@ class StartNodeTraversalBranch extends TraversalBranchWithState
     StartNodeTraversalBranch( TraversalContext context, TraversalBranch parent, Node source,
             InitialBranchState initialState )
     {
-        super( context, parent, source );
+        super( context, parent, source, initialState );
         this.initialState = initialState;
-        this.state = initialState.initialState( this );
+        this.state = this.stateForChildren = initialState.initialState( this );
         context.isUniqueFirst( this );
     }
 
@@ -52,16 +52,22 @@ class StartNodeTraversalBranch extends TraversalBranchWithState
     }
     
     @Override
-    protected TraversalBranch newNextBranch( Node node, Relationship relationship )
+    public Object getState()
     {
-        return state != null ?
-            new TraversalBranchWithState( this, 1, node, relationship ) :
-            new TraversalBranchImpl( this, 1, node, relationship );
+        return state;
     }
     
     @Override
-    protected Object retrieveStateFromParent()
+    public void setState( Object state )
     {
-        return state;
+        stateForChildren = state;
+    }
+    
+    @Override
+    protected TraversalBranch newNextBranch( Node node, Relationship relationship )
+    {
+        return stateForChildren != null ?
+            new TraversalBranchWithState( this, 1, node, relationship, stateForChildren ) :
+            new TraversalBranchImpl( this, 1, node, relationship );
     }
 }

@@ -37,6 +37,7 @@ import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
 import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.InitialStateFactory;
+import org.neo4j.graphdb.traversal.PathEvaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.Traverser;
 import org.neo4j.graphdb.traversal.UniquenessFactory;
@@ -56,14 +57,14 @@ public final class TraversalDescriptionImpl implements TraversalDescription
     final InitialBranchState initialState;
     final UniquenessFactory uniqueness;
     final Object uniquenessParameter;
-    final Evaluator evaluator;
+    final PathEvaluator evaluator;
     final BranchOrderingPolicy branchOrdering;
     final Comparator<? super Path> sorting;
     final Collection<Node> endNodes;
 
     private TraversalDescriptionImpl( PathExpander expander,
             UniquenessFactory uniqueness, Object uniquenessParameter,
-            Evaluator evaluator, InitialBranchState initialState, BranchOrderingPolicy branchOrdering,
+            PathEvaluator evaluator, InitialBranchState initialState, BranchOrderingPolicy branchOrdering,
             Comparator<? super Path> sorting, Collection<Node> endNodes )
     {
         this.expander = expander;
@@ -116,6 +117,11 @@ public final class TraversalDescriptionImpl implements TraversalDescription
     
     public TraversalDescription evaluator( Evaluator evaluator )
     {
+        return evaluator( new EvaluatorAsPathEvaluator( evaluator ) );
+    }
+    
+    public TraversalDescription evaluator( PathEvaluator evaluator )
+    {
         if ( this.evaluator == evaluator )
         {
             return this;
@@ -125,7 +131,7 @@ public final class TraversalDescriptionImpl implements TraversalDescription
                 addEvaluator( this.evaluator, evaluator ), initialState, branchOrdering, sorting, endNodes );
     }
     
-    protected static Evaluator addEvaluator( Evaluator existing, Evaluator toAdd )
+    protected static PathEvaluator addEvaluator( PathEvaluator existing, PathEvaluator toAdd )
     {
         if ( existing instanceof MultiEvaluator )
         {
@@ -134,7 +140,7 @@ public final class TraversalDescriptionImpl implements TraversalDescription
         else
         {
             return existing == Evaluators.all() ? toAdd :
-                new MultiEvaluator( new Evaluator[] { existing, toAdd } );
+                new MultiEvaluator( new PathEvaluator[] { existing, toAdd } );
         }
     }
     
