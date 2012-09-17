@@ -20,18 +20,21 @@
 package org.neo4j.kernel.impl.traversal;
 
 import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.traversal.AbstractPathEvaluator;
+import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
+import org.neo4j.graphdb.traversal.PathEvaluator;
 
 /**
  * Evaluator which can hold multiple {@link Evaluator}s and delegate to them
  * all for evaluation requests.
  */
-public class MultiEvaluator implements Evaluator
+public class MultiEvaluator extends AbstractPathEvaluator
 {
-    private final Evaluator[] evaluators;
+    private final PathEvaluator[] evaluators;
 
-    MultiEvaluator( Evaluator... evaluators )
+    MultiEvaluator( PathEvaluator... evaluators )
     {
         this.evaluators = evaluators;
     }
@@ -51,13 +54,13 @@ public class MultiEvaluator implements Evaluator
      * @param position the {@link Path} to evaluate.
      * @see Evaluator
      */
-    public Evaluation evaluate( Path position )
+    public Evaluation evaluate( Path position, BranchState state )
     {
         boolean includes = true;
         boolean continues = true;
-        for ( Evaluator evaluator : this.evaluators )
+        for ( PathEvaluator evaluator : this.evaluators )
         {
-            Evaluation bla = evaluator.evaluate( position );
+            Evaluation bla = evaluator.evaluate( position, state );
             if ( !bla.includes() )
             {
                 includes = false;
@@ -84,9 +87,9 @@ public class MultiEvaluator implements Evaluator
      * @return a new instance containing the current list of evaluator plus
      * the supplied one.
      */
-    public MultiEvaluator add( Evaluator evaluator )
+    public MultiEvaluator add( PathEvaluator evaluator )
     {
-        Evaluator[] newArray = new Evaluator[this.evaluators.length+1];
+        PathEvaluator[] newArray = new PathEvaluator[this.evaluators.length+1];
         System.arraycopy( this.evaluators, 0, newArray, 0, this.evaluators.length );
         newArray[newArray.length-1] = evaluator;
         return new MultiEvaluator( newArray );
