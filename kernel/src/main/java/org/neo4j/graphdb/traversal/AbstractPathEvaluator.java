@@ -22,8 +22,9 @@ package org.neo4j.graphdb.traversal;
 import org.neo4j.graphdb.Path;
 import org.neo4j.kernel.Traversal;
 
-public abstract class AbstractPathEvaluator implements PathEvaluator
+public abstract class AbstractPathEvaluator<STATE> implements PathEvaluator<STATE>
 {
+    @SuppressWarnings( "unchecked" )
     @Override
     public Evaluation evaluate( Path path )
     {

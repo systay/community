@@ -30,7 +30,7 @@ import org.neo4j.graphdb.traversal.PathEvaluator;
  * Evaluator which can hold multiple {@link Evaluator}s and delegate to them
  * all for evaluation requests.
  */
-public class MultiEvaluator extends AbstractPathEvaluator
+public class MultiEvaluator<STATE> extends AbstractPathEvaluator<STATE>
 {
     private final PathEvaluator[] evaluators;
 
@@ -54,11 +54,11 @@ public class MultiEvaluator extends AbstractPathEvaluator
      * @param position the {@link Path} to evaluate.
      * @see Evaluator
      */
-    public Evaluation evaluate( Path position, BranchState state )
+    public Evaluation evaluate( Path position, BranchState<STATE> state )
     {
         boolean includes = true;
         boolean continues = true;
-        for ( PathEvaluator evaluator : this.evaluators )
+        for ( PathEvaluator<STATE> evaluator : this.evaluators )
         {
             Evaluation bla = evaluator.evaluate( position, state );
             if ( !bla.includes() )
@@ -87,11 +87,11 @@ public class MultiEvaluator extends AbstractPathEvaluator
      * @return a new instance containing the current list of evaluator plus
      * the supplied one.
      */
-    public MultiEvaluator add( PathEvaluator evaluator )
+    public MultiEvaluator<STATE> add( PathEvaluator<STATE> evaluator )
     {
         PathEvaluator[] newArray = new PathEvaluator[this.evaluators.length+1];
         System.arraycopy( this.evaluators, 0, newArray, 0, this.evaluators.length );
         newArray[newArray.length-1] = evaluator;
-        return new MultiEvaluator( newArray );
+        return new MultiEvaluator<STATE>( newArray );
     }
 }
