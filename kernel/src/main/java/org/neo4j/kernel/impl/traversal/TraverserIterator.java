@@ -24,6 +24,7 @@ import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.traversal.BranchOrderingPolicy;
 import org.neo4j.graphdb.traversal.BranchSelector;
+import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.PathEvaluator;
@@ -50,9 +51,9 @@ class TraverserIterator extends AbstractTraverserIterator
     }
 
     @Override
-    public Evaluation evaluate( TraversalBranch branch )
+    public Evaluation evaluate( TraversalBranch branch, BranchState state )
     {
-        return evaluator.evaluate( branch );
+        return evaluator.evaluate( branch, state );
     }
     
     @Override

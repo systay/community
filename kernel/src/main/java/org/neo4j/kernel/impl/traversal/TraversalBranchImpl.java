@@ -75,18 +75,17 @@ class TraversalBranchImpl implements TraversalBranch
     }
 
     /*
-     * For the start node expansion source
+     * For the start node branches
      */
-    TraversalBranchImpl( TraversalContext context, TraversalBranch parent, Node source )
+    TraversalBranchImpl( TraversalBranch parent, Node source )
     {
         this.parent = parent;
         this.source = source;
         this.howIGotHere = null;
         this.depthAndEvaluationBits = 0;
-        setEvaluation( context.evaluate( this ) );
     }
 
-    private void setEvaluation( Evaluation evaluation )
+    protected void setEvaluation( Evaluation evaluation )
     {
         this.depthAndEvaluationBits &= 0x3FFFFFFF; // First clear those evaluation bits
         this.depthAndEvaluationBits |= bitValue( evaluation.includes(), 30 ) | bitValue( evaluation.continues(), 31 );
@@ -118,10 +117,15 @@ class TraversalBranchImpl implements TraversalBranch
     {
         return relationships != null;
     }
+    
+    protected void evaluate( TraversalContext context )
+    {
+        setEvaluation( context.evaluate( this, null ) );
+    }
 
     public void initialize( final PathExpander expander, TraversalContext metadata )
     {
-        setEvaluation( metadata.evaluate( this ) );
+        evaluate( metadata );
         
         // Instantiate an Iterator<Relationship> which will initialize the real
         // iterator on the first call to hasNext() and rebind the relationships
