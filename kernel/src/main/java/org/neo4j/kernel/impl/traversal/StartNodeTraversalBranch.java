@@ -29,14 +29,13 @@ import org.neo4j.graphdb.traversal.TraversalContext;
 class StartNodeTraversalBranch extends TraversalBranchWithState
 {
     private final InitialBranchState initialState;
-    private final Object state;
     
     StartNodeTraversalBranch( TraversalContext context, TraversalBranch parent, Node source,
             InitialBranchState initialState )
     {
-        super( context, parent, source, initialState );
+        super( parent, source, initialState );
         this.initialState = initialState;
-        this.state = this.stateForChildren = initialState.initialState( this );
+        evaluate( context );
         context.isUniqueFirst( this );
     }
 
@@ -52,21 +51,9 @@ class StartNodeTraversalBranch extends TraversalBranchWithState
     }
     
     @Override
-    public Object getState()
-    {
-        return state;
-    }
-    
-    @Override
-    public void setState( Object state )
-    {
-        stateForChildren = state;
-    }
-    
-    @Override
     protected TraversalBranch newNextBranch( Node node, Relationship relationship )
     {
-        return stateForChildren != null ?
+        return initialState != InitialBranchState.NO_STATE ?
             new TraversalBranchWithState( this, 1, node, relationship, stateForChildren ) :
             new TraversalBranchImpl( this, 1, node, relationship );
     }

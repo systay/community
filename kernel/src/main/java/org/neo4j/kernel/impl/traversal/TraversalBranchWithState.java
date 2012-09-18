@@ -40,9 +40,9 @@ public class TraversalBranchWithState extends TraversalBranchImpl implements Bra
         this.stateForMe = this.stateForChildren = inheritedState;
     }
 
-    public TraversalBranchWithState( TraversalContext context, TraversalBranch parent, Node source, InitialBranchState initialState )
+    public TraversalBranchWithState( TraversalBranch parent, Node source, InitialBranchState initialState )
     {
-        super( context, parent, source );
+        super( parent, source );
         this.stateForMe = this.stateForChildren = initialState.initialState( this );
     }
     
@@ -73,6 +73,12 @@ public class TraversalBranchWithState extends TraversalBranchImpl implements Bra
     @Override
     public Object state()
     {
-        return getState();
+        return this.stateForMe;
+    }
+    
+    @Override
+    protected void evaluate( TraversalContext context )
+    {
+        setEvaluation( context.evaluate( this, this ) );
     }
 }
