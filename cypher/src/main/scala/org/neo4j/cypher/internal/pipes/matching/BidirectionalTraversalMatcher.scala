@@ -25,9 +25,7 @@ import traversal._
 import java.lang.{Iterable => JIterable}
 import collection.JavaConverters._
 import org.neo4j.kernel.{StandardBranchCollisionDetector, Uniqueness, Traversal}
-import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.kernel.impl.traversal.BranchCollisionPolicy
-import org.neo4j.cypher.internal.pipes.matching.BidirectionalTraversalMatcher
 
 
 class BidirectionalTraversalMatcher(steps: ExpanderStep,

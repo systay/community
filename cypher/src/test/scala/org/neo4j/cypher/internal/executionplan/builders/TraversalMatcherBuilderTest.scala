@@ -19,112 +19,21 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.junit.{Ignore, Before, Test}
+import org.junit.{Before, Test}
 import org.neo4j.cypher.internal.commands._
-import org.neo4j.graphdb.{RelationshipType, Direction}
 import org.scalatest.Assertions
-import org.neo4j.graphdb.Direction._
-import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.cypher.GraphDatabaseTestBase
 import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
 import org.junit.Assert._
 import org.neo4j.cypher.internal.commands.expressions.Literal
-import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.LongestPathResult
-import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
-import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.BoundPoint
-import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.WrappingTrail
-import org.neo4j.cypher.internal.commands.True
 import org.neo4j.cypher.internal.pipes.NullPipe
 import org.neo4j.cypher.internal.parser.v1_9.CypherParserImpl
 
 class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
   var builder:TraversalMatcherBuilder = null
-  val A = withName("A")
-  val B = withName("B")
-  val C = withName("C")
-  val D = withName("D")
-
-  /*
-          (b2)
-            ^
-            |
-          [:D]
-            |
- (a)-[:A]->(b)-[:B]->(c)-[:C]->(d)
-  */
-  val AtoB = RelatedTo("a", "b", "pr1", Seq("A"), Direction.OUTGOING, optional = false, predicate = True())
-  val BtoC = RelatedTo("b", "c", "pr2", Seq("B"), Direction.OUTGOING, optional = false, predicate = True())
-  val CtoD = RelatedTo("c", "d", "pr3", Seq("C"), Direction.OUTGOING, optional = false, predicate = True())
-  val BtoB2 = RelatedTo("b", "b2", "pr4", Seq("D"), Direction.OUTGOING, optional = false, predicate = True())
 
   @Before def init() {
     builder = new TraversalMatcherBuilder(graph)
-  }
-
-  @Test def find_longest_path_for_single_pattern() {
-    val expected = step(0, Seq(A), Direction.INCOMING, None)
-
-
-    TraversalMatcherBuilder.findLongestPath(Seq(AtoB), Seq("a", "b")) match {
-      case Some(lpr@LongestPathResult("a", Some("b"), remains, lp)) => assert(lpr.step === expected.reverse())
-      case Some(lpr@LongestPathResult("b", Some("a"), remains, lp)) => assert(lpr.step === expected)
-      case _                                                      => fail("Didn't find any paths")
-    }
-  }
-
-  @Test def find_longest_path_between_two_points() {
-    val forward2 = step(0, Seq(A), Direction.INCOMING, None)
-    val forward1 = step(1, Seq(B), Direction.INCOMING, Some(forward2))
-
-    val backward2 = step(0, Seq(B), Direction.OUTGOING, None)
-    val backward1 = step(1, Seq(A), Direction.OUTGOING, Some(backward2))
-
-    TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2), Seq("a", "c")) match {
-      case Some(lpr@LongestPathResult("a", Some("c"), remains, lp)) => assert(lpr.step === backward1)
-      case Some(lpr@LongestPathResult("c", Some("a"), remains, lp)) => assert(lpr.step === forward1)
-      case _                                                        => fail("Didn't find any paths")
-    }
-  }
-
-  @Ignore @Test def find_longest_path_with_single_start() {
-    val pr3 = step(0, Seq(C), OUTGOING, None)
-    val pr2 = step(1, Seq(B), OUTGOING, Some(pr3))
-    val pr1 = step(2, Seq(A), OUTGOING, Some(pr2))
-
-    TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a")) match {
-      case Some(lpr@LongestPathResult("a", None, Seq(BtoB2), lp)) => assert(lpr.step === pr1)
-      case _                                                      => fail("Didn't find any paths")
-    }
-  }
-
-  @Test def decompose_simple_path() {
-    val nodeA    = createNode("A")
-    val nodeB    = createNode("B")
-    val rel      = relate(nodeA, nodeB, "LINK_T")
-
-    val kernPath = Seq(nodeA, rel, nodeB).reverse
-    val path     = WrappingTrail(BoundPoint("a"), Direction.OUTGOING, "link", Seq("LINK_T"), "b")
-
-    val resultMap = path.decompose(kernPath)
-    assert(resultMap === Map("a" -> nodeA, "b" -> nodeB, "link" -> rel))
-  }
-
-  @Test def decompose_little_longer_path() {
-    val nodeA    = createNode("A")
-    val nodeB    = createNode("B")
-    val nodeC    = createNode("C")
-    val rel1      = relate(nodeA, nodeB, "LINK_T")
-    val rel2      = relate(nodeB, nodeC, "LINK_T")
-
-    val kernPath = Seq(nodeA, rel1, nodeB, rel2, nodeC).reverse
-    val path     =
-      WrappingTrail(
-        WrappingTrail(BoundPoint("a"), Direction.OUTGOING, "link1", Seq("LINK_T"), "b"),
-        Direction.OUTGOING, "link2", Seq("LINK_T"), "c")
-
-    val resultMap = path.decompose(kernPath)
-    assert(resultMap === Map("a" -> nodeA, "b" -> nodeB, "c" -> nodeC,
-                             "link1" -> rel1, "link2" -> rel2))
   }
 
   @Test def should_not_accept_queries_without_patterns() {
@@ -169,10 +78,4 @@ class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions 
 
   val parser = new CypherParserImpl
   private def query(text:String):PartiallySolvedQuery=PartiallySolvedQuery(parser.parse(text))
-
-  private def step(id: Int,
-                   typ: Seq[RelationshipType],
-                   direction: Direction,
-                   next: Option[ExpanderStep]) = ExpanderStep(id, typ, direction, next, True(), True())
-
 }

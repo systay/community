@@ -21,12 +21,12 @@ package org.neo4j.cypher.internal.pipes
 
 import matching.TraversalMatcher
 import org.neo4j.cypher.internal.symbols.SymbolTable
-import org.neo4j.cypher.internal.executionplan.builders.TraversalMatcherBuilder.Trail
 import collection.JavaConverters._
+import org.neo4j.cypher.internal.executionplan.builders.Trail
 
 class TraversalMatchPipe(source: Pipe, matcher:TraversalMatcher, trail:Trail) extends PipeWithSource(source) {
-  def createResults(state: QueryState) = {
-    val result = source.createResults(state).flatMap {
+  def createResults(state: QueryState) =
+    source.createResults(state).flatMap {
       context => val paths = matcher.findMatchingPaths(state, context)
 
       paths.map {
@@ -35,10 +35,6 @@ class TraversalMatchPipe(source: Pipe, matcher:TraversalMatcher, trail:Trail) ex
         context.newWith(m)
       }
     }
-    println(result)
-
-    result
-  }
 
   def symbols = trail.symbols(source.symbols)
 
