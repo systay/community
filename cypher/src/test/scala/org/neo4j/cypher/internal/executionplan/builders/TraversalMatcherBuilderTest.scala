@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.junit.{Ignore, Before, Test}
 import org.neo4j.cypher.internal.commands._
-import org.neo4j.graphdb.Direction
+import org.neo4j.graphdb.{RelationshipType, Direction}
 import org.scalatest.Assertions
 import org.neo4j.graphdb.Direction._
 import org.neo4j.graphdb.DynamicRelationshipType.withName
@@ -62,7 +62,7 @@ class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions 
   }
 
   @Test def find_longest_path_for_single_pattern() {
-    val expected = ExpanderStep(0, Seq(A), Direction.INCOMING, None)
+    val expected = step(0, Seq(A), Direction.INCOMING, None)
 
 
     TraversalMatcherBuilder.findLongestPath(Seq(AtoB), Seq("a", "b")) match {
@@ -73,11 +73,11 @@ class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions 
   }
 
   @Test def find_longest_path_between_two_points() {
-    val forward2 = ExpanderStep(0, Seq(A), Direction.INCOMING, None)
-    val forward1 = ExpanderStep(1, Seq(B), Direction.INCOMING, Some(forward2))
+    val forward2 = step(0, Seq(A), Direction.INCOMING, None)
+    val forward1 = step(1, Seq(B), Direction.INCOMING, Some(forward2))
 
-    val backward2 = ExpanderStep(0, Seq(B), Direction.OUTGOING, None)
-    val backward1 = ExpanderStep(1, Seq(A), Direction.OUTGOING, Some(backward2))
+    val backward2 = step(0, Seq(B), Direction.OUTGOING, None)
+    val backward1 = step(1, Seq(A), Direction.OUTGOING, Some(backward2))
 
     TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2), Seq("a", "c")) match {
       case Some(lpr@LongestPathResult("a", Some("c"), remains, lp)) => assert(lpr.step === backward1)
@@ -87,9 +87,9 @@ class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions 
   }
 
   @Ignore @Test def find_longest_path_with_single_start() {
-    val pr3 = ExpanderStep(0, Seq(C), OUTGOING, None)
-    val pr2 = ExpanderStep(1, Seq(B), OUTGOING, Some(pr3))
-    val pr1 = ExpanderStep(2, Seq(A), OUTGOING, Some(pr2))
+    val pr3 = step(0, Seq(C), OUTGOING, None)
+    val pr2 = step(1, Seq(B), OUTGOING, Some(pr3))
+    val pr1 = step(2, Seq(A), OUTGOING, Some(pr2))
 
     TraversalMatcherBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a")) match {
       case Some(lpr@LongestPathResult("a", None, Seq(BtoB2), lp)) => assert(lpr.step === pr1)
@@ -169,4 +169,10 @@ class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions 
 
   val parser = new CypherParserImpl
   private def query(text:String):PartiallySolvedQuery=PartiallySolvedQuery(parser.parse(text))
+
+  private def step(id: Int,
+                   typ: Seq[RelationshipType],
+                   direction: Direction,
+                   next: Option[ExpanderStep]) = ExpanderStep(id, typ, direction, next, True(), True())
+
 }

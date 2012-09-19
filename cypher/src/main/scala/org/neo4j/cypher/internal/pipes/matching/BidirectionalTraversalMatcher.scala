@@ -27,11 +27,12 @@ import collection.JavaConverters._
 import org.neo4j.kernel.{StandardBranchCollisionDetector, Uniqueness, Traversal}
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.kernel.impl.traversal.BranchCollisionPolicy
-
+import org.neo4j.cypher.internal.pipes.matching.BidirectionalTraversalMatcher
 
 
 class BidirectionalTraversalMatcher(steps: ExpanderStep,
-                                    start: (ExecutionContext) => Iterable[Node], end: (ExecutionContext) => Iterable[Node]) extends TraversalMatcher  {
+                                    start: (ExecutionContext) => Iterable[Node],
+                                    end: (ExecutionContext) => Iterable[Node]) extends TraversalMatcher  {
 
   lazy val reversedSteps = steps.reverse()
 
@@ -42,15 +43,19 @@ class BidirectionalTraversalMatcher(steps: ExpanderStep,
   val initialEndStep = new InitialStateFactory[Option[ExpanderStep]] {
     def initialState(path: Path): Option[ExpanderStep] = Some(reversedSteps)
   }
-  val baseTraversal: TraversalDescription = Traversal.traversal(Uniqueness.RELATIONSHIP_PATH)
+  val baseTraversal: TraversalDescription = Traversal.traversal(Uniqueness.NODE_PATH)
   val collisionDetector = new StepCollisionDetector
 
   def findMatchingPaths(state: QueryState, context: ExecutionContext): Iterable[Path] = {
+    val s = start(context).toList
+    val e = end(context).toList
+    val startDepth = steps.size / 2
+    val endDepth = steps.size - startDepth
     val result: JIterable[Path] = Traversal.bidirectionalTraversal()
-      .startSide(baseTraversal.expand(new TraversalPathExpander, initialStartStep))
-      .endSide(baseTraversal.expand(new TraversalPathExpander, initialEndStep))
+      .startSide(baseTraversal.expand(new TraversalPathExpander, initialStartStep).evaluator(Evaluators.toDepth(startDepth)))
+      .endSide(baseTraversal.expand(new TraversalPathExpander, initialEndStep).evaluator(Evaluators.toDepth(endDepth)))
       .collisionPolicy(collisionDetector)
-      .traverse(start(context).asJava, end(context).asJava)
+      .traverse(s.asJava, e.asJava)
 
     result.asScala
   }
@@ -71,9 +76,10 @@ class BidirectionalTraversalMatcher(steps: ExpanderStep,
         case (Some(startStep), Some(endStep)) => endStep.id == startStep.id + 1
         case (Some(x), None)                  => startPath.length() == 0
         case (None, Some(x))                  => endPath.length() == 0
-        case _                                => throw new ThisShouldNotHappenError("Mattias", "I'm baffled by this.")
+        case _                                => false
       }
 
+      //TODO: Make sure this is what we want to do, and create a test that nails it down.
       if (result) {
         startPath.prune()
         endPath.prune()
@@ -82,6 +88,6 @@ class BidirectionalTraversalMatcher(steps: ExpanderStep,
       result
     }
 
-    def create(evaluator: Evaluator) = this
+    def create(evaluator: Evaluator) = new StepCollisionDetector
   }
 }

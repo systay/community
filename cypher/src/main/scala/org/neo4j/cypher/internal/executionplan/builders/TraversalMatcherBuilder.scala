@@ -135,7 +135,7 @@ object TraversalMatcherBuilder {
   case class WrappingTrail(s: Trail, dir: Direction, rel: String, typ: Seq[String], end: String) extends Trail {
     def start = s.start
     def pathDescription = s.pathDescription ++ Seq(rel, end)
-    def toSteps(id: Int) = Some(ExpanderStep(id, typ.map(withName(_)), dir, s.toSteps(id + 1)))
+    def toSteps(id: Int) = Some(ExpanderStep(id, typ.map(withName(_)), dir, s.toSteps(id + 1), True(), True()))
     def size = s.size + 1
     protected[TraversalMatcherBuilder] def decompose(p: Seq[PropertyContainer], m: Map[String, Any]) = {
       val r = p.tail.head

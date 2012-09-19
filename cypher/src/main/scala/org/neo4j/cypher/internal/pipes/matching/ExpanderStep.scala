@@ -22,15 +22,21 @@ package org.neo4j.cypher.internal.pipes.matching
 import org.neo4j.graphdb.{Node, Relationship, Direction, RelationshipType}
 import collection.mutable
 import collection.JavaConverters._
+import org.neo4j.cypher.internal.commands.{True, Predicate}
 
-case class ExpanderStep(id: Int, typ: Seq[RelationshipType], direction: Direction, next: Option[ExpanderStep]) {
-  def pop() = next
-
+case class ExpanderStep(id: Int,
+                        typ: Seq[RelationshipType],
+                        direction: Direction,
+                        next: Option[ExpanderStep],
+                        relPredicate: Predicate,
+                        nodePredicate: Predicate) {
   def reverse(): ExpanderStep = {
     val allSteps = getAllStepsAsSeq()
 
-    val reversed = allSteps.foldLeft[Option[ExpanderStep]](None) {
-      case (last, step) => Some(ExpanderStep(step.id, step.typ, step.direction.reverse(), last))
+    val (reversed, _) = allSteps.foldLeft[(Option[ExpanderStep], Predicate)]((None, True())) {
+      case ((last, predicate), step) =>
+        val reverse1 = step.direction.reverse()
+        (Some(step.copy(next = last, direction = reverse1, nodePredicate = predicate)), step.nodePredicate)
     }
 
     assert(reversed.nonEmpty, "The reverse of an expander should never be empty")
@@ -38,12 +44,17 @@ case class ExpanderStep(id: Int, typ: Seq[RelationshipType], direction: Directio
     reversed.get
   }
 
-  def expand(node: Node): Iterable[Relationship] = typ match {
-    case Seq() => node.getRelationships(direction).asScala
-    case x     => node.getRelationships(direction, x: _*).asScala
+  def filter(r: Relationship, n: Node): Boolean = {
+    val m = new MiniMap(r, n)
+    relPredicate.isMatch(m) && nodePredicate.isMatch(m)
   }
 
-  private def getAllStepsAsSeq():Seq[ExpanderStep] = {
+  def expand(node: Node): Iterable[Relationship] = typ match {
+    case Seq() => node.getRelationships(direction).asScala.filter(r => filter(r, r.getOtherNode(node)))
+    case x     => node.getRelationships(direction, x: _*).asScala.filter(r => filter(r, r.getOtherNode(node)))
+  }
+
+  private def getAllStepsAsSeq(): Seq[ExpanderStep] = {
     var allSteps = mutable.Seq[ExpanderStep]()
     var current: Option[ExpanderStep] = Some(this)
 
@@ -59,32 +70,58 @@ case class ExpanderStep(id: Int, typ: Seq[RelationshipType], direction: Directio
   private def shape = "(%s)%s-%s-%s".format(id, left, relInfo, right)
 
   private def left =
-    if (direction == Direction.OUTGOING) ""
+    if (direction == Direction.OUTGOING)
+      ""
     else
       "<"
 
   private def right =
-    if (direction == Direction.INCOMING) ""
+    if (direction == Direction.INCOMING)
+      ""
     else
       ">"
 
   private def relInfo = typ.toList match {
     case List() => ""
-    case _ => "[:%s]".format(typ.map(_.name()).mkString("|"))
+    case _      => "[:%s {%s,%s}]".format(typ.map(_.name()).mkString("|"), relPredicate, nodePredicate)
   }
 
   override def toString = next match {
-    case None    => shape + "()"
+    case None    => "%s()".format(shape)
     case Some(x) => shape + x.toString
   }
 
   override def equals(p1: Any) = p1 match {
     case null                => false
     case other: ExpanderStep =>
-      id == other.id &&
-      direction == other.direction &&
-      next == other.next &&
-      typ.map(_.name()) == other.typ.map(_.name())
+      val a = id == other.id
+      val b = direction == other.direction
+      val c = next == other.next
+      val d = typ.map(_.name()) == other.typ.map(_.name())
+      val e = relPredicate == other.relPredicate
+      val f = nodePredicate == other.nodePredicate
+      a && b && c && d && e && f
     case _                   => false
   }
+
+  def size: Int = next match {
+    case Some(s) => 1 + s.size
+    case None    => 1
+  }
+}
+
+class MiniMap(r: Relationship, n: Node) extends Map[String, Any] {
+  def get(key: String): Option[Any] =
+    if (key == "r")
+      Some(r)
+    else if (key == "n")
+      Some(n)
+    else
+      None
+
+  def iterator = throw new RuntimeException
+
+  def -(key: String) = throw new RuntimeException
+
+  def +[B1 >: Any](kv: (String, B1)) = throw new RuntimeException
 }

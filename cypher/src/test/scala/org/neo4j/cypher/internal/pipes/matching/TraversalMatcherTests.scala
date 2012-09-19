@@ -25,6 +25,7 @@ import org.neo4j.graphdb.Path
 import org.neo4j.cypher.internal.pipes.{ExecutionContext, MutableMaps, QueryState}
 import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.graphdb.Direction.OUTGOING
+import org.neo4j.cypher.internal.commands.True
 
 
 class TraversalMatcherTests extends GraphDatabaseTestBase {
@@ -32,8 +33,8 @@ class TraversalMatcherTests extends GraphDatabaseTestBase {
   val A = withName("A")
   val B = withName("B")
 
-  val pr2 = ExpanderStep(0, Seq(B), OUTGOING, None)
-  val pr1 = ExpanderStep(1, Seq(A), OUTGOING, Some(pr2))
+  val pr2 = ExpanderStep(0, Seq(B), OUTGOING, None, True(), True())
+  val pr1 = ExpanderStep(1, Seq(A), OUTGOING, Some(pr2), True(), True())
 
   @Test def basic() {
     //Data nodes and rels
