@@ -25,7 +25,7 @@ import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.graphdb
 import graphdb.{Node, GraphDatabaseService}
 import org.neo4j.cypher.internal.pipes.{TraversalMatchPipe, ExecutionContext}
-import org.neo4j.cypher.internal.pipes.matching.{UnidirectionalTraversalMatcher, BidirectionalTraversalMatcher}
+import org.neo4j.cypher.internal.pipes.matching.{MonoDirectionalTraversalMatcher, BidirectionalTraversalMatcher}
 import org.neo4j.cypher.internal.executionplan.ExecutionPlanInProgress
 import scala.Some
 import org.neo4j.cypher.internal.commands.NodeByIndex
@@ -48,7 +48,7 @@ class TraversalMatcherBuilder(graph: GraphDatabaseService) extends PlanBuilder {
 
 
       val (matcher,tokens) = if (end.isEmpty) {
-        val matcher = new UnidirectionalTraversalMatcher(longestPath.step, startNodeFn)
+        val matcher = new MonoDirectionalTraversalMatcher(longestPath.step, startNodeFn)
         (matcher, Seq(startToken))
       } else {
         val (endToken, endNodeFn) = identifier2nodeFn(graph, end.get, unsolvedItems)
@@ -86,8 +86,8 @@ class TraversalMatcherBuilder(graph: GraphDatabaseService) extends PlanBuilder {
     }
 
     val pattern = plan.query.patterns.flatMap {
-      case Unsolved(r: RelatedTo) if !r.optional => Some(r)
-      case _                                     => None
+      case Unsolved(r: RelatedTo) if !r.optional && r.left != r.right => Some(r)
+      case _                                                          => None
     }
 
     val preds = plan.query.where.filter(_.unsolved).map(_.token)

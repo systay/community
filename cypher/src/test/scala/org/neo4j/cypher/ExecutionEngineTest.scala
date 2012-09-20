@@ -243,14 +243,16 @@ class ExecutionEngineTest extends ExecutionEngineHelper {
     relate(n1, n2, "KNOWS")
     relate(n2, n3, "FRIEND")
 
-    val query = Query.
-      start(NodeById("start", n1.getId)).
-      matches(
-      RelatedTo("start", "a", "rel", "KNOWS", Direction.OUTGOING),
-      RelatedTo("a", "b", "rel2", "FRIEND", Direction.OUTGOING)).
-      returns(ReturnItem(Identifier("b"), "b"))
+    val result = parseAndExecute("start n=node(1) match n-->a-->b RETURN b").toList
 
-    val result = execute(query)
+//    val query = Query.
+//      start(NodeById("start", n1.getId)).
+//      matches(
+//      RelatedTo("start", "a", "rel", "KNOWS", Direction.OUTGOING),
+//      RelatedTo("a", "b", "rel2", "FRIEND", Direction.OUTGOING)).
+//      returns(ReturnItem(Identifier("b"), "b"))
+//
+//    val result = execute(query)
 
     assertEquals(List(Map("b" -> n3)), result.toList)
   }

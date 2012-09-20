@@ -24,37 +24,43 @@ import org.neo4j.cypher.internal.pipes.{ExecutionContext, QueryState}
 import traversal._
 import java.lang.{Iterable => JIterable}
 import collection.JavaConverters._
-import org.neo4j.kernel.{StandardBranchCollisionDetector, Uniqueness, Traversal}
-import org.neo4j.helpers.ThisShouldNotHappenError
-import org.neo4j.kernel.impl.traversal.BranchCollisionPolicy
+import org.neo4j.kernel.{Uniqueness, Traversal}
 
-class UnidirectionalTraversalMatcher(steps: ExpanderStep, start: (ExecutionContext) => Iterable[Node])
-  extends TraversalMatcher  {
+class MonoDirectionalTraversalMatcher(steps: ExpanderStep, start: (ExecutionContext) => Iterable[Node])
+  extends TraversalMatcher {
 
   val initialStartStep = new InitialStateFactory[Option[ExpanderStep]] {
     def initialState(path: Path): Option[ExpanderStep] = Some(steps)
   }
 
-
-
-
   val baseTraversal: TraversalDescription = Traversal.
     traversal(Uniqueness.RELATIONSHIP_PATH).
+    evaluator(new MyEvaluator).
     expand(new TraversalPathExpander, initialStartStep)
 
-  // FIXME add state based evaluator
 
-  def findMatchingPaths(state: QueryState, context: ExecutionContext): Iterable[Path] =    {
-      val arr = start(context).toArray
+  def findMatchingPaths(state: QueryState, context: ExecutionContext): Iterable[Path] = {
+    val arr = start(context).toArray
 
-      val traverse = baseTraversal.traverse(arr: _*).asScala.toList
-      traverse
-    }
+    val traverse = baseTraversal.traverse(arr: _*).asScala.toList
+    traverse
+  }
 
   class ExpanderEvaluator extends PathEvaluator[Option[ExpanderStep]] {
     def evaluate(path: Path, state: BranchState[Option[ExpanderStep]]) = Evaluation.ofIncludes(state.getState.isEmpty)
 
     def evaluate(path: Path) = Evaluation.INCLUDE_AND_CONTINUE
   }
+
 }
 
+class MyEvaluator extends PathEvaluator[Option[ExpanderStep]] {
+  def evaluate(path: Path, state: BranchState[Option[ExpanderStep]]) = {
+    if (state.getState.isEmpty)
+      Evaluation.INCLUDE_AND_PRUNE
+    else
+      Evaluation.EXCLUDE_AND_CONTINUE
+  }
+
+  def evaluate(path: Path) = throw new RuntimeException
+}

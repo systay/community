@@ -31,7 +31,7 @@ class TraversalMatchPipe(source: Pipe, matcher:TraversalMatcher, trail:Trail) ex
         val paths = matcher.findMatchingPaths(state, context)
 
         paths.map {
-          path => val seq = path.iterator().asScala.toSeq
+          path => val seq = path.iterator().asScala.toSeq.reverse
           val m = trail.decompose(seq)
           context.newWith(m)
         }

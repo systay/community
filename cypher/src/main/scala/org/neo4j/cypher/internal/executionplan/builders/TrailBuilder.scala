@@ -36,8 +36,6 @@ final case class LongestTrail(start: String, end: Option[String], remainingPatte
 }
 
 final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], predicates: Seq[Predicate]) {
-
-
   private def internalFindLongestPath(doneSeq: Seq[(Trail, Seq[RelatedTo])]): Seq[(Trail, Seq[RelatedTo])] = {
     val result: Seq[(Trail, Seq[RelatedTo])] = doneSeq.flatMap {
       case (done: Trail, patterns: Seq[RelatedTo]) =>
@@ -62,7 +60,7 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
       internalFindLongestPath(result)
   }
 
-  def findLongestTrail(): Option[LongestTrail] =
+  private def findLongestTrail(): Option[LongestTrail] =
     if (patterns.isEmpty) {
       None
     }
@@ -83,7 +81,7 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
     }
 
 
-  def findLongestTrail(pathsBetweenBoundPoints: scala.Seq[(Trail, scala.Seq[RelatedTo])]): LongestTrail = {
+  private def findLongestTrail(pathsBetweenBoundPoints: scala.Seq[(Trail, scala.Seq[RelatedTo])]): LongestTrail = {
     val almost = pathsBetweenBoundPoints.sortBy(_._1.size)
     val (longestPath, remainingPattern) = almost.last
 
@@ -93,7 +91,7 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
     trail
   }
 
-  def findAllPaths(): Seq[(Trail, scala.Seq[RelatedTo])] = {
+  private def findAllPaths(): Seq[(Trail, scala.Seq[RelatedTo])] = {
     val startPoints = boundPoints.map(point => (BoundPoint(point), patterns))
     val foundPaths = internalFindLongestPath(startPoints).
       filter {
@@ -102,7 +100,7 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
     foundPaths
   }
 
-  def findCompatiblePaths(foundPaths: Seq[(Trail, Seq[RelatedTo])]): Seq[(Trail, Seq[RelatedTo])] = {
+  private def findCompatiblePaths(foundPaths: Seq[(Trail, Seq[RelatedTo])]): Seq[(Trail, Seq[RelatedTo])] = {
     val boundInTwoPoints = foundPaths.filter {
       case (p, left) => boundPoints.contains(p.start) && boundPoints.contains(p.end)
     }
@@ -110,99 +108,10 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
     if (boundInTwoPoints.nonEmpty)
       boundInTwoPoints
     else
-    foundPaths.filter {
-      case (p, left) => boundPoints.contains(p.start) || boundPoints.contains(p.end)
-    }
+      Seq.empty
+      //TODO: Turn this on!
+//    foundPaths.filter {
+//      case (p, left) => boundPoints.contains(p.start) || boundPoints.contains(p.end)
+//    }
   }
-}
-
-sealed abstract class Trail {
-  def pathDescription: Seq[String]
-
-  def start: String
-
-  def end: String
-
-  def size: Int
-
-  def toSteps(id: Int): Option[ExpanderStep]
-
-  override def toString: String = pathDescription.toString()
-
-  def decompose(p: Seq[PropertyContainer]): Map[String, Any] = decompose(p, Map.empty)._2
-
-  protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]): (Seq[PropertyContainer], Map[String, Any])
-
-  def symbols(table: SymbolTable): SymbolTable
-
-  def contains(target: String): Boolean
-
-  def predicates:Seq[Predicate]
-}
-
-final case class BoundPoint(name: String) extends Trail {
-  def end = name
-
-  def pathDescription = Seq(name)
-
-  def start = name
-
-  def size = 0
-
-  def toSteps(id: Int) = None
-
-  protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) = {
-    assert(p.size == 1, "Expected a path with a single node in it")
-    (p.tail, r ++ Map(name -> p.head))
-  }
-
-  def symbols(table: SymbolTable): SymbolTable = table.add(name, NodeType())
-
-  def contains(target: String): Boolean = target == name
-
-  def predicates = Seq.empty
-}
-
-final case class WrappingTrail(s: Trail,
-                               dir: Direction,
-                               rel: String,
-                               typ: Seq[String],
-                               end: String,
-                               candPredicates: Seq[Predicate]) extends Trail {
-
-  val relPred  = candPredicates.find(createFinder(rel))
-  val nodePred = candPredicates.find(createFinder(end))
-
-  private def containsSingle(set: Set[String], elem: String) = set.size == 1 && set.head == elem
-
-  private def createFinder(elem: String): (Predicate => Boolean) =
-    (pred: Predicate) => containsSingle(pred.symbolTableDependencies, elem)
-
-  def start = s.start
-
-  def pathDescription = s.pathDescription ++ Seq(rel, end)
-
-  def toSteps(id: Int) = {
-    val types = typ.map(withName(_))
-    val steps = s.toSteps(id + 1)
-    val relPredicate = relPred.getOrElse(True())
-    val nodePredicate = nodePred.getOrElse(True())
-
-    Some(ExpanderStep(id, types, dir, steps, relPredicate, nodePredicate))
-  }
-
-  def size = s.size + 1
-
-  protected[builders] def decompose(p: Seq[PropertyContainer], m: Map[String, Any]) = {
-    val r = p.tail.head
-    val n = p.head
-    val newMap = m + (rel -> r) + (end -> n)
-    s.decompose(p.tail.tail, newMap)
-  }
-
-  def symbols(table: SymbolTable): SymbolTable = s.symbols(table).add(end, NodeType()).add(rel, RelationshipType())
-
-  def contains(target: String): Boolean = s.contains(target) || target == end
-
-  def predicates = nodePred.toSeq ++ relPred.toSeq ++ s.predicates
 }
