@@ -84,7 +84,11 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
         val start = longestPath.start
         val end = if (boundPoints.contains(longestPath.end)) Some(longestPath.end) else None
 
-        Some(LongestTrail(start, end, remainingPattern, longestPath))
+
+        if (longestPath.size < 2)
+          None
+        else
+          Some(LongestTrail(start, end, remainingPattern, longestPath))
       }
     }
 

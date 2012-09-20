@@ -21,13 +21,12 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.commands._
 import org.neo4j.cypher.internal.pipes.{ExecutionContext, RelationshipStartPipe, NodeStartPipe, Pipe}
-import org.neo4j.graphdb.{PropertyContainer, Relationship, Node, GraphDatabaseService}
+import org.neo4j.graphdb.{Relationship, Node, GraphDatabaseService}
 import collection.JavaConverters._
 import java.lang.{Iterable => JIterable}
 import org.neo4j.cypher.MissingIndexException
 import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
-import collection.Iterable
-
+import GetGraphElements.getElements
 
 class IndexQueryBuilder(graph: GraphDatabaseService) extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
@@ -92,6 +91,8 @@ object IndexQueryBuilder {
           val r = indexHits.asScala.toList
           r
         }
+
+      case NodeById(varName, ids) => m => GetGraphElements.getElements[Node](ids(m), varName, graph.getNodeById)
     }
 
   def getRelationshipGetter(startItem: StartItem, graph: GraphDatabaseService): ExecutionContext => Iterable[Relationship] =

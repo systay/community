@@ -22,8 +22,8 @@ package org.neo4j.cypher.internal.pipes.matching
 import org.junit.Test
 import org.neo4j.graphdb.{RelationshipType, DynamicRelationshipType, Direction}
 import org.scalatest.Assertions
-import org.neo4j.cypher.internal.commands.{True, Predicate}
-import org.neo4j.cypher.internal.commands.expressions.Expression
+import org.neo4j.cypher.internal.commands.{Equals, True, Predicate}
+import org.neo4j.cypher.internal.commands.expressions.{Literal, Property, Expression}
 import org.neo4j.cypher.internal.symbols.SymbolTable
 import collection.Map
 import org.neo4j.kernel.impl.core.NodeManager
@@ -66,58 +66,47 @@ class ExpanderStepTest extends Assertions {
 
 
   @Test def reverse_two_steps() {
-    /*
-        (a)-[pr1:A]->(b)-[pr2:B]->(c)
-        WHERE pr1.prop = 1 AND b.prop = 2 AND pr2.prop = 3
+    //()-[pr1:A]->(a)-[pr2:B]->()
+    //WHERE r1.prop = 42 AND r2.prop = "FOO"
 
+    val step2 = step(0, A, Direction.INCOMING, None, "pr1", "b")
+    val step1 = step(1, B, Direction.INCOMING, Some(step2), "pr2")
 
-            val forward2 = step(0, Seq(A), Direction.INCOMING, None, nodePredicate = nodePred)
-            val forward1 = step(1, Seq(B), Direction.INCOMING, Some(forward2))
-
-
-    */
-
-    val step2 = step(0, B, Direction.OUTGOING, None, "pr2")
-    val step1 = step(1, A, Direction.OUTGOING, Some(step2), "pr1", "b")
-
-    val step1R = step(1, A, Direction.INCOMING, None, "pr1")
-    val step2R = step(0, B, Direction.INCOMING, Some(step1R), "pr2", "b")
+    val step1R = step(1, B, Direction.OUTGOING, None, "pr2", "b")
+    val step2R = step(0, A, Direction.OUTGOING, Some(step1R), "pr1")
 
     assert(step1.reverse() === step2R)
     assert(step2R.reverse() === step1)
   }
 
-  @Test def reverse_with_predicates() {
-    /*
-        (a)-[r1:A]->(b)-[r2:B]->(c)-[r3:C]->(d)
-        WHERE r1.prop = 1 AND b.prop = 2 AND r2.prop = 3 AND c.prop=4 AND r3.prop=5
-    */
-    val step3 = step(0, C, Direction.OUTGOING, None, "pr3")
-    val step2 = step(1, B, Direction.OUTGOING, Some(step3), "pr2", "c")
-    val step1 = step(2, A, Direction.OUTGOING, Some(step2), "pr1", "b")
+  @Test def reverse_with_three_steps() {
+    //()-[pr1:A]->(a)-[pr2:B]->(b)-[pr3:C]->()
+    //WHERE r1.prop = 42 AND r2.prop = "FOO"
 
-    val step1R = step(2, A, Direction.INCOMING, None, "pr1")
-    val step2R = step(1, B, Direction.INCOMING, Some(step1R), "pr2", "b")
-    val step3R = step(0, C, Direction.INCOMING, Some(step2R), "pr3", "c")
+    val step3 = step(0, A, Direction.INCOMING, None, "pr1", "b")
+    val step2 = step(1, B, Direction.INCOMING, Some(step3), "pr2", "c")
+    val step1 = step(2, C, Direction.INCOMING, Some(step2), "pr3")
 
+    val step1R = step(2, C, Direction.OUTGOING, None, "pr3", "c")
+    val step2R = step(1, B, Direction.OUTGOING, Some(step1R), "pr2", "b")
+    val step3R = step(0, A, Direction.OUTGOING, Some(step2R), "pr1")
 
     assert(step1.reverse() === step3R)
     assert(step3R.reverse() === step1)
+
   }
 
   @Test def reverse_predicates_with_mixed_directions() {
-    /*
-        (a)-[r1:A]->(b)<-[r2:B]-(c)-[r3:C]->(d)
-        WHERE r1.prop = 1 AND b.prop = 2 AND r2.prop = 3 AND c.prop=4 AND r3.prop=5
-    */
-    val step3 = step(0, C, Direction.BOTH, None, "pr3")
+    //()-[pr1:A]->(a)-[pr2:B]->(b)-[pr3:C]->()
+    //WHERE r1.prop = 42 AND r2.prop = "FOO"
+
+    val step3 = step(0, A, Direction.BOTH, None, "pr1", "b")
     val step2 = step(1, B, Direction.INCOMING, Some(step3), "pr2", "c")
-    val step1 = step(2, A, Direction.OUTGOING, Some(step2), "pr1", "b")
+    val step1 = step(2, C, Direction.OUTGOING, Some(step2), "pr3")
 
-    val step1R = step(2, A, Direction.INCOMING, None, "pr1")
+    val step1R = step(2, C, Direction.INCOMING, None, "pr3", "c")
     val step2R = step(1, B, Direction.OUTGOING, Some(step1R), "pr2", "b")
-    val step3R = step(0, C, Direction.BOTH, Some(step2R), "pr3", "c")
-
+    val step3R = step(0, A, Direction.BOTH, Some(step2R), "pr1")
 
     assert(step1.reverse() === step3R)
     assert(step3R.reverse() === step1)
