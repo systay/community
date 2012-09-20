@@ -35,7 +35,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
   private def prepareExecutionPlan(): ((Map[String, Any]) => ExecutionResult, String) = {
 
     var continue = true
-    var planInProgress = ExecutionPlanInProgress(PartiallySolvedQuery(inputQuery), new ParameterPipe(), containsTransaction = false)
+    var planInProgress = PartialExecPlan(PartiallySolvedQuery(inputQuery), Seq(new ParameterPipe()), containsTransaction = false)
 
     while (continue) {
       while (builders.exists(_.canWorkWith(planInProgress))) {
@@ -51,7 +51,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
         planInProgress = newPlan
       }
 
-      if (!planInProgress.query.isSolved) {
+      if (! (planInProgress.query.isSolved && planInProgress.pipes.size == 1) ) {
         produceAndThrowException(planInProgress)
       }
 
@@ -61,17 +61,20 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
       }
     }
 
-    val columns = getQueryResultColumns(inputQuery, planInProgress.pipe.symbols)
-    val (pipe, func) = if (planInProgress.containsTransaction) {
-      val p = new CommitPipe(planInProgress.pipe, graph)
-      (p, getEagerReadWriteQuery(p, columns))
-    } else {
-      (planInProgress.pipe, getLazyReadonlyQuery(planInProgress.pipe, columns))
+    {
+      val singlePlan = planInProgress.toSinglePlan
+      val columns = getQueryResultColumns(inputQuery, singlePlan.pipe.symbols)
+      val (pipe, func) = if (singlePlan.containsTransaction) {
+        val p = new CommitPipe(singlePlan.pipe, graph)
+        (p, getEagerReadWriteQuery(p, columns))
+      } else {
+        (singlePlan.pipe, getLazyReadonlyQuery(singlePlan.pipe, columns))
+      }
+
+      val executionPlan = pipe.executionPlan()
+
+      (func, executionPlan)
     }
-
-    val executionPlan = pipe.executionPlan()
-
-    (func, executionPlan)
   }
 
   private def getQueryResultColumns(q: Query, currentSymbols:SymbolTable) = {
@@ -106,7 +109,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
     func
   }
 
-  private def produceAndThrowException(plan: ExecutionPlanInProgress) {
+  private def produceAndThrowException(plan: PartialExecPlan) {
     val errors = builders.flatMap(builder => builder.missingDependencies(plan).map(builder -> _)).toList.
       sortBy {
       case (builder, _) => builder.priority
@@ -128,7 +131,7 @@ The Neo4j Team
     throw new SyntaxException(errorMessage)
   }
 
-  lazy val builders = Seq(
+  lazy val builders: Seq[PlanBuilder] = Seq(
     new NodeByIdBuilder(graph),
     new IndexQueryBuilder(graph),
     new GraphGlobalStartBuilder(graph),
@@ -144,7 +147,8 @@ The Neo4j Team
     new RelationshipByIdBuilder(graph),
     new CreateNodesAndRelationshipsBuilder(graph),
     new UpdateActionBuilder(graph),
-    new EmptyResultBuilder,    new TraversalMatcherBuilder(graph)
+    new EmptyResultBuilder,
+    new TraversalMatcherBuilder(graph)
   )
 
   override def toString = executionPlanText

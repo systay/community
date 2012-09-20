@@ -19,19 +19,18 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.neo4j.cypher.internal.executionplan.PlanBuilder
+import org.neo4j.cypher.internal.executionplan.{PlanBuilder, MonoPlanBuilder, ExecutionPlanInProgress}
 import org.neo4j.cypher.internal.commands._
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.graphdb
 import graphdb.{Node, GraphDatabaseService}
 import org.neo4j.cypher.internal.pipes.{TraversalMatchPipe, ExecutionContext}
 import org.neo4j.cypher.internal.pipes.matching.{MonoDirectionalTraversalMatcher, BidirectionalTraversalMatcher}
-import org.neo4j.cypher.internal.executionplan.ExecutionPlanInProgress
 import scala.Some
 import org.neo4j.cypher.internal.commands.NodeByIndex
 import org.neo4j.cypher.internal.commands.NodeByIndexQuery
 
-class TraversalMatcherBuilder(graph: GraphDatabaseService) extends PlanBuilder {
+class TraversalMatcherBuilder(graph: GraphDatabaseService) extends MonoPlanBuilder {
   def apply(plan: ExecutionPlanInProgress): ExecutionPlanInProgress = extractExpanderStepsFromQuery(plan) match {
     case None              => throw new ThisShouldNotHappenError("Andres", "This plan should not have been accepted")
     case Some(longestPath) =>

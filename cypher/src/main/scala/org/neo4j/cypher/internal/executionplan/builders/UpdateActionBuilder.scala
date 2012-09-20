@@ -19,13 +19,13 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.executionplan.{PlanBuilder, ExecutionPlanInProgress, MonoPlanBuilder}
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.cypher.internal.pipes.{Pipe, ExecuteUpdateCommandsPipe, TransactionStartPipe}
 import org.neo4j.cypher.internal.mutation.{CreateUniqueAction, UpdateAction}
 import org.neo4j.cypher.internal.commands.StartItem
 
-class UpdateActionBuilder(db: GraphDatabaseService) extends PlanBuilder {
+class UpdateActionBuilder(db: GraphDatabaseService) extends MonoPlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
 
     val p = if (plan.containsTransaction) {

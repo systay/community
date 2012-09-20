@@ -22,16 +22,32 @@ package org.neo4j.cypher.internal.executionplan
 /*
 PlanBuilders take a unsolved query, and solves another piece of it.
 */
+
 trait PlanBuilder {
+  def apply(plan: PartialExecPlan): PartialExecPlan
+
+  def canWorkWith(plan: PartialExecPlan): Boolean
+
+  def missingDependencies(plan: PartialExecPlan):Seq[String] = Seq()
+
+  // Lower priority wins
+  def priority: Int
+}
+
+trait MonoPlanBuilder extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress): ExecutionPlanInProgress
 
   def canWorkWith(plan: ExecutionPlanInProgress): Boolean
 
   def missingDependencies(plan: ExecutionPlanInProgress):Seq[String] = Seq()
 
-  // Lower priority wins
-  def priority: Int
+  def apply(plan: PartialExecPlan): PartialExecPlan = apply(plan.toSinglePlan).toMultiPlan
+
+  def canWorkWith(plan: PartialExecPlan): Boolean = canWorkWith(plan.toSinglePlan)
+
+  override def missingDependencies(plan: PartialExecPlan):Seq[String] = missingDependencies(plan.toSinglePlan)
 }
+
 
 // The priorities are all here, to make it easy to change and compare
 // Lower priority wins

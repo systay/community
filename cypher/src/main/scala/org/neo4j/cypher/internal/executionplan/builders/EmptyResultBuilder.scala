@@ -19,10 +19,10 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.executionplan.{PlanBuilder, ExecutionPlanInProgress, MonoPlanBuilder}
 import org.neo4j.cypher.internal.pipes.EmptyResultPipe
 
-class EmptyResultBuilder extends PlanBuilder {
+class EmptyResultBuilder extends MonoPlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
     val resultPipe = new EmptyResultPipe(plan.pipe)
 

@@ -165,4 +165,16 @@ case class PartiallySolvedQuery(returns: Seq[QueryToken[ReturnColumn]],
   }
 }
 
-case class ExecutionPlanInProgress(query: PartiallySolvedQuery, pipe: Pipe, containsTransaction: Boolean=false)
+case class ExecutionPlanInProgress(query: PartiallySolvedQuery, pipe: Pipe, containsTransaction: Boolean = false) {
+  def toMultiPlan = PartialExecPlan(query, Seq(pipe), containsTransaction)
+}
+
+case class PartialExecPlan(query: PartiallySolvedQuery, pipes: Seq[Pipe], containsTransaction: Boolean = false) {
+
+  def toSinglePlan: ExecutionPlanInProgress = pipes match {
+    case Seq(p) => ExecutionPlanInProgress(query, p, containsTransaction)
+    case _      => throw new ThisShouldNotHappenError("Stefan P", "Can't have not a pipe and smoke it, too")
+  }
+}
+
+

@@ -48,7 +48,7 @@ class FakeEPI(q: Query, gds: GraphDatabaseService) extends ExecutionPlanImpl(q, 
 
 // This is a builder that accepts everything, but changes nothing
 // It's a never ending loop waiting to happen
-class BadBuilder extends PlanBuilder {
+class BadBuilder extends MonoPlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = plan
 
   def canWorkWith(plan: ExecutionPlanInProgress) = true
