@@ -19,6 +19,8 @@
  */
 package org.neo4j.cypher.internal.executionplan
 
+import org.neo4j.helpers.ThisShouldNotHappenError
+
 /*
 PlanBuilders take a unsolved query, and solves another piece of it.
 */
@@ -28,7 +30,7 @@ trait PlanBuilder {
 
   def canWorkWith(plan: PartialExecPlan): Boolean
 
-  def missingDependencies(plan: PartialExecPlan):Seq[String] = Seq()
+  def missingDependencies(plan: PartialExecPlan): Seq[String] = Seq()
 
   // Lower priority wins
   def priority: Int
@@ -39,13 +41,17 @@ trait MonoPlanBuilder extends PlanBuilder {
 
   def canWorkWith(plan: ExecutionPlanInProgress): Boolean
 
-  def missingDependencies(plan: ExecutionPlanInProgress):Seq[String] = Seq()
+  def missingDependencies(plan: ExecutionPlanInProgress): Seq[String] = Seq()
 
-  def apply(plan: PartialExecPlan): PartialExecPlan = apply(plan.toSinglePlan).toMultiPlan
+  def apply(plan: PartialExecPlan): PartialExecPlan =
+    plan.
+      find(canWorkWith).
+      map(oldPlan => plan.replace(oldPlan.pipe, apply(oldPlan))).
+      getOrElse(throw new ThisShouldNotHappenError("Andres", "A builder offered to work on a pipe, but then bailed. " + getClass.getSimpleName))
 
-  def canWorkWith(plan: PartialExecPlan): Boolean = canWorkWith(plan.toSinglePlan)
+  def canWorkWith(plan: PartialExecPlan): Boolean = plan.exists(canWorkWith)
 
-  override def missingDependencies(plan: PartialExecPlan):Seq[String] = missingDependencies(plan.toSinglePlan)
+  override def missingDependencies(plan: PartialExecPlan): Seq[String] = missingDependencies(plan.toSinglePlan)
 }
 
 

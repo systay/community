@@ -35,7 +35,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
   private def prepareExecutionPlan(): ((Map[String, Any]) => ExecutionResult, String) = {
 
     var continue = true
-    var planInProgress = PartialExecPlan(PartiallySolvedQuery(inputQuery), Seq(new ParameterPipe()), containsTransaction = false)
+    var planInProgress = PartialExecPlan(PartiallySolvedQuery(inputQuery), Seq(), containsTransaction = false)
 
     while (continue) {
       while (builders.exists(_.canWorkWith(planInProgress))) {

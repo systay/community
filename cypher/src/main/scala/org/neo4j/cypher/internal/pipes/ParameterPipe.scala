@@ -24,7 +24,7 @@ import org.neo4j.cypher.internal.symbols.SymbolTable
 import org.neo4j.cypher.internal.commands.expressions.ParameterValue
 import collection.mutable.Map
 
-class ParameterPipe() extends Pipe {
+class ParameterPipe extends Pipe {
   def createResults(state: QueryState) = {
     Seq(ExecutionContext(Parameters.createParamContextMap(state)))
   }

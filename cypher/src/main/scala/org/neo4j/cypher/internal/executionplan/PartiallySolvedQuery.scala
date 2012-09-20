@@ -24,7 +24,7 @@ import org.neo4j.cypher.internal.commands._
 import collection.Seq
 import expressions.{Expression, AggregationExpression}
 import org.neo4j.helpers.ThisShouldNotHappenError
-import org.neo4j.cypher.internal.pipes.Pipe
+import org.neo4j.cypher.internal.pipes.{ParameterPipe, Pipe}
 import org.neo4j.cypher.internal.mutation.UpdateAction
 
 
@@ -104,64 +104,64 @@ case class PartiallySolvedQuery(returns: Seq[QueryToken[ReturnColumn]],
     namedPaths.exists(_.unsolved) ||
     updates.exists(_.unsolved))
 
-  def rewrite(f: Expression => Expression):PartiallySolvedQuery = {
+  def rewrite(f: Expression => Expression): PartiallySolvedQuery = {
     this.copy(
       returns = returns.map {
         case Unsolved(ReturnItem(expression, name, renamed)) => Unsolved[ReturnColumn](ReturnItem(expression.rewrite(f), name, renamed))
-        case x => x
+        case x                                               => x
       },
       where = where.map {
         case Unsolved(pred) => Unsolved(pred.rewrite(f))
-        case x => x
+        case x              => x
       },
       updates = updates.map {
-        case Unsolved(cmd)  => Unsolved(cmd.rewrite(f))
-        case x => x
+        case Unsolved(cmd) => Unsolved(cmd.rewrite(f))
+        case x             => x
       },
       sort = sort.map {
-        case Unsolved(SortItem(expression, asc)) => Unsolved(SortItem(expression.rewrite(f),asc))
-        case x => x
+        case Unsolved(SortItem(expression, asc)) => Unsolved(SortItem(expression.rewrite(f), asc))
+        case x                                   => x
       },
       patterns = patterns.map {
         case Unsolved(p) => Unsolved(p.rewrite(f))
-        case x => x
+        case x           => x
       },
       aggregation = aggregation.map {
         case Unsolved(exp) => Unsolved(exp.rewrite(f) match {
-                  case x: AggregationExpression => x
-                  case _ => throw new ThisShouldNotHappenError("Andrés & Michael","aggregation expressions should never be rewritten to non-aggregation-expressions")
+          case x: AggregationExpression => x
+          case _                        => throw new ThisShouldNotHappenError("Andrés & Michael", "aggregation expressions should never be rewritten to non-aggregation-expressions")
         })
-        case x => x
+        case x             => x
       },
       namedPaths = namedPaths.map {
         case Unsolved(namedPath) => Unsolved(namedPath.rewrite(f))
-        case x => x
+        case x                   => x
       }
     )
   }
 
   def unsolvedExpressions = {
     val rExpressions = returns.flatMap {
-      case Unsolved(ReturnItem(expression, _, _)) => expression.filter( e=>true )
-      case _ => None
+      case Unsolved(ReturnItem(expression, _, _)) => expression.filter(e => true)
+      case _                                      => None
     }
 
     val wExpressions = where.flatMap {
-      case Unsolved(pred) => pred.filter( e=>true )
-      case _ => Seq()
+      case Unsolved(pred) => pred.filter(e => true)
+      case _              => Seq()
     }
 
     val aExpressions = aggregation.flatMap {
-      case Unsolved(expression) => expression.filter( e=>true )
-      case _ => Seq()
+      case Unsolved(expression) => expression.filter(e => true)
+      case _                    => Seq()
     }
 
     val updateExpressions = updates.flatMap {
-      case Unsolved(cmd)  => cmd.filter(e=>true)
-      case _ => Seq()
+      case Unsolved(cmd) => cmd.filter(e => true)
+      case _             => Seq()
     }
 
-   rExpressions ++ wExpressions ++ aExpressions ++ updateExpressions
+    rExpressions ++ wExpressions ++ aExpressions ++ updateExpressions
   }
 }
 
@@ -170,6 +170,32 @@ case class ExecutionPlanInProgress(query: PartiallySolvedQuery, pipe: Pipe, cont
 }
 
 case class PartialExecPlan(query: PartiallySolvedQuery, pipes: Seq[Pipe], containsTransaction: Boolean = false) {
+
+  def exists(f: ExecutionPlanInProgress => Boolean):Boolean=find(f).nonEmpty
+
+  def find(f: ExecutionPlanInProgress => Boolean): Option[ExecutionPlanInProgress] =
+    (pipes :+ new ParameterPipe()).
+      map(p => ExecutionPlanInProgress(query, p, containsTransaction)).
+      find(f)
+
+  def replace(oldPipe: Pipe, newPlan:ExecutionPlanInProgress): PartialExecPlan = {
+    val newPipe = newPlan.pipe
+
+    val newPipes = if (pipes.contains(oldPipe))
+      replace(oldPipe, newPipe)
+    else
+      pipes :+ newPipe
+
+    copy(pipes = newPipes, query = newPlan.query)
+  }
+
+
+  def replace(oldPipe: Pipe, newPipe: Pipe): Seq[Pipe] = {
+    pipes.map {
+      case p if p == oldPipe => newPipe
+      case p                 => p
+    }
+  }
 
   def toSinglePlan: ExecutionPlanInProgress = pipes match {
     case Seq(p) => ExecutionPlanInProgress(query, p, containsTransaction)
