@@ -63,34 +63,44 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
   }
 
   def findLongestTrail(): Option[LongestTrail] =
-    if (patterns.isEmpty) None
+    if (patterns.isEmpty) {
+      None
+    }
     else {
-      val foundPaths: Seq[(Trail, Seq[RelatedTo])] =
-        internalFindLongestPath(boundPoints.map {
-          point => (BoundPoint(point), patterns)
-        }).
-          filter {
-          case (trail, toes) => trail.size > 0 && trail.start != trail.end
-        }
+      val foundPaths = findAllPaths()
+      val pathsBetweenBoundPoints = findCompatiblePaths(foundPaths)
 
-      val pathsBetweenBoundPoints: Seq[(Trail, Seq[RelatedTo])] = findCompatiblePaths(foundPaths)
-
-      if (pathsBetweenBoundPoints.isEmpty)
+      if (pathsBetweenBoundPoints.isEmpty) {
         None
-      else {
-        val almost = pathsBetweenBoundPoints.sortBy(_._1.size)
-        val (longestPath, remainingPattern) = almost.last
+      } else {
+        val trail = findLongestTrail(pathsBetweenBoundPoints)
 
-        val start = longestPath.start
-        val end = if (boundPoints.contains(longestPath.end)) Some(longestPath.end) else None
-
-
-        if (longestPath.size < 2)
+        if (trail.longestTrail.size < 2)
           None
         else
-          Some(LongestTrail(start, end, remainingPattern, longestPath))
+          Some(trail)
       }
     }
+
+
+  def findLongestTrail(pathsBetweenBoundPoints: scala.Seq[(Trail, scala.Seq[RelatedTo])]): LongestTrail = {
+    val almost = pathsBetweenBoundPoints.sortBy(_._1.size)
+    val (longestPath, remainingPattern) = almost.last
+
+    val start = longestPath.start
+    val end = if (boundPoints.contains(longestPath.end)) Some(longestPath.end) else None
+    val trail = LongestTrail(start, end, remainingPattern, longestPath)
+    trail
+  }
+
+  def findAllPaths(): Seq[(Trail, scala.Seq[RelatedTo])] = {
+    val startPoints = boundPoints.map(point => (BoundPoint(point), patterns))
+    val foundPaths = internalFindLongestPath(startPoints).
+      filter {
+      case (trail, toes) => trail.size > 0 && trail.start != trail.end
+    }
+    foundPaths
+  }
 
   def findCompatiblePaths(foundPaths: Seq[(Trail, Seq[RelatedTo])]): Seq[(Trail, Seq[RelatedTo])] = {
     val boundInTwoPoints = foundPaths.filter {
@@ -100,12 +110,9 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
     if (boundInTwoPoints.nonEmpty)
       boundInTwoPoints
     else
-      Seq.empty
-    /* FIXME
     foundPaths.filter {
       case (p, left) => boundPoints.contains(p.start) || boundPoints.contains(p.end)
     }
-    */
   }
 }
 

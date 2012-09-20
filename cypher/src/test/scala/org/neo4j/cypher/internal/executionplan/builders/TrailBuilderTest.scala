@@ -115,14 +115,14 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     }
   }
 
-  @Ignore @Test def find_longest_path_with_single_start() {
+  @Test def find_longest_path_with_single_start() {
     val pr3 = step(0, Seq(C), OUTGOING, None)
     val pr2 = step(1, Seq(B), OUTGOING, Some(pr3))
     val pr1 = step(2, Seq(A), OUTGOING, Some(pr2))
 
     TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a")) match {
       case Some(lpr@LongestTrail("a", None, Seq(BtoB2), lp)) => assert(lpr.step === pr1)
-      case _                                                      => fail("Didn't find any paths")
+      case _                                                 => fail("Didn't find any paths")
     }
   }
 
