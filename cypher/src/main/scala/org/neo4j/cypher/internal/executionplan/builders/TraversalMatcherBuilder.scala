@@ -21,23 +21,21 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.executionplan.PlanBuilder
 import org.neo4j.cypher.internal.commands._
-import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.helpers.ThisShouldNotHappenError
 import org.neo4j.graphdb
-import graphdb.{Node, GraphDatabaseService, Direction, PropertyContainer}
+import graphdb.{Node, GraphDatabaseService}
 import org.neo4j.cypher.internal.pipes.{TraversalMatchPipe, ExecutionContext}
-import org.neo4j.cypher.internal.pipes.matching.{UnidirectionalTraversalMatcher, BidirectionalTraversalMatcher, ExpanderStep}
+import org.neo4j.cypher.internal.pipes.matching.{UnidirectionalTraversalMatcher, BidirectionalTraversalMatcher}
 import org.neo4j.cypher.internal.executionplan.ExecutionPlanInProgress
 import scala.Some
 import org.neo4j.cypher.internal.commands.NodeByIndex
 import org.neo4j.cypher.internal.commands.NodeByIndexQuery
-import org.neo4j.cypher.internal.symbols.{RelationshipType, NodeType, SymbolTable}
 
 class TraversalMatcherBuilder(graph: GraphDatabaseService) extends PlanBuilder {
   def apply(plan: ExecutionPlanInProgress): ExecutionPlanInProgress = extractExpanderStepsFromQuery(plan) match {
     case None              => throw new ThisShouldNotHappenError("Andres", "This plan should not have been accepted")
     case Some(longestPath) =>
-      val TrailBuilder.LongestTrailResult(start, end, remainingPattern, longestTrail) = longestPath
+      val LongestTrail(start, end, remainingPattern, longestTrail) = longestPath
 
       val markedPatterns = plan.query.patterns.map {
         case Unsolved(p: RelatedTo) if remainingPattern.contains(p) => Unsolved[Pattern](p)
@@ -79,7 +77,7 @@ class TraversalMatcherBuilder(graph: GraphDatabaseService) extends PlanBuilder {
     steps.nonEmpty
   }
 
-  private def extractExpanderStepsFromQuery(plan: ExecutionPlanInProgress): Option[TrailBuilder.LongestTrailResult] = {
+  private def extractExpanderStepsFromQuery(plan: ExecutionPlanInProgress): Option[LongestTrail] = {
     val startPoints = plan.query.start.flatMap {
       case Unsolved(NodeByIndexQuery(id, _, _)) => Some(id)
       case Unsolved(NodeByIndex(id, _, _, _))   => Some(id)
@@ -91,7 +89,8 @@ class TraversalMatcherBuilder(graph: GraphDatabaseService) extends PlanBuilder {
       case _                      => None
     }
 
-    TrailBuilder.findLongestPath(pattern, startPoints)
+    val preds = plan.query.where.filter(_.unsolved).map(_.token)
+    TrailBuilder.findLongestTrail(pattern, startPoints, preds)
   }
 
   def priority = PlanBuilder.TraversalMatcher

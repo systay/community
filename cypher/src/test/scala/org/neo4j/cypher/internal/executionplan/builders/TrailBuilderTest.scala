@@ -19,8 +19,9 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.junit.{Ignore, Before, Test}
+import org.junit.{Ignore, Test}
 import org.neo4j.cypher.internal.commands._
+import expressions.{Literal, Property}
 import org.neo4j.graphdb.{RelationshipType, Direction}
 import org.scalatest.Assertions
 import org.neo4j.graphdb.Direction._
@@ -28,7 +29,6 @@ import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.cypher.GraphDatabaseTestBase
 import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
 import org.neo4j.cypher.internal.commands.True
-import org.neo4j.cypher.internal.executionplan.builders.TrailBuilder.LongestTrailResult
 
 class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
   val A = withName("A")
@@ -53,9 +53,9 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     val expected = step(0, Seq(A), Direction.INCOMING, None)
 
 
-    TrailBuilder.findLongestPath(Seq(AtoB), Seq("a", "b")) match {
-      case Some(lpr@LongestTrailResult("a", Some("b"), remains, lp)) => assert(lpr.step === expected.reverse())
-      case Some(lpr@LongestTrailResult("b", Some("a"), remains, lp)) => assert(lpr.step === expected)
+    TrailBuilder.findLongestTrail(Seq(AtoB), Seq("a", "b")) match {
+      case Some(lpr@LongestTrail("a", Some("b"), remains, lp)) => assert(lpr.step === expected.reverse())
+      case Some(lpr@LongestTrail("b", Some("a"), remains, lp)) => assert(lpr.step === expected)
       case _                                                      => fail("Didn't find any paths")
     }
   }
@@ -67,9 +67,50 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     val backward2 = step(0, Seq(B), Direction.OUTGOING, None)
     val backward1 = step(1, Seq(A), Direction.OUTGOING, Some(backward2))
 
-    TrailBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2), Seq("a", "c")) match {
-      case Some(lpr@LongestTrailResult("a", Some("c"), remains, lp)) => assert(lpr.step === backward1)
-      case Some(lpr@LongestTrailResult("c", Some("a"), remains, lp)) => assert(lpr.step === forward1)
+    TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2), Seq("a", "c")) match {
+      case Some(lpr@LongestTrail("a", Some("c"), remains, lp)) => assert(lpr.step === backward1)
+      case Some(lpr@LongestTrail("c", Some("a"), remains, lp)) => assert(lpr.step === forward1)
+      case _                                                        => fail("Didn't find any paths")
+    }
+  }
+
+  @Test def find_longest_path_between_two_points_with_a_predicate() {
+
+    //()<-[r1:A]-(a)<-[r2:B]-()
+    //WHERE r1.prop = 42 AND r2.prop = "FOO"
+
+    val r1Pred = Equals(Property("pr1", "prop"), Literal(42))
+    val r2Pred = Equals(Property("pr2", "prop"), Literal("FOO"))
+
+    val forward2 = step(0, Seq(A), Direction.INCOMING, None, relPredicate = r1Pred)
+    val forward1 = step(1, Seq(B), Direction.INCOMING, Some(forward2), relPredicate = r2Pred)
+
+    val backward2 = step(0, Seq(B), Direction.OUTGOING, None, relPredicate = r2Pred)
+    val backward1 = step(1, Seq(A), Direction.OUTGOING, Some(backward2), relPredicate = r1Pred)
+
+    TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2), Seq("a", "c"), Seq(r1Pred, r2Pred)) match {
+      case Some(lpr@LongestTrail("a", Some("c"), remains, lp)) => assert(lpr.step === backward1)
+      case Some(lpr@LongestTrail("c", Some("a"), remains, lp)) => assert(lpr.step === forward1)
+      case _                                                        => fail("Didn't find any paths")
+    }
+  }
+
+  @Test def find_longest_path_between_two_points_with_a_node_predicate() {
+    //()-[pr1:A]->(a)-[pr2:B]->()
+    //WHERE r1.prop = 42 AND r2.prop = "FOO"
+
+    val nodePred = Equals(Property("b", "prop"), Literal(42))
+
+    val forward2 = step(0, Seq(A), Direction.INCOMING, None, nodePredicate = nodePred)
+    val forward1 = step(1, Seq(B), Direction.INCOMING, Some(forward2))
+
+    val trail = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC), Seq("a", "c"), Seq(nodePred))
+
+    assert(trail.get.longestTrail.predicates.contains(nodePred))
+
+    trail match {
+      case Some(lpr@LongestTrail("c", Some("a"), remains, lp)) => assert(lpr.step === forward1)
+      case Some(lpr@LongestTrail("a", Some("c"), remains, lp)) => assert(lpr.step === forward1.reverse())
       case _                                                        => fail("Didn't find any paths")
     }
   }
@@ -79,8 +120,8 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     val pr2 = step(1, Seq(B), OUTGOING, Some(pr3))
     val pr1 = step(2, Seq(A), OUTGOING, Some(pr2))
 
-    TrailBuilder.findLongestPath(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a")) match {
-      case Some(lpr@LongestTrailResult("a", None, Seq(BtoB2), lp)) => assert(lpr.step === pr1)
+    TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a")) match {
+      case Some(lpr@LongestTrail("a", None, Seq(BtoB2), lp)) => assert(lpr.step === pr1)
       case _                                                      => fail("Didn't find any paths")
     }
   }
@@ -91,7 +132,7 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     val rel      = relate(nodeA, nodeB, "LINK_T")
 
     val kernPath = Seq(nodeA, rel, nodeB).reverse
-    val path     = WrappingTrail(BoundPoint("a"), Direction.OUTGOING, "link", Seq("LINK_T"), "b")
+    val path     = WrappingTrail(BoundPoint("a"), Direction.OUTGOING, "link", Seq("LINK_T"), "b", Seq.empty)
 
     val resultMap = path.decompose(kernPath)
     assert(resultMap === Map("a" -> nodeA, "b" -> nodeB, "link" -> rel))
@@ -107,8 +148,8 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     val kernPath = Seq(nodeA, rel1, nodeB, rel2, nodeC).reverse
     val path     =
       WrappingTrail(
-        WrappingTrail(BoundPoint("a"), Direction.OUTGOING, "link1", Seq("LINK_T"), "b"),
-        Direction.OUTGOING, "link2", Seq("LINK_T"), "c")
+        WrappingTrail(BoundPoint("a"), Direction.OUTGOING, "link1", Seq("LINK_T"), "b", Seq.empty),
+        Direction.OUTGOING, "link2", Seq("LINK_T"), "c", Seq.empty)
 
     val resultMap = path.decompose(kernPath)
     assert(resultMap === Map("a" -> nodeA, "b" -> nodeB, "c" -> nodeC,
@@ -118,6 +159,9 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
   private def step(id: Int,
                    typ: Seq[RelationshipType],
                    direction: Direction,
-                   next: Option[ExpanderStep]) = ExpanderStep(id, typ, direction, next, True(), True())
+                   next: Option[ExpanderStep],
+                   nodePredicate:Predicate=True(),
+                   relPredicate:Predicate=True()
+  ) = ExpanderStep(id, typ, direction, next, relPredicate = relPredicate, nodePredicate = nodePredicate)
 
 }

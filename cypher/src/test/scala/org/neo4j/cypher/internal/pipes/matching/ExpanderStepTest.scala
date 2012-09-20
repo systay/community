@@ -69,6 +69,12 @@ class ExpanderStepTest extends Assertions {
     /*
         (a)-[pr1:A]->(b)-[pr2:B]->(c)
         WHERE pr1.prop = 1 AND b.prop = 2 AND pr2.prop = 3
+
+
+            val forward2 = step(0, Seq(A), Direction.INCOMING, None, nodePredicate = nodePred)
+            val forward1 = step(1, Seq(B), Direction.INCOMING, Some(forward2))
+
+
     */
 
     val step2 = step(0, B, Direction.OUTGOING, None, "pr2")

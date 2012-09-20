@@ -33,10 +33,10 @@ case class ExpanderStep(id: Int,
   def reverse(): ExpanderStep = {
     val allSteps = getAllStepsAsSeq()
 
-    val (reversed, _) = allSteps.foldLeft[(Option[ExpanderStep], Predicate)]((None, True())) {
-      case ((last, predicate), step) =>
-        val reverse1 = step.direction.reverse()
-        (Some(step.copy(next = last, direction = reverse1, nodePredicate = predicate)), step.nodePredicate)
+    val reversed = allSteps.foldLeft[Option[ExpanderStep]]((None)) {
+      case (last, step) =>
+        val p = step.next.map(_.nodePredicate).getOrElse(True())
+        Some(step.copy(next = last, direction = step.direction.reverse(), nodePredicate = p))
     }
 
     assert(reversed.nonEmpty, "The reverse of an expander should never be empty")
