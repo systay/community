@@ -23,12 +23,38 @@ package org.neo4j.cypher.internal.pipes
 import collection.mutable
 
 class HashJoinPipe(a: Pipe, b: Pipe) extends Pipe {
-  val keySet = a.symbols.identifiers.keySet.intersect(b.symbols.identifiers.keySet)
-  assert(keySet.nonEmpty, "No overlap between the incoming pipes exist")
 
-  val keySeq = keySet.toSeq
+  object States extends Enumeration {
+    type State = Value
 
-  def createResults(state: QueryState): Traversable[ExecutionContext] = {
+    val Build,
+        MapZip,
+        Probe,
+        DropProbe,
+        Done = Value
+  }
+
+  object Messages extends Enumeration {
+    type Message = Value
+
+    val OneEmpty, TwoEmpty, TooBig = Value
+  }
+
+  import States._
+  import Messages._
+
+  class Context {
+
+  }
+
+
+
+    def createResults(state: QueryState): Traversable[ExecutionContext] =
+      new mutable.Iterable[ExecutionContext] {
+        def iterator = null
+      }
+
+    def createOldResults(state: QueryState): Traversable[ExecutionContext] = {
     val table = buildTable(a.createResults(state))
 
     b.createResults(state).flatMap { (entry) =>
@@ -49,6 +75,11 @@ class HashJoinPipe(a: Pipe, b: Pipe) extends Pipe {
     }
     table
   }
+
+  val keySet = a.symbols.identifiers.keySet.intersect(b.symbols.identifiers.keySet)
+  assert(keySet.nonEmpty, "No overlap between the incoming pipes exist")
+
+  val keySeq = keySet.toSeq
 
   def computeKey(m: mutable.Map[String, Any]): Seq[Any] = keySeq.map { m(_) }
   def symbols = a.symbols.add(b.symbols.identifiers)

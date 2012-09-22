@@ -43,13 +43,13 @@ trait MonoPlanBuilder extends PlanBuilder {
 
   def missingDependencies(plan: ExecutionPlanInProgress): Seq[String] = Seq()
 
-  def apply(plan: PartialExecPlan): PartialExecPlan =
-    plan.
-      find(canWorkWith).
-      map(oldPlan => plan.replace(oldPlan.pipe, apply(oldPlan))).
-      getOrElse(throw new ThisShouldNotHappenError("Andres", "A builder offered to work on a pipe, but then bailed. " + getClass.getSimpleName))
+  def apply(plan: PartialExecPlan): PartialExecPlan = apply(plan.toSinglePlan).toMultiPlan
+//    plan.
+//      find(canWorkWith).
+//      map(oldPlan => plan.replace(oldPlan.pipe, apply(oldPlan))).
+//      getOrElse(throw new ThisShouldNotHappenError("Andres", "A builder offered to work on a pipe, but then bailed. " + getClass.getSimpleName))
 
-  def canWorkWith(plan: PartialExecPlan): Boolean = plan.exists(canWorkWith)
+  def canWorkWith(plan: PartialExecPlan): Boolean = canWorkWith(plan.toSinglePlan)//plan.exists(canWorkWith)
 
   override def missingDependencies(plan: PartialExecPlan): Seq[String] = missingDependencies(plan.toSinglePlan)
 }

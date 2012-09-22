@@ -49,14 +49,14 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
   val CtoD = RelatedTo("c", "d", "pr3", Seq("C"), Direction.OUTGOING, optional = false, predicate = True())
   val BtoB2 = RelatedTo("b", "b2", "pr4", Seq("D"), Direction.OUTGOING, optional = false, predicate = True())
 
-  @Test def find_longest_path_for_single_pattern() {
+  @Ignore @Test def find_longest_path_for_single_pattern() {
     val expected = step(0, Seq(A), Direction.INCOMING, None)
 
 
     TrailBuilder.findLongestTrail(Seq(AtoB), Seq("a", "b")) match {
       case Some(lpr@LongestTrail("a", Some("b"), remains, lp)) => assert(lpr.step === expected.reverse())
       case Some(lpr@LongestTrail("b", Some("a"), remains, lp)) => assert(lpr.step === expected)
-      case _                                                      => fail("Didn't find any paths")
+      case _                                                   => fail("Didn't find any paths")
     }
   }
 

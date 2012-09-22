@@ -35,7 +35,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
   private def prepareExecutionPlan(): ((Map[String, Any]) => ExecutionResult, String) = {
 
     var continue = true
-    var planInProgress = PartialExecPlan(PartiallySolvedQuery(inputQuery), Seq(), containsTransaction = false)
+    var planInProgress = PartialExecPlan(PartiallySolvedQuery(inputQuery), Seq(new ParameterPipe()), containsTransaction = false)
 
     while (continue) {
       while (builders.exists(_.canWorkWith(planInProgress))) {
@@ -147,8 +147,8 @@ The Neo4j Team
     new RelationshipByIdBuilder(graph),
     new CreateNodesAndRelationshipsBuilder(graph),
     new UpdateActionBuilder(graph),
-    new EmptyResultBuilder,
-    new TraversalMatcherBuilder(graph)
+    new EmptyResultBuilder//,
+    //new TraversalMatcherBuilder(graph)
   )
 
   override def toString = executionPlanText
