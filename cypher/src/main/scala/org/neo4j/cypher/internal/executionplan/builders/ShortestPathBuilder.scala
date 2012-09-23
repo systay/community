@@ -20,11 +20,11 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.commands.ShortestPath
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.executionplan.{PlanBuilder, ExecutionPlanInProgress, MonoPlanBuilder}
 import collection.Seq
 import org.neo4j.cypher.internal.pipes.{ShortestPathPipe, Pipe}
 
-class ShortestPathBuilder extends PlanBuilder {
+class ShortestPathBuilder extends MonoPlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
     val q = plan.query
     val p = plan.pipe
@@ -45,7 +45,6 @@ class ShortestPathBuilder extends PlanBuilder {
   }
 
   def priority: Int = PlanBuilder.ShortestPath
-
 
   override def missingDependencies(plan: ExecutionPlanInProgress) = {
     val querySoFar = plan.query

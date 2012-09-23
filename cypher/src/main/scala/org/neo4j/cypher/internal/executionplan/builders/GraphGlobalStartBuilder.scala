@@ -24,9 +24,9 @@ import org.neo4j.cypher.internal.pipes.{RelationshipStartPipe, NodeStartPipe, Pi
 import org.neo4j.graphdb.GraphDatabaseService
 import collection.JavaConverters._
 import org.neo4j.tooling.GlobalGraphOperations
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PartiallySolvedQuery, PlanBuilder}
+import org.neo4j.cypher.internal.executionplan.{PlanBuilder, ExecutionPlanInProgress, PartiallySolvedQuery, MonoPlanBuilder}
 
-class GraphGlobalStartBuilder(graph: GraphDatabaseService) extends PlanBuilder {
+class GraphGlobalStartBuilder(graph: GraphDatabaseService) extends MonoPlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
     val q = plan.query
     val p = plan.pipe

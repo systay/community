@@ -38,8 +38,13 @@ class HashJoinContext(private var inputA: Iterator[Map[String, Any]],
   //If we have zipped two probe tables, this is where we'll find the buffer from that result
   var zipBuffer: Iterator[Map[String, Any]] = None.toIterator
 
+  //Here is the probe result for when we have done a end-probe
   var probe: Probe = null
+
+  //If a drop probe has been started, this is the next one to do after the first one is finished
   var nextDropProbe: Option[Probe] = None
+
+  //This is the drop probe that we are currently working on
   var dropProbe: Probe = null
 
 
@@ -96,10 +101,8 @@ class HashJoinContext(private var inputA: Iterator[Map[String, Any]],
       val map = mapA
 
       val (a, b) = inputB.duplicate
-      val (a1,a2) = a.duplicate
-      val asdfasdf = a2.toList
 
-      val input = a1
+      val input = a
 
       inputB = b
       mapA = mutable.Map.empty
@@ -151,9 +154,9 @@ class HashJoinContext(private var inputA: Iterator[Map[String, Any]],
 
   def switchDropProbe() {
     dropProbe = nextDropProbe match {
-      case Some(p) =>
+      case Some(nextProbe) =>
         nextDropProbe = None
-        p
+        nextProbe
       case None    =>
         throw new ThisShouldNotHappenError("Andrés", "Can not get next drop probe because there is none")
     }

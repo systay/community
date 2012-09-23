@@ -20,7 +20,7 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.{Pipe, ExtractPipe, EagerAggregationPipe}
-import org.neo4j.cypher.internal.executionplan.{PartiallySolvedQuery, ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.executionplan.{PlanBuilder, PartiallySolvedQuery, ExecutionPlanInProgress, MonoPlanBuilder}
 import org.neo4j.cypher.internal.commands.expressions.{Identifier, CachedExpression, AggregationExpression, Expression}
 import org.neo4j.cypher.internal.symbols.SymbolTable
 
@@ -45,7 +45,7 @@ Rewrite the remainder of the query to not use the aggregation expression, instea
 value.
  */
 
-class AggregationBuilder extends PlanBuilder  {
+class AggregationBuilder extends MonoPlanBuilder  {
   def apply(plan: ExecutionPlanInProgress) = {
     // First, calculate the key expressions and save them down to the map
     val keyExpressionsToExtract = getExpressions(plan)

@@ -26,7 +26,7 @@ import org.neo4j.cypher.internal.commands.{RelationshipById, StartItem}
 import org.neo4j.graphdb.{Relationship, GraphDatabaseService}
 import org.neo4j.cypher.internal.pipes.RelationshipStartPipe
 
-class RelationshipByIdBuilder(graph: GraphDatabaseService) extends PlanBuilder {
+class RelationshipByIdBuilder(graph: GraphDatabaseService) extends MonoPlanBuilder {
   def priority = PlanBuilder.RelationshipById
 
   def apply(plan: ExecutionPlanInProgress) = {

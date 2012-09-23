@@ -26,7 +26,7 @@ import org.neo4j.cypher.internal.pipes.{NodeStartPipe, Pipe}
 import GetGraphElements.getElements
 import org.neo4j.cypher.internal.executionplan._
 
-class NodeByIdBuilder(graph: GraphDatabaseService) extends PlanBuilder {
+class NodeByIdBuilder(graph: GraphDatabaseService) extends MonoPlanBuilder {
   def priority: Int = PlanBuilder.NodeById
 
   def apply(plan: ExecutionPlanInProgress) = {

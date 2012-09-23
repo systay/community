@@ -22,10 +22,10 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.commands.Predicate
 import org.neo4j.cypher.internal.pipes.{FilterPipe, Pipe}
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.executionplan.{PlanBuilder, ExecutionPlanInProgress, MonoPlanBuilder}
 import org.neo4j.cypher.{CypherException, CypherTypeException, SyntaxException}
 
-class FilterBuilder extends PlanBuilder {
+class FilterBuilder extends MonoPlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
     val q = plan.query
     val p = plan.pipe

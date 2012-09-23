@@ -20,11 +20,11 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.pipes.ColumnFilterPipe
-import org.neo4j.cypher.internal.executionplan.{ExecutionPlanInProgress, PlanBuilder}
+import org.neo4j.cypher.internal.executionplan.{PlanBuilder, ExecutionPlanInProgress, MonoPlanBuilder}
 import org.neo4j.cypher.internal.symbols.SymbolTable
 import org.neo4j.cypher.internal.commands.{AllIdentifiers, ReturnItem, ReturnColumn}
 
-class ColumnFilterBuilder extends PlanBuilder {
+class ColumnFilterBuilder extends MonoPlanBuilder {
   def apply(plan: ExecutionPlanInProgress) = {
     val q = plan.query
     val p = plan.pipe

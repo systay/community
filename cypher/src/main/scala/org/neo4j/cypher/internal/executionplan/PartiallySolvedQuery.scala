@@ -166,3 +166,4 @@ case class PartiallySolvedQuery(returns: Seq[QueryToken[ReturnColumn]],
 }
 
 case class ExecutionPlanInProgress(query: PartiallySolvedQuery, pipe: Pipe, containsTransaction: Boolean=false)
+case class PartialExecPlan(query: PartiallySolvedQuery, pipe: Seq[Pipe], containsTransaction: Boolean=false)
