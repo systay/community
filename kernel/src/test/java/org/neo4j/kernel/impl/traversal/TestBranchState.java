@@ -19,12 +19,14 @@
  */
 package org.neo4j.kernel.impl.traversal;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.traversal.AbstractPathEvaluator;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.PathExpander;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.graphdb.traversal.Evaluation;
+import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.PathEvaluator;
 
 import static junit.framework.Assert.assertEquals;
@@ -103,7 +105,7 @@ public class TestBranchState extends AbstractTestBase
         }
     }
     
-    @Ignore @Test
+    @Test
     public void evaluateState() throws Exception
     {
         /*
@@ -113,17 +115,8 @@ public class TestBranchState extends AbstractTestBase
          *    (e)-5->(f)
          */
         createGraph( "a TO b", "b TO c", "c TO d", "a TO e", "e TO f", "f TO c" );
-        Transaction tx = beginTx();
-        setRelationshipProperty( "a", "b", "weight", 1 );
-        setRelationshipProperty( "b", "c", "weight", 2 );
-        setRelationshipProperty( "c", "d", "weight", 3 );
-        setRelationshipProperty( "a", "e", "weight", 4 );
-        setRelationshipProperty( "e", "f", "weight", 5 );
-        setRelationshipProperty( "f", "c", "weight", 6 );
-        tx.success();
-        tx.finish();
-        
-        PathEvaluator<Integer> evaluator = new AbstractPathEvaluator<Integer>()
+
+        PathEvaluator<Integer> evaluator = new PathEvaluator.Adapter<Integer>()
         {
             @Override
             public Evaluation evaluate( Path path, BranchState<Integer> state )
@@ -132,7 +125,7 @@ public class TestBranchState extends AbstractTestBase
             }
         };
         
-        expectPaths( traversal( NODE_PATH ).expand( new RelationshipWeightExpander(), initialState( 0, 0 ) )
+        expectPaths( traversal( NODE_PATH ).expand( new RelationshipWeightExpander(), new InitialBranchState.State<Integer>( 1, 1 ) )
                 .evaluator( evaluator ).traverse( getNodeWithName( "a" ) ), "a,b,c" );
     }
     
@@ -141,8 +134,7 @@ public class TestBranchState extends AbstractTestBase
         @Override
         public Iterable<Relationship> expand( Path path, BranchState<Integer> state )
         {
-            if ( path.length() > 0 )
-                state.setState( state.getState() + (Integer)path.lastRelationship().getProperty( "weight" ) );
+            state.setState( state.getState() + 1 );
             return path.endNode().getRelationships( OUTGOING );
         }
 

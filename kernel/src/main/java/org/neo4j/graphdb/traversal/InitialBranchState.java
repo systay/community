@@ -42,11 +42,48 @@ public interface InitialBranchState<STATE> extends InitialStateFactory<STATE>
             return this;
         }
     };
-    
+
     /**
      * Creates a version of this state factory which produces reversed initial state,
      * used in bidirectional traversals.
      * @return an instance which produces reversed initial state.
      */
     InitialBranchState<STATE> reverse();
+
+    public static abstract class Adapter<STATE> implements InitialBranchState<STATE>
+    {
+        @Override
+        public InitialBranchState<STATE> reverse()
+        {
+            return this;
+        }
+    }
+
+    /**
+     * Branch state evaluator for an initial state.
+     * @param <STATE>
+     */
+    public static class State<STATE> extends Adapter<STATE>
+    {
+        private final STATE initialState;
+        private final STATE reversedInitialState;
+
+        public State( STATE initialState, STATE reversedInitialState )
+        {
+            this.initialState = initialState;
+            this.reversedInitialState = reversedInitialState;
+        }
+        
+        @Override
+        public InitialBranchState<STATE> reverse()
+        {
+            return new State( reversedInitialState, initialState );
+        }
+
+        @Override
+        public STATE initialState( Path path )
+        {
+            return initialState;
+        }
+    }
 }

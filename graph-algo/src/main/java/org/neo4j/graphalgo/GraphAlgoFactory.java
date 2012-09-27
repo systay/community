@@ -19,8 +19,6 @@
  */
 package org.neo4j.graphalgo;
 
-import static org.neo4j.kernel.Traversal.wrapInitialStateFactory;
-
 import org.neo4j.graphalgo.impl.path.AStar;
 import org.neo4j.graphalgo.impl.path.AllPaths;
 import org.neo4j.graphalgo.impl.path.AllSimplePaths;
@@ -157,7 +155,7 @@ public abstract class GraphAlgoFactory
      *            {@link Relationship}s for each {@link Node}.
      * @param maxDepth the max {@link Path#length()} returned paths are allowed
      *            to have.
-     * @param maxResultCount the maximum number of {@link Path}s to return.
+     * @param maxHitCount the maximum number of {@link Path}s to return.
      * If this number of found paths are encountered the traversal will stop.
      * @return an algorithm which finds shortest paths between two nodes.
      */
@@ -177,7 +175,7 @@ public abstract class GraphAlgoFactory
      *            {@link Relationship}s for each {@link Path}.
      * @param maxDepth the max {@link Path#length()} returned paths are allowed
      *            to have.
-     * @param maxResultCount the maximum number of {@link Path}s to return.
+     * @param maxHitCount the maximum number of {@link Path}s to return.
      * If this number of found paths are encountered the traversal will stop.
      * @return an algorithm which finds shortest paths between two nodes.
      */
@@ -373,15 +371,14 @@ public abstract class GraphAlgoFactory
      * @param expander the {@link PathExpander} to use for expanding
      * {@link Relationship}s for each {@link Path}.
      * @param stateFactory initial state for the traversal branches.
-     * @param relationshipPropertyRepresentingCost the property to represent cost
-     * on each relationship the algorithm traverses.
+     * @param costEvaluator the cost evaluator for each relationship the algorithm traverses.
      * @return an algorithm which finds the cheapest path between two nodes
      * using the Dijkstra algorithm.
      */
     public static PathFinder<WeightedPath> dijkstra( PathExpander expander,
             InitialStateFactory stateFactory, CostEvaluator<Double> costEvaluator )
     {
-        return new Dijkstra( expander, wrapInitialStateFactory( stateFactory ), costEvaluator );
+        return new Dijkstra( expander, new InitialStateFactory.AsInitialBranchState( stateFactory ), costEvaluator );
     }
 
     /**
@@ -393,8 +390,7 @@ public abstract class GraphAlgoFactory
      * @param expander the {@link PathExpander} to use for expanding
      * {@link Relationship}s for each {@link Path}.
      * @param stateFactory initial state for the traversal branches.
-     * @param relationshipPropertyRepresentingCost the property to represent cost
-     * on each relationship the algorithm traverses.
+     * @param costEvaluator the cost evaluator for each relationship the algorithm traverses.
      * @return an algorithm which finds the cheapest path between two nodes
      * using the Dijkstra algorithm.
      */

@@ -41,7 +41,7 @@ import org.neo4j.graphdb.RelationshipType;
 public abstract class Evaluators
 {
     @SuppressWarnings( "rawtypes" )
-    private static final PathEvaluator ALL = new AbstractPathEvaluator()
+    private static final PathEvaluator ALL = new PathEvaluator.Adapter()
     {
         public Evaluation evaluate( Path path, BranchState state )
         {
@@ -83,7 +83,7 @@ public abstract class Evaluators
     @SuppressWarnings( "rawtypes" )
     public static PathEvaluator toDepth( final int depth )
     {
-        return new AbstractPathEvaluator()
+        return new PathEvaluator.Adapter()
         {
             public Evaluation evaluate( Path path, BranchState state )
             {
@@ -104,7 +104,7 @@ public abstract class Evaluators
     @SuppressWarnings( "rawtypes" )
     public static PathEvaluator fromDepth( final int depth )
     {
-        return new AbstractPathEvaluator()
+        return new PathEvaluator.Adapter()
         {
             public Evaluation evaluate( Path path, BranchState state )
             {
@@ -124,7 +124,7 @@ public abstract class Evaluators
     @SuppressWarnings( "rawtypes" )
     public static PathEvaluator atDepth( final int depth )
     {
-        return new AbstractPathEvaluator()
+        return new PathEvaluator.Adapter()
         {
             public Evaluation evaluate( Path path, BranchState state )
             {
@@ -147,7 +147,7 @@ public abstract class Evaluators
     @SuppressWarnings( "rawtypes" )
     public static PathEvaluator includingDepths( final int minDepth, final int maxDepth )
     {
-        return new AbstractPathEvaluator()
+        return new PathEvaluator.Adapter()
         {
             public Evaluation evaluate( Path path, BranchState state )
             {
@@ -181,7 +181,7 @@ public abstract class Evaluators
     {
         if ( orAnyOfTheseTypes.length == 0 )
         {
-            return new AbstractPathEvaluator()
+            return new PathEvaluator.Adapter()
             {
                 @Override
                 public Evaluation evaluate( Path path, BranchState state )
@@ -199,7 +199,7 @@ public abstract class Evaluators
             expectedTypes.add( otherType.name() );
         }
 
-        return new AbstractPathEvaluator()
+        return new PathEvaluator.Adapter()
         {
             @Override
             public Evaluation evaluate( Path path, BranchState state )
@@ -283,7 +283,7 @@ public abstract class Evaluators
         if ( possibleEndNodes.length == 1 )
         {
             final Node target = possibleEndNodes[0];
-            return new AbstractPathEvaluator()
+            return new PathEvaluator.Adapter()
             {
                 @Override
                 public Evaluation evaluate( Path path, BranchState state )
@@ -294,7 +294,7 @@ public abstract class Evaluators
         }
 
         final Set<Node> endNodes = new HashSet<Node>( asList( possibleEndNodes ) );
-        return new AbstractPathEvaluator()
+        return new PathEvaluator.Adapter()
         {
             @Override
             public Evaluation evaluate( Path path, BranchState state )
@@ -345,7 +345,7 @@ public abstract class Evaluators
     {
         if ( nodes.length == 1 )
         {
-            return new AbstractPathEvaluator()
+            return new PathEvaluator.Adapter()
             {
                 @Override
                 public Evaluation evaluate( Path path, BranchState state )
@@ -364,7 +364,7 @@ public abstract class Evaluators
         else
         {
             final Set<Node> fullSet = new HashSet<Node>( Arrays.asList( nodes ) );
-            return new AbstractPathEvaluator()
+            return new PathEvaluator.Adapter()
             {
                 @Override
                 public Evaluation evaluate( Path path, BranchState state )
@@ -395,7 +395,7 @@ public abstract class Evaluators
     @SuppressWarnings( "rawtypes" )
     public static PathEvaluator includeIfAcceptedByAny( final PathEvaluator... evaluators )
     {
-        return new AbstractPathEvaluator()
+        return new PathEvaluator.Adapter()
         {
             @SuppressWarnings( "unchecked" )
             @Override
@@ -425,7 +425,7 @@ public abstract class Evaluators
     @SuppressWarnings( "rawtypes" )
     public static PathEvaluator includeIfAcceptedByAny( final Evaluator... evaluators )
     {
-        return new AbstractPathEvaluator()
+        return new PathEvaluator.Adapter()
         {
             @Override
             public Evaluation evaluate( Path path, BranchState state )

@@ -20,7 +20,6 @@
 package org.neo4j.kernel.impl.traversal;
 
 import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.traversal.AbstractPathEvaluator;
 import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.Evaluator;
@@ -30,7 +29,7 @@ import org.neo4j.graphdb.traversal.PathEvaluator;
  * Evaluator which can hold multiple {@link Evaluator}s and delegate to them
  * all for evaluation requests.
  */
-public class MultiEvaluator<STATE> extends AbstractPathEvaluator<STATE>
+public class MultiEvaluator<STATE> extends PathEvaluator.Adapter<STATE>
 {
     private final PathEvaluator[] evaluators;
 

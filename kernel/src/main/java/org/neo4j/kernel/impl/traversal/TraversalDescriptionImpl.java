@@ -19,8 +19,6 @@
  */
 package org.neo4j.kernel.impl.traversal;
 
-import static org.neo4j.kernel.Traversal.wrapInitialStateFactory;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -33,9 +31,9 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.RelationshipExpander;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.BranchOrderingPolicy;
+import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.Evaluator;
 import org.neo4j.graphdb.traversal.Evaluators;
-import org.neo4j.graphdb.traversal.InitialBranchState;
 import org.neo4j.graphdb.traversal.InitialStateFactory;
 import org.neo4j.graphdb.traversal.PathEvaluator;
 import org.neo4j.graphdb.traversal.TraversalDescription;
@@ -117,7 +115,7 @@ public final class TraversalDescriptionImpl implements TraversalDescription
     
     public TraversalDescription evaluator( Evaluator evaluator )
     {
-        return evaluator( new EvaluatorAsPathEvaluator( evaluator ) );
+        return evaluator( new Evaluator.AsPathEvaluator( evaluator) );
     }
     
     public TraversalDescription evaluator( PathEvaluator evaluator )
@@ -222,7 +220,7 @@ public final class TraversalDescriptionImpl implements TraversalDescription
     public <STATE> TraversalDescription expand( PathExpander<STATE> expander, InitialStateFactory<STATE> initialState )
     {
         return new TraversalDescriptionImpl( expander, uniqueness,
-                uniquenessParameter, evaluator, wrapInitialStateFactory( initialState ), branchOrdering, sorting, endNodes );
+                uniquenessParameter, evaluator, new InitialStateFactory.AsInitialBranchState<STATE>( initialState ), branchOrdering, sorting, endNodes );
     }
     
     @Override

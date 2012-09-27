@@ -26,6 +26,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.graphdb.traversal.Evaluation;
 import org.neo4j.graphdb.traversal.TraversalBranch;
 import org.neo4j.graphdb.traversal.TraversalContext;
@@ -110,7 +111,7 @@ class TraversalBranchImpl implements TraversalBranch
     
     protected Iterator<Relationship> expandRelationshipsWithoutChecks( PathExpander expander )
     {
-        return expander.expand( this, Traversal.noBranchState() ).iterator();
+        return expander.expand( this, BranchState.NO_STATE ).iterator();
     }
 
     protected boolean hasExpandedRelationships()

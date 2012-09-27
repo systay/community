@@ -52,8 +52,33 @@ public interface InitialStateFactory<STATE>
      * {@link PathExpander} to becomes the new state from that point in that branch
      * and downwards.
      * 
-     * @param branch the start branch to return the initial state for.
+     * @param path the start branch to return the initial state for.
      * @return an initial state for the traversal branch.
      */
     STATE initialState( Path path );
+
+    /**
+     * Wraps an {@link InitialStateFactory} in a {@link InitialBranchState}
+     */
+    public static class AsInitialBranchState<STATE> implements InitialBranchState<STATE>
+    {
+        private final InitialStateFactory<STATE> factory;
+
+        public AsInitialBranchState( InitialStateFactory<STATE> factory )
+        {
+            this.factory = factory;
+        }
+
+        @Override
+        public InitialBranchState<STATE> reverse()
+        {
+            return this;
+        }
+
+        @Override
+        public STATE initialState( Path path )
+        {
+            return factory.initialState( path );
+        }
+    }
 }

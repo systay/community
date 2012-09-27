@@ -96,7 +96,26 @@ public interface TraversalDescription
      * @return a new traversal description with the new modifications.
      */
     TraversalDescription evaluator( Evaluator evaluator );
-    
+
+    /**
+     * Adds {@code evaluator} to the list of evaluators which will control the
+     * behaviour of the traversal. Each {@link PathEvaluator} can decide whether or
+     * not to include a position in the traverser result, i.e. return it from
+     * the {@link Traverser} iterator and also whether to continue down that
+     * path or to prune, so that the traverser won't continue further down that
+     * path.
+     *
+     * Multiple {@link PathEvaluator}s can be added. For a path to be included in
+     * the result, all evaluators must agree to include it, i.e. returning
+     * either {@link Evaluation#INCLUDE_AND_CONTINUE} or
+     * {@link Evaluation#INCLUDE_AND_PRUNE}. For making the traversal continue
+     * down that path all evaluators must agree to continue from that path, i.e.
+     * returning either {@link Evaluation#INCLUDE_AND_CONTINUE} or
+     * {@link Evaluation#EXCLUDE_AND_CONTINUE}.
+     *
+     * @param evaluator
+     * @return a new traversal description with the new modifications.
+     */
     TraversalDescription evaluator( PathEvaluator evaluator );
 
     /**

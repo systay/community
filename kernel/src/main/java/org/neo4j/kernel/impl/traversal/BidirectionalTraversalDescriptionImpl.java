@@ -20,7 +20,6 @@
 package org.neo4j.kernel.impl.traversal;
 
 import static org.neo4j.kernel.Traversal.traversal;
-import static org.neo4j.kernel.Traversal.wrapEvaluator;
 import static org.neo4j.kernel.impl.traversal.TraversalDescriptionImpl.addEvaluator;
 import static org.neo4j.kernel.impl.traversal.TraversalDescriptionImpl.nullCheck;
 
@@ -103,7 +102,7 @@ public class BidirectionalTraversalDescriptionImpl implements BidirectionalTrave
     @Override
     public BidirectionalTraversalDescription collisionEvaluator( Evaluator collisionEvaluator )
     {
-        return collisionEvaluator( wrapEvaluator( collisionEvaluator ) );
+        return collisionEvaluator( new Evaluator.AsPathEvaluator( collisionEvaluator ) );
     }
 
     @Override

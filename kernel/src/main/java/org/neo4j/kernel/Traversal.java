@@ -30,20 +30,15 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipExpander;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.BidirectionalTraversalDescription;
-import org.neo4j.graphdb.traversal.BranchOrderingPolicy;
-import org.neo4j.graphdb.traversal.BranchState;
-import org.neo4j.graphdb.traversal.Evaluator;
-import org.neo4j.graphdb.traversal.Evaluators;
-import org.neo4j.graphdb.traversal.InitialBranchState;
-import org.neo4j.graphdb.traversal.InitialStateFactory;
 import org.neo4j.graphdb.traversal.BranchCollisionDetector;
-import org.neo4j.graphdb.traversal.PathEvaluator;
+import org.neo4j.graphdb.traversal.BranchOrderingPolicy;
+import org.neo4j.graphdb.traversal.Evaluators;
+import org.neo4j.graphdb.traversal.InitialStateFactory;
 import org.neo4j.graphdb.traversal.SideSelectorPolicy;
 import org.neo4j.graphdb.traversal.TraversalBranch;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.graphdb.traversal.UniquenessFactory;
 import org.neo4j.kernel.impl.traversal.BidirectionalTraversalDescriptionImpl;
-import org.neo4j.kernel.impl.traversal.EvaluatorAsPathEvaluator;
 import org.neo4j.kernel.impl.traversal.FinalTraversalBranch;
 import org.neo4j.kernel.impl.traversal.TraversalDescriptionImpl;
 
@@ -94,28 +89,7 @@ public class Traversal
     {
         return new BidirectionalTraversalDescriptionImpl();
     }
-    
-    @SuppressWarnings( "rawtypes" )
-    public static final BranchState NO_BRANCH_STATE = new BranchState()
-    {
-        @Override
-        public Object getState()
-        {
-            throw new UnsupportedOperationException( "Branch state disabled, pass in an initial state to enable it" );
-        }
-        
-        @Override
-        public void setState( Object state )
-        {
-            throw new UnsupportedOperationException( "Branch state disabled, pass in an initial state to enable it" );
-        }
-    };
-    
-    public static <STATE> BranchState<STATE> noBranchState()
-    {
-        return NO_BRANCH_STATE;
-    }
-    
+
     /**
      * {@link InitialStateFactory} which always returns the supplied {@code initialState}.
      * @param initialState the initial state for a traversal branch.
@@ -601,53 +575,5 @@ public class Traversal
     public static PathDescription path()
     {
         return new PathDescription();
-    }
-    
-    /**
-     * Wraps an {@link InitialStateFactory} in a {@link InitialBranchState}
-     * (which has got {@link InitialBranchState#reverse() reverse method}).
-     * @param state the {@link InitialStateFactory} to wrap.
-     * @return state as an {@link InitialBranchState} object.
-     * @deprecated together with {@link InitialStateFactory}.
-     */
-    public static <STATE> InitialBranchState<STATE> wrapInitialStateFactory( final InitialStateFactory<STATE> state )
-    {
-        return new InitialBranchState<STATE>()
-        {
-            @Override
-            public STATE initialState( Path path )
-            {
-                return state.initialState( path );
-            }
-
-            @Override
-            public InitialBranchState<STATE> reverse()
-            {
-                return this;
-            }
-        };
-    }
-    
-    public static <STATE> InitialBranchState<STATE> initialState( final STATE initialState, final STATE reversedInitialState )
-    {
-        return new InitialBranchState<STATE>()
-        {
-            @Override
-            public STATE initialState( Path path )
-            {
-                return initialState;
-            }
-
-            @Override
-            public InitialBranchState<STATE> reverse()
-            {
-                return Traversal.initialState( reversedInitialState, initialState );
-            }
-        };
-    }
-    
-    public static PathEvaluator wrapEvaluator( Evaluator evaluator )
-    {
-        return new EvaluatorAsPathEvaluator( evaluator );
     }
 }

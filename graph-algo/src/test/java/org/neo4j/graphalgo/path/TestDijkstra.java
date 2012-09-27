@@ -210,20 +210,7 @@ public class TestDijkstra extends Neo4jAlgoTestCase
         setWeight( "b", "c", 2 );
         setWeight( "c", "d", 5 );
         
-        InitialBranchState<Integer> state = new InitialBranchState<Integer>()
-        {
-            @Override
-            public Integer initialState( Path path )
-            {
-                return 0;
-            }
-
-            @Override
-            public InitialBranchState<Integer> reverse()
-            {
-                return this;
-            }
-        };
+        InitialBranchState<Integer> state = new InitialBranchState.State<Integer>( 0, 0 );
         final Map<Node, Integer> encounteredState = new HashMap<Node, Integer>();
         PathExpander<Integer> expander = new PathExpander<Integer>()
         {
