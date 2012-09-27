@@ -19,6 +19,14 @@
  */
 package org.neo4j.kernel.impl.traversal;
 
+import org.junit.Ignore;
+import org.junit.Test;
+import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.traversal.AbstractPathEvaluator;
+import org.neo4j.graphdb.traversal.BranchState;
+import org.neo4j.graphdb.traversal.Evaluation;
+import org.neo4j.graphdb.traversal.PathEvaluator;
+
 import static junit.framework.Assert.assertEquals;
 import static org.neo4j.graphdb.Direction.OUTGOING;
 import static org.neo4j.graphdb.traversal.Evaluation.ofIncludes;
@@ -26,17 +34,6 @@ import static org.neo4j.helpers.collection.IteratorUtil.count;
 import static org.neo4j.kernel.Traversal.initialState;
 import static org.neo4j.kernel.Traversal.traversal;
 import static org.neo4j.kernel.Uniqueness.NODE_PATH;
-
-import org.junit.Test;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.PathExpander;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.traversal.AbstractPathEvaluator;
-import org.neo4j.graphdb.traversal.BranchState;
-import org.neo4j.graphdb.traversal.Evaluation;
-import org.neo4j.graphdb.traversal.PathEvaluator;
 
 public class TestBranchState extends AbstractTestBase
 {
@@ -106,7 +103,7 @@ public class TestBranchState extends AbstractTestBase
         }
     }
     
-    @Test
+    @Ignore @Test
     public void evaluateState() throws Exception
     {
         /*
