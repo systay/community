@@ -43,7 +43,7 @@ class VariableLengthExpanderStepExpandTest extends GraphDatabaseTestBase {
   val B = DynamicRelationshipType.withName("B")
   val C = DynamicRelationshipType.withName("C")
 
-  @Test def single_step() {
+  @Test def not_reached_min_zero_with_matching_rels() {
     /*
     Given the pattern:
      ()-[:REL*1..2]->()
@@ -71,7 +71,7 @@ class VariableLengthExpanderStepExpandTest extends GraphDatabaseTestBase {
     assert(next === expectedNext)
   }
 
-  @Test def return_two_types_of_relationships() {
+  @Test def reached_min_zero_with_matching_rels() {
     /*
     Given the pattern:
      ()-[:A*0..]->()-[:B]->()
@@ -107,7 +107,7 @@ class VariableLengthExpanderStepExpandTest extends GraphDatabaseTestBase {
     assert(next === Some(step1))
   }
 
-  @Test def when_not_finding_more_with_this_relationship_type() {
+  @Test def reached_min_zero_and_not_finding_matching_rels() {
     /*
     Given the pattern:
      ()-[:A*0..]->()-[:B]->()
@@ -133,7 +133,7 @@ class VariableLengthExpanderStepExpandTest extends GraphDatabaseTestBase {
     assert(next === None)
   }
 
-  @Test def when_exhausted_should_return_next_step() {
+  @Test def reached_max_0_should_return_next_step() {
     /*
     Given the pattern:
      ()-[:A*1..1]->()-[:B]->()
@@ -156,5 +156,32 @@ class VariableLengthExpanderStepExpandTest extends GraphDatabaseTestBase {
     /*should return the single relationship and step2 as the next step*/
     assert(relationships.toSeq === Seq(r1))
     assert(next === Some(step2))
+  }
+
+  @Test def not_reached_min_0_and_no_matching_rels() {
+    /*
+    Given the pattern:
+     ()-[:A*1..2]->()-[:B]->()
+     */
+    val step2 = step(1, Seq(B), Direction.OUTGOING, None)
+    val step1 = varStep(0, Seq(A), Direction.OUTGOING, 1, Some(2), Some(step2))
+
+    /*
+    And the graph:
+     (a)-[r1:B]->(b)
+    */
+    val a = createNode()
+    val b = createNode()
+
+    val r1 = relate(a, b, "B")
+
+    /*When given the start node a*/
+    val (relationships, next) = step1.expand(a, Map.empty)
+
+    /*should return the single relationship and step2 as the next step*/
+    val expectedNext = varStep(0, Seq(A), Direction.OUTGOING, 0, Some(1), Some(step2))
+
+    assert(relationships.toSeq === Seq())
+    assert(next === Some(expectedNext))
   }
 }

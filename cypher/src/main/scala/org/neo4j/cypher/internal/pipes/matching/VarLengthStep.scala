@@ -24,6 +24,18 @@ import org.neo4j.cypher.internal.commands.Predicate
 import collection.JavaConverters._
 import org.neo4j.cypher.internal.pipes.ExecutionContext
 
+/*
+Variable length paths are expanded by decreasing min and max, if it's a bounded path. Once
+min reaches 0, the next step is also given a chance to find relationships. Since this
+is done recursively, many steps could in theory be involved in the expansion of this single
+step.
+
+Once max reaches 1, the next step will be what is stored in the `next` field.
+
+Finally, if we don't find any matching relationships, we either allow our next step to
+expand, if we have one. If we don't have a next step, we return an empty result and None
+as the next step.
+ */
 case class VarLengthStep(id: Int,
                          typ: Seq[RelationshipType],
                          direction: Direction,
@@ -59,7 +71,7 @@ case class VarLengthStep(id: Int,
       }
     }
 
-    def decreaseAndReturnNewNextStep: Option[ExpanderStep] = {
+    def decreaseAndReturnNewNextStep(): Option[ExpanderStep] = {
       if (max == Some(1)) {
         next
       } else {
@@ -74,9 +86,13 @@ case class VarLengthStep(id: Int,
     }
 
     if (foundRelationships.isEmpty) {
-      forceNextStep()
+      if (min == 0) {  //If min is zero, it's ok to continue with the next step
+        forceNextStep()
+      } else {
+        (foundRelationships, decreaseAndReturnNewNextStep())
+      }
     } else {
-      (expandeRecursively(foundRelationships), decreaseAndReturnNewNextStep)
+      (expandeRecursively(foundRelationships), decreaseAndReturnNewNextStep())
     }
   }
 
