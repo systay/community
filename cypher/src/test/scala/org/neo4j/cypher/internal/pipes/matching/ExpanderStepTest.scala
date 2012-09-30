@@ -34,7 +34,7 @@ class ExpanderStepTest extends Assertions {
   private def step(id: Int,
                    typ: Seq[RelationshipType],
                    direction: Direction,
-                   next: Option[ExpanderStep]) = ExpanderStep(id, typ, direction, next, True(), True())
+                   next: Option[ExpanderStep]) = SingleStep(id, typ, direction, next, True(), True())
 
   val A = DynamicRelationshipType.withName("A")
   val B = DynamicRelationshipType.withName("B")
@@ -112,30 +112,15 @@ class ExpanderStepTest extends Assertions {
     assert(step3R.reverse() === step1)
   }
 
+
+
   def step(id: Int, t: RelationshipType, dir: Direction, next: Option[ExpanderStep], relName: String, nodeName: String): ExpanderStep =
-    ExpanderStep(id, Seq(t), dir, next, relPredicate = Pred(relName), nodePredicate = Pred(nodeName))
+    SingleStep(id, Seq(t), dir, next, relPredicate = Pred(relName), nodePredicate = Pred(nodeName))
 
   def step(id: Int, t: RelationshipType, dir: Direction, next: Option[ExpanderStep], relName: String): ExpanderStep =
-    ExpanderStep(id, Seq(t), dir, next, relPredicate = Pred(relName), nodePredicate = True())
+    SingleStep(id, Seq(t), dir, next, relPredicate = Pred(relName), nodePredicate = True())
 
 
-  case class Pred(identifier: String) extends Predicate {
-    def isMatch(m: Map[String, Any]) = false
-
-    def atoms = Seq(this)
-
-    def rewrite(f: (Expression) => Expression) = null
-
-    def containsIsNull = false
-
-    def filter(f: (Expression) => Boolean) = null
-
-    def assertInnerTypes(symbols: SymbolTable) {}
-
-    def symbolTableDependencies = Set(identifier)
-
-    override def toString() = "Pred[%s]".format(identifier)
-  }
 
   trait MyNodeManager extends NodeManager {
     var count = 0
@@ -146,4 +131,22 @@ class ExpanderStepTest extends Assertions {
     }
   }
 
+}
+
+case class Pred(identifier: String) extends Predicate {
+  def isMatch(m: Map[String, Any]) = false
+
+  def atoms = Seq(this)
+
+  def rewrite(f: (Expression) => Expression) = null
+
+  def containsIsNull = false
+
+  def filter(f: (Expression) => Boolean) = null
+
+  def assertInnerTypes(symbols: SymbolTable) {}
+
+  def symbolTableDependencies = Set(identifier)
+
+  override def toString() = "Pred[%s]".format(identifier)
 }

@@ -33,8 +33,8 @@ class TraversalPathExpander(params: Map[String, Any]) extends PathExpander[Optio
 
       case Some(step) =>
         val node = path.endNode()
-        val rels: Iterable[Relationship] = step.expand(node, params)
-        state.setState(step.next)
+        val (rels, next)  = step.expand(node, params)
+        state.setState(next)
         rels
     }
 
