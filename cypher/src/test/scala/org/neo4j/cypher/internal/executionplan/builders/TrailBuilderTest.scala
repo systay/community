@@ -27,7 +27,7 @@ import org.scalatest.Assertions
 import org.neo4j.graphdb.Direction._
 import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.cypher.GraphDatabaseTestBase
-import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
+import org.neo4j.cypher.internal.pipes.matching.{SingleStep, ExpanderStep}
 import org.neo4j.cypher.internal.commands.True
 
 class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
@@ -171,5 +171,5 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
                    next: Option[ExpanderStep],
                    nodePredicate: Predicate = True(),
                    relPredicate: Predicate = True()) =
-    ExpanderStep(id, typ, direction, next, relPredicate = relPredicate, nodePredicate = nodePredicate)
+    SingleStep(id, typ, direction, next, relPredicate = relPredicate, nodePredicate = nodePredicate)
 }

@@ -23,7 +23,7 @@ import org.neo4j.graphdb.{Direction, PropertyContainer}
 import org.neo4j.cypher.internal.symbols.{RelationshipType, NodeType, SymbolTable}
 import org.neo4j.cypher.internal.commands.{Pattern, True, Predicate}
 import org.neo4j.graphdb.DynamicRelationshipType._
-import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
+import org.neo4j.cypher.internal.pipes.matching.{SingleStep, ExpanderStep}
 import scala.Some
 
 
@@ -84,7 +84,7 @@ final case class WrappingTrail(s: Trail,
     val relPredicate = relPred.getOrElse(True())
     val nodePredicate = nodePred.getOrElse(True())
 
-    Some(ExpanderStep(id, types, dir, steps, relPredicate, nodePredicate))
+    Some(SingleStep(id, types, dir, steps, relPredicate, nodePredicate))
   }
 
   def size = s.size + 1

@@ -1,0 +1,63 @@
+/**
+ * Copyright (c) 2002-2012 "Neo Technology,"
+ * Network Engine for Objects in Lund AB [http://neotechnology.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.neo4j.cypher.internal.pipes.matching
+
+import org.neo4j.graphdb.{Node, Relationship, Direction, RelationshipType}
+import org.neo4j.cypher.internal.commands.Predicate
+import org.neo4j.cypher.internal.pipes.ExecutionContext
+
+case class VarLengthStep(id: Int,
+                         typ: Seq[RelationshipType],
+                         direction: Direction,
+                         next: Option[ExpanderStep],
+                         relPredicate: Predicate,
+                         nodePredicate: Predicate) extends ExpanderStep {
+  def createCopy(next: Option[ExpanderStep], direction: Direction, nodePredicate: Predicate): ExpanderStep =
+    copy(next = next, direction = direction, nodePredicate = nodePredicate)
+
+  def expand(node: Node, parameters: ExecutionContext):  (Iterable[Relationship], Option[ExpanderStep]) =
+    null
+
+  def size: Int = 0
+
+  private def shape = "(%s)%s-%s-%s".format(id, left, relInfo, right)
+
+  private def left =
+    if (direction == Direction.OUTGOING)
+      ""
+    else
+      "<"
+
+  private def right =
+    if (direction == Direction.INCOMING)
+      ""
+    else
+      ">"
+
+  private def relInfo = typ.toList match {
+    case List() => ""
+    case _      => "[:%s {r: %s, n: %s}]".format(typ.map(_.name()).mkString("|"), relPredicate, nodePredicate)
+  }
+
+  override def toString = next match {
+    case None    => "%s()".format(shape)
+    case Some(x) => shape + x.toString
+  }
+}
