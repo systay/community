@@ -23,8 +23,6 @@ import org.junit.Test
 import org.neo4j.graphdb.{RelationshipType, DynamicRelationshipType, Direction}
 import org.scalatest.Assertions
 import org.neo4j.cypher.internal.commands.True
-import org.neo4j.kernel.impl.core.NodeManager
-import org.neo4j.kernel.impl.transaction.LockType
 
 class VariableLengthExpanderStepTest extends Assertions {
 
@@ -45,14 +43,11 @@ class VariableLengthExpanderStepTest extends Assertions {
   val C = DynamicRelationshipType.withName("C")
 
   @Test def reverse_single_step() {
-    // Given
     // ()-[:A*]->()
     val step = varStep(0, Seq(A), Direction.OUTGOING, None, None, None)
 
-    //Reversed
     // ()<-[:A*]-()
     val reversed = varStep(0, Seq(A), Direction.INCOMING, None, None, None)
-
 
     assert(step.reverse() === reversed)
     assert(reversed.reverse() === step)
@@ -60,10 +55,10 @@ class VariableLengthExpanderStepTest extends Assertions {
 
   @Test def reverse_two_steps() {
     // ()-[:A*]->()<-[:B*]-()
-
     val step2 = varStep(1, Seq(B), Direction.INCOMING, None, None, None)
     val step1 = varStep(0, Seq(A), Direction.OUTGOING, None, None, Some(step2))
 
+    // ()-[:B*]->()<-[:A*]-()
     val reversed2 = varStep(0, Seq(A), Direction.INCOMING, None, None, None)
     val reversed1 = varStep(1, Seq(B), Direction.OUTGOING, None, None, Some(reversed2))
 
@@ -72,32 +67,15 @@ class VariableLengthExpanderStepTest extends Assertions {
   }
 
   @Test def reverse_mixed_steps() {
-    // ()-[:A*]->()<-[:B]-()
-
+    // ()-[:A*]->()-[:B]-()
     val step2 = step(1, Seq(B), Direction.INCOMING, None)
     val step1 = varStep(0, Seq(A), Direction.OUTGOING, None, None, Some(step2))
 
+    // ()-[:B]-()<-[:A*]-()
     val reversed2 = varStep(0, Seq(A), Direction.INCOMING, None, None, None)
     val reversed1 = step(1, Seq(B), Direction.OUTGOING, Some(reversed2))
 
     assert(step1.reverse() === reversed1)
     assert(reversed1.reverse() === step1)
   }
-
-
-  def step(id: Int, t: RelationshipType, dir: Direction, next: Option[ExpanderStep], relName: String, nodeName: String): ExpanderStep =
-    SingleStep(id, Seq(t), dir, next, relPredicate = Pred(relName), nodePredicate = Pred(nodeName))
-
-  def step(id: Int, t: RelationshipType, dir: Direction, next: Option[ExpanderStep], relName: String): ExpanderStep =
-    SingleStep(id, Seq(t), dir, next, relPredicate = Pred(relName), nodePredicate = True())
-
-  trait MyNodeManager extends NodeManager {
-    var count = 0
-
-    override def getRelationshipForProxy(relId: Long, lock: LockType) = {
-      count = count + 1
-      super.getRelationshipForProxy(relId, lock)
-    }
-  }
-
 }
