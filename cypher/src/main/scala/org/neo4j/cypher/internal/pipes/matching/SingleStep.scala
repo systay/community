@@ -20,9 +20,8 @@
 package org.neo4j.cypher.internal.pipes.matching
 
 import org.neo4j.graphdb.{Node, Relationship, Direction, RelationshipType}
-import org.neo4j.cypher.internal.commands.{True, Predicate}
+import org.neo4j.cypher.internal.commands.Predicate
 import collection.JavaConverters._
-import collection.mutable
 import collection.Map
 
 case class SingleStep(id: Int,
@@ -36,7 +35,7 @@ case class SingleStep(id: Int,
     copy(next = next, direction = direction, nodePredicate = nodePredicate)
 
 
-  def filter(r: Relationship, n: Node, parameters: Map[String, Any]): Boolean = {
+  private def filter(r: Relationship, n: Node, parameters: Map[String, Any]): Boolean = {
     val m = new MiniMap(r, n, parameters)
     relPredicate.isMatch(m) && nodePredicate.isMatch(m)
   }

@@ -24,7 +24,7 @@ import org.neo4j.graphdb.{RelationshipType, DynamicRelationshipType, Direction}
 import org.scalatest.Assertions
 import org.neo4j.cypher.internal.commands.True
 
-class VariableLengthExpanderStepTest extends Assertions {
+class VariableLengthExpanderStepReversalTest extends Assertions {
 
   private def step(id: Int,
                    typ: Seq[RelationshipType],
@@ -34,9 +34,9 @@ class VariableLengthExpanderStepTest extends Assertions {
   private def varStep(id: Int,
                       typ: Seq[RelationshipType],
                       direction: Direction,
-                      min: Option[Int],
+                      min: Int,
                       max: Option[Int],
-                      next: Option[ExpanderStep]) = VarLengthStep(id, typ, direction, next, True(), True())
+                      next: Option[ExpanderStep]) = VarLengthStep(id, typ, direction, min, max, next, True(), True())
 
   val A = DynamicRelationshipType.withName("A")
   val B = DynamicRelationshipType.withName("B")
@@ -44,10 +44,10 @@ class VariableLengthExpanderStepTest extends Assertions {
 
   @Test def reverse_single_step() {
     // ()-[:A*]->()
-    val step = varStep(0, Seq(A), Direction.OUTGOING, None, None, None)
+    val step = varStep(0, Seq(A), Direction.OUTGOING, 1, None, None)
 
     // ()<-[:A*]-()
-    val reversed = varStep(0, Seq(A), Direction.INCOMING, None, None, None)
+    val reversed = varStep(0, Seq(A), Direction.INCOMING, 1, None, None)
 
     assert(step.reverse() === reversed)
     assert(reversed.reverse() === step)
@@ -55,12 +55,12 @@ class VariableLengthExpanderStepTest extends Assertions {
 
   @Test def reverse_two_steps() {
     // ()-[:A*]->()<-[:B*]-()
-    val step2 = varStep(1, Seq(B), Direction.INCOMING, None, None, None)
-    val step1 = varStep(0, Seq(A), Direction.OUTGOING, None, None, Some(step2))
+    val step2 = varStep(1, Seq(B), Direction.INCOMING, 1, None, None)
+    val step1 = varStep(0, Seq(A), Direction.OUTGOING, 1, None, Some(step2))
 
     // ()-[:B*]->()<-[:A*]-()
-    val reversed2 = varStep(0, Seq(A), Direction.INCOMING, None, None, None)
-    val reversed1 = varStep(1, Seq(B), Direction.OUTGOING, None, None, Some(reversed2))
+    val reversed2 = varStep(0, Seq(A), Direction.INCOMING, 1, None, None)
+    val reversed1 = varStep(1, Seq(B), Direction.OUTGOING, 1, None, Some(reversed2))
 
     assert(step1.reverse() === reversed1)
     assert(reversed1.reverse() === step1)
@@ -69,10 +69,10 @@ class VariableLengthExpanderStepTest extends Assertions {
   @Test def reverse_mixed_steps() {
     // ()-[:A*]->()-[:B]-()
     val step2 = step(1, Seq(B), Direction.INCOMING, None)
-    val step1 = varStep(0, Seq(A), Direction.OUTGOING, None, None, Some(step2))
+    val step1 = varStep(0, Seq(A), Direction.OUTGOING, 1, None, Some(step2))
 
     // ()-[:B]-()<-[:A*]-()
-    val reversed2 = varStep(0, Seq(A), Direction.INCOMING, None, None, None)
+    val reversed2 = varStep(0, Seq(A), Direction.INCOMING, 1, None, None)
     val reversed1 = step(1, Seq(B), Direction.OUTGOING, Some(reversed2))
 
     assert(step1.reverse() === reversed1)
