@@ -1,0 +1,160 @@
+/**
+ * Copyright (c) 2002-2012 "Neo Technology,"
+ * Network Engine for Objects in Lund AB [http://neotechnology.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.neo4j.cypher.internal.pipes.matching
+
+import org.junit.Test
+import org.neo4j.graphdb.{RelationshipType, DynamicRelationshipType, Direction}
+import org.neo4j.cypher.internal.commands.True
+import org.neo4j.cypher.GraphDatabaseTestBase
+import org.neo4j.cypher.internal.pipes.ExecutionContext
+
+class VariableLengthExpanderStepExpandTest extends GraphDatabaseTestBase {
+
+  private def step(id: Int,
+                   typ: Seq[RelationshipType],
+                   direction: Direction,
+                   next: Option[ExpanderStep]) = SingleStep(id, typ, direction, next, True(), True())
+
+  private def varStep(id: Int,
+                      typ: Seq[RelationshipType],
+                      direction: Direction,
+                      min: Int,
+                      max: Option[Int],
+                      next: Option[ExpanderStep]) = VarLengthStep(id, typ, direction, min, max, next, True(), True())
+
+  val A = DynamicRelationshipType.withName("A")
+  val B = DynamicRelationshipType.withName("B")
+  val C = DynamicRelationshipType.withName("C")
+
+  @Test def single_step() {
+    /*
+    Given the pattern:
+     ()-[:REL*1..2]->()
+     */
+    val step = varStep(0, Seq(REL), Direction.OUTGOING, 1, Some(2), None)
+
+    /*
+    And the graph:
+     (a)-[r1:REL]->(b)
+    */
+
+    val a = createNode()
+    val b = createNode()
+    val r1 = relate(a, b)
+
+    /*
+   When given the start node a
+   */
+    val (relationships, next) = step.expand(a, ExecutionContext.empty)
+
+    /*should return r1 and next step: ()-[:A*0..1]->()*/
+    val expectedNext = Some(varStep(0, Seq(REL), Direction.OUTGOING, 0, Some(1), None))
+
+    assert(relationships.toSeq === Seq(r1))
+    assert(next === expectedNext)
+  }
+
+  @Test def return_two_types_of_relationships() {
+    /*
+    Given the pattern:
+     ()-[:A*0..]->()-[:B]->()
+     */
+    val step2 = step(1, Seq(B), Direction.OUTGOING, None)
+    val step1 = varStep(0, Seq(A), Direction.OUTGOING, 0, None, Some(step2))
+
+    /*
+    And the graph:
+     (a)-[r1:A]->(b)
+      ^
+      |
+    [r2:B]
+      |
+     (c)
+    */
+
+    val a = createNode()
+    val b = createNode()
+    val c = createNode()
+
+    val r1 = relate(a, b, "A")
+    val r2 = relate(a, c, "B")
+
+    /*
+   When given the start node a
+   */
+    val (relationships, next) = step1.expand(a, ExecutionContext.empty)
+
+    /*should return both relationships and the same step again */
+
+    assert(relationships.toSeq === Seq(r1, r2))
+    assert(next === Some(step1))
+  }
+
+  @Test def when_not_finding_more_with_this_relationship_type() {
+    /*
+    Given the pattern:
+     ()-[:A*0..]->()-[:B]->()
+     */
+    val step2 = step(1, Seq(B), Direction.OUTGOING, None)
+    val step1 = varStep(0, Seq(A), Direction.OUTGOING, 0, None, Some(step2))
+
+    /*
+    And the graph:
+     (a)-[r1:B]->(b)
+    */
+
+    val a = createNode()
+    val b = createNode()
+
+    val r1 = relate(a, b, "B")
+
+    /*When given the start node a*/
+    val (relationships, next) = step1.expand(a, ExecutionContext.empty)
+
+    /*should return the single relationship and None as the next step*/
+    assert(relationships.toSeq === Seq(r1))
+    assert(next === None)
+  }
+
+  @Test def when_exhausted_should_return_next_step() {
+    /*
+    Given the pattern:
+     ()-[:A*1..1]->()-[:B]->()
+     */
+    val step2 = step(1, Seq(B), Direction.OUTGOING, None)
+    val step1 = varStep(0, Seq(A), Direction.OUTGOING, 1, Some(1), Some(step2))
+
+    /*
+    And the graph:
+     (a)-[r1:A]->(b)
+    */
+    val a = createNode()
+    val b = createNode()
+
+    val r1 = relate(a, b, "A")
+
+    /*When given the start node a*/
+    val (relationships, next) = step1.expand(a, ExecutionContext.empty)
+
+    /*should return the single relationship and step2 as the next step*/
+    assert(relationships.toSeq === Seq(r1))
+    assert(next === Some(step2))
+  }
+}
