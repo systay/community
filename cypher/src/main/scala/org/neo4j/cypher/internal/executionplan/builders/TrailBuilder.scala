@@ -48,8 +48,8 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
         else {
           Seq((done, patterns)) ++
           relatedToes.map {
-            case rel if rel.left == done.end => (WrappingTrail(done, rel.direction.reverse(), rel.relName, rel.relTypes, rel.right, predicates, rel), patterns.filterNot(_ == rel))
-            case rel                         => (WrappingTrail(done, rel.direction, rel.relName, rel.relTypes, rel.left, predicates, rel), patterns.filterNot(_ == rel))
+            case rel if rel.left == done.end => (SingleStepTrail(done, rel.direction.reverse(), rel.relName, rel.relTypes, rel.right, predicates, rel), patterns.filterNot(_ == rel))
+            case rel                         => (SingleStepTrail(done, rel.direction, rel.relName, rel.relTypes, rel.left, predicates, rel), patterns.filterNot(_ == rel))
           }
         }
     }

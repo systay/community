@@ -48,28 +48,30 @@ case class SingleStep(id: Int,
     (rels, next)
   }
 
-  private def shape = "(%s)%s-%s-%s".format(id, left, relInfo, right)
-
-  private def left =
+  override def toString = {
+    val left =
     if (direction == Direction.OUTGOING)
       ""
     else
       "<"
 
-  private def right =
+    val right =
     if (direction == Direction.INCOMING)
       ""
     else
       ">"
 
-  private def relInfo = typ.toList match {
-    case List() => ""
-    case _      => "[:%s {%s,%s}]".format(typ.map(_.name()).mkString("|"), relPredicate, nodePredicate)
-  }
+    val relInfo = typ.toList match {
+      case List() => ""
+      case _      => "[:%s {%s,%s}]".format(typ.map(_.name()).mkString("|"), relPredicate, nodePredicate)
+    }
 
-  override def toString = next match {
-    case None    => "%s()".format(shape)
-    case Some(x) => shape + x.toString
+    val shape = "(%s)%s-%s-%s".format(id, left, relInfo, right)
+
+    next match {
+      case None    => "%s()".format(shape)
+      case Some(x) => shape + x.toString
+    }
   }
 
   def size: Int = next match {
