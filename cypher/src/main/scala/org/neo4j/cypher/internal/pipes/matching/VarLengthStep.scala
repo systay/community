@@ -99,29 +99,29 @@ case class VarLengthStep(id: Int,
   def size: Int = 0
 
   override def toString = {
-    def predicateString = "r: %s, n: %s".format(relPredicate, nodePredicate)
+    val predicateString = "r: %s, n: %s".format(relPredicate, nodePredicate)
 
-    def shape = "(%s)%s-[:%s*%s {%s}]-%s".format(id, left, typeString, varLengthString, predicateString, right)
-
-    def left =
+    val left =
       if (direction == Direction.OUTGOING)
         ""
       else
         "<"
 
-    def right =
+    val right =
       if (direction == Direction.INCOMING)
         ""
       else
         ">"
 
-    def typeString =
+    val typeString =
       typ.map(_.name()).mkString("|")
 
-    def varLengthString = max match {
+    val varLengthString = max match {
       case None    => "%s..".format(min)
       case Some(y) => "%s..%s".format(min, y)
     }
+
+    val shape = "(%s)%s-[:%s*%s {%s}]-%s".format(id, left, typeString, varLengthString, predicateString, right)
 
     next match {
       case None    => "%s()".format(shape)

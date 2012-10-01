@@ -29,44 +29,64 @@ import scala.Some
 
 sealed abstract class Trail {
   def pathDescription: Seq[String]
+
   def start: String
+
   def end: String
+
   def size: Int
+
   def toSteps(id: Int): Option[ExpanderStep]
+
   override def toString: String = pathDescription.toString()
+
   def decompose(p: Seq[PropertyContainer]): Map[String, Any] = decompose(p, Map.empty)._2
+
   protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]): (Seq[PropertyContainer], Map[String, Any])
+
   def symbols(table: SymbolTable): SymbolTable
+
   def contains(target: String): Boolean
-  def predicates:Seq[Predicate]
-  def patterns:Seq[Pattern]
+
+  def predicates: Seq[Predicate]
+
+  def patterns: Seq[Pattern]
 }
 
 final case class BoundPoint(name: String) extends Trail {
   def end = name
+
   def pathDescription = Seq(name)
+
   def start = name
+
   def size = 0
+
   def toSteps(id: Int) = None
+
   protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) = {
     assert(p.size == 1, "Expected a path with a single node in it")
     (p.tail, r ++ Map(name -> p.head))
   }
+
   def symbols(table: SymbolTable): SymbolTable = table.add(name, NodeType())
+
   def contains(target: String): Boolean = target == name
+
   def predicates = Seq.empty
+
   def patterns = Seq.empty
 }
 
-final case class WrappingTrail(s: Trail,
-                               dir: Direction,
-                               rel: String,
-                               typ: Seq[String],
-                               end: String,
-                               candPredicates: Seq[Predicate],
-                               pattern: Pattern) extends Trail {
+final case class SingleStepTrail(s: Trail,
+                                 dir: Direction,
+                                 rel: String,
+                                 typ: Seq[String],
+                                 end: String,
+                                 candPredicates: Seq[Predicate],
+                                 pattern: Pattern) extends Trail {
 
-  val relPred  = candPredicates.find(createFinder(rel))
+  val relPred = candPredicates.find(createFinder(rel))
   val nodePred = candPredicates.find(createFinder(end))
 
   private def containsSingle(set: Set[String], elem: String) = set.size == 1 && set.head == elem
@@ -103,4 +123,14 @@ final case class WrappingTrail(s: Trail,
   def predicates = nodePred.toSeq ++ relPred.toSeq ++ s.predicates
 
   def patterns = s.patterns :+ pattern
+}
+
+final case class VariableLengthStepTrail(s: Trail,
+                                         dir: Direction,
+                                         rel: String,
+                                         typ: Seq[String],
+                                         end: String,
+                                         candPredicates: Seq[Predicate],
+                                         pattern: Pattern) extends Trail {
+
 }
