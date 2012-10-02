@@ -23,6 +23,14 @@ import org.neo4j.cypher.internal.commands.{Predicate, RelatedTo}
 
 object TrailBuilder {
   def findLongestTrail(patterns: Seq[RelatedTo], boundPoints: Seq[String], predicates: Seq[Predicate] = Seq.empty) = {
+
+
+    def createFinder(elem: String): (Predicate => Boolean) = {
+      def containsSingle(set: Set[String]) = set.size == 1 && set.head == elem
+      (pred: Predicate) => containsSingle(pred.symbolTableDependencies)
+    }
+
+
     def internalFindLongestPath(doneSeq: Seq[(Trail, Seq[RelatedTo])]): Seq[(Trail, Seq[RelatedTo])] = {
       val result: Seq[(Trail, Seq[RelatedTo])] = doneSeq.flatMap {
         case (done: Trail, patterns: Seq[RelatedTo]) =>
@@ -33,11 +41,14 @@ object TrailBuilder {
           if (relatedToes.isEmpty)
             Seq((done, patterns))
           else {
+            def relPred(k: String) = predicates.find(createFinder(k))
+            def nodePred(k: String) = predicates.find(createFinder(k))
+
             Seq((done, patterns)) ++
-            relatedToes.map {
-              case rel if rel.left == done.end => (SingleStepTrail(done, rel.direction, rel.relName, rel.relTypes, rel.right, predicates, rel), patterns.filterNot(_ == rel))
-              case rel => (SingleStepTrail(done, rel.direction.reverse(), rel.relName, rel.relTypes, rel.left, predicates, rel), patterns.filterNot(_ == rel))
-            }
+              relatedToes.map {
+                case rel if rel.left == done.end => (SingleStepTrail(done, rel.direction, rel.relName, rel.relTypes, rel.right, relPred(rel.relName), nodePred(rel.right), rel), patterns.filterNot(_ == rel))
+                case rel                         => (SingleStepTrail(done, rel.direction.reverse(), rel.relName, rel.relTypes, rel.left, relPred(rel.relName), nodePred(rel.left), rel), patterns.filterNot(_ == rel))
+              }
           }
       }
 

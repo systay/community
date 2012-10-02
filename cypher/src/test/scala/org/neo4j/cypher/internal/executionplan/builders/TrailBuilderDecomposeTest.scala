@@ -37,7 +37,7 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val rel = relate(nodeA, nodeB, "LINK_T")
 
     val kernPath = Seq(nodeA, rel, nodeB).reverse
-    val path = SingleStepTrail(BoundPoint("a"), Direction.OUTGOING, "link", Seq("LINK_T"), "b", Seq.empty, null)
+    val path = SingleStepTrail(BoundPoint("a"), Direction.OUTGOING, "link", Seq("LINK_T"), "b", None, None, null)
 
     val resultMap = path.decompose(kernPath)
     assert(resultMap === Map("a" -> nodeA, "b" -> nodeB, "link" -> rel))
@@ -53,8 +53,8 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val kernPath = Seq(nodeA, rel1, nodeB, rel2, nodeC).reverse
     val path =
       SingleStepTrail(
-        SingleStepTrail(BoundPoint("a"), Direction.OUTGOING, "link1", Seq("LINK_T"), "b", Seq.empty, null),
-        Direction.OUTGOING, "link2", Seq("LINK_T"), "c", Seq.empty, null)
+        SingleStepTrail(BoundPoint("a"), Direction.OUTGOING, "link1", Seq("LINK_T"), "b", None, None, null),
+        Direction.OUTGOING, "link2", Seq("LINK_T"), "c", None, None, null)
 
     val resultMap = path.decompose(kernPath)
     assert(resultMap === Map("a" -> nodeA, "b" -> nodeB, "c" -> nodeC,
