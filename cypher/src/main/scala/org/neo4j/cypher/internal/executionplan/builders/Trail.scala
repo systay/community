@@ -29,52 +29,32 @@ import scala.Some
 
 sealed abstract class Trail {
   def pathDescription: Seq[String]
-
   def start: String
-
   def end: String
-
   def size: Int
-
   def toSteps(id: Int): Option[ExpanderStep]
-
   override def toString: String = pathDescription.toString()
-
   def decompose(p: Seq[PropertyContainer]): Map[String, Any] = decompose(p, Map.empty)._2
-
   protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]): (Seq[PropertyContainer], Map[String, Any])
-
   def symbols(table: SymbolTable): SymbolTable
-
   def contains(target: String): Boolean
-
   def predicates: Seq[Predicate]
-
   def patterns: Seq[Pattern]
 }
 
 final case class BoundPoint(name: String) extends Trail {
   def end = name
-
   def pathDescription = Seq(name)
-
   def start = name
-
   def size = 0
-
   def toSteps(id: Int) = None
-
   protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) = {
     assert(p.size == 1, "Expected a path with a single node in it")
     (p.tail, r ++ Map(name -> p.head))
   }
-
   def symbols(table: SymbolTable): SymbolTable = table.add(name, NodeType())
-
   def contains(target: String): Boolean = target == name
-
   def predicates = Seq.empty
-
   def patterns = Seq.empty
 }
 
@@ -89,10 +69,10 @@ final case class SingleStepTrail(s: Trail,
   val relPred = candPredicates.find(createFinder(rel))
   val nodePred = candPredicates.find(createFinder(end))
 
-  private def containsSingle(set: Set[String], elem: String) = set.size == 1 && set.head == elem
-
-  private def createFinder(elem: String): (Predicate => Boolean) =
-    (pred: Predicate) => containsSingle(pred.symbolTableDependencies, elem)
+  private def createFinder(elem: String): (Predicate => Boolean) = {
+    def containsSingle(set: Set[String]) = set.size == 1 && set.head == elem
+    (pred: Predicate) => containsSingle(pred.symbolTableDependencies)
+  }
 
   def start = s.start
 
@@ -132,5 +112,21 @@ final case class VariableLengthStepTrail(s: Trail,
                                          end: String,
                                          candPredicates: Seq[Predicate],
                                          pattern: Pattern) extends Trail {
+  def contains(target: String) = false
 
+  protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) = null
+
+  def pathDescription = null
+
+  def patterns = null
+
+  def predicates = null
+
+  def size = 0
+
+  def start = null
+
+  def symbols(table: SymbolTable) = null
+
+  def toSteps(id: Int) = null
 }

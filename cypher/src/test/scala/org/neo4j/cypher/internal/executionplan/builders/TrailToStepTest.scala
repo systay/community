@@ -24,12 +24,13 @@ import org.neo4j.cypher.internal.commands._
 import expressions.{Literal, Property}
 import org.neo4j.graphdb.{RelationshipType, Direction}
 import org.scalatest.Assertions
+import org.neo4j.graphdb.Direction._
 import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.cypher.GraphDatabaseTestBase
 import org.neo4j.cypher.internal.pipes.matching.{SingleStep, ExpanderStep}
 import org.neo4j.cypher.internal.commands.True
 
-class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
+class TrailToStepTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
   val A = withName("A")
   val B = withName("B")
   val C = withName("C")
@@ -68,25 +69,29 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
   val BtoE = VarLengthRelatedTo("p", "b", "e", None, None, Seq("A"), Direction.OUTGOING, None, optional = false, predicate = True())
 
   @Test def find_longest_path_for_single_pattern() {
-    val expectedTrail = Some(LongestTrail("b", Some("a"), SingleStepTrail(BoundPoint("b"), Direction.INCOMING, "pr1", Seq("A"), "a", Seq.empty, AtoB)))
+    val expected = step(0, Seq(A), Direction.INCOMING, None)
 
-    assert(
-      TrailBuilder.findLongestTrail(Seq(AtoB), Seq("a", "b")) ===
-      expectedTrail)
+    val steps = SingleStepTrail(BoundPoint("b"), Direction.INCOMING, "pr1", Seq("A"), "a", Seq.empty, AtoB).toSteps(0).get
+
+    assert(steps === expected)
   }
 
   @Test def find_longest_path_between_two_points() {
     val boundPoint = BoundPoint("c")
     val second = SingleStepTrail(boundPoint, Direction.INCOMING, "pr2", Seq("B"), "b", Seq.empty, BtoC)
     val first = SingleStepTrail(second, Direction.INCOMING, "pr1", Seq("A"), "a", Seq.empty, AtoB)
-    val expectedTrail = Some(LongestTrail("c", Some("a"), first))
 
-    assert(expectedTrail === TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2), Seq("a", "c")))
+    val backward2 = step(1, Seq(B), Direction.INCOMING, None)
+    val backward1 = step(0, Seq(A), Direction.INCOMING, Some(backward2))
+
+    assert(first.toSteps(0).get === backward1)
   }
 
   @Test def find_longest_path_between_two_points_with_a_predicate() {
+
     //()<-[r1:A]-(a)<-[r2:B]-()
     //WHERE r1.prop = 42 AND r2.prop = "FOO"
+
     val r1Pred = Equals(Property("pr1", "prop"), Literal(42))
     val r2Pred = Equals(Property("pr2", "prop"), Literal("FOO"))
     val predicates = Seq(r1Pred, r2Pred)
@@ -94,46 +99,59 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     val boundPoint = BoundPoint("c")
     val second = SingleStepTrail(boundPoint, Direction.INCOMING, "pr2", Seq("B"), "b", predicates, BtoC)
     val first = SingleStepTrail(second, Direction.INCOMING, "pr1", Seq("A"), "a", predicates, AtoB)
-    val expectedTrail = Some(LongestTrail("c", Some("a"), first))
 
-    val foundTrail = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2), Seq("a", "c"), predicates)
-    assert(expectedTrail === foundTrail)
+    val backward2 = step(1, Seq(B), Direction.INCOMING, None, relPredicate = r2Pred)
+    val backward1 = step(0, Seq(A), Direction.INCOMING, Some(backward2), relPredicate = r1Pred)
+
+    assert(first.toSteps(0).get === backward1)
   }
 
   @Test def find_longest_path_between_two_points_with_a_node_predicate() {
-    //(a)-[pr1:A]->(b)-[pr2:B]->(c)
-    //WHERE b.prop = 42
+    //()-[pr1:A]->(a)-[pr2:B]->()
+    //WHERE r1.prop = 42 AND r2.prop = "FOO"
 
     val nodePred = Equals(Property("b", "prop"), Literal(42))
+
+    val forward2 = step(1, Seq(B), Direction.INCOMING, None, nodePredicate = nodePred)
+    val forward1 = step(0, Seq(A), Direction.INCOMING, Some(forward2))
+
     val predicates = Seq(nodePred)
 
     val boundPoint = BoundPoint("c")
     val second = SingleStepTrail(boundPoint, Direction.INCOMING, "pr2", Seq("B"), "b", predicates, BtoC)
     val first = SingleStepTrail(second, Direction.INCOMING, "pr1", Seq("A"), "a", predicates, AtoB)
-    val expectedTrail = Some(LongestTrail("c", Some("a"), first))
 
-    val foundTrail = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2), Seq("a", "c"), predicates)
-    assert(expectedTrail === foundTrail)
+
+    assert(first.toSteps(0).get === forward1)
   }
 
   @Test def should_not_accept_trails_with_bound_points_in_the_middle() {
     //()-[pr1:A]->(a)-[pr2:B]->()
+    //WHERE r1.prop = 42 AND r2.prop = "FOO"
 
-    val LongestTrail(_, _, trail) = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC), Seq("a", "b", "c"), Seq()).get
+    val LongestTrail(_,_,trail) = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC), Seq("a", "b", "c"), Seq()).get
 
     assert(trail.size === 1)
   }
 
   @Test def find_longest_path_with_single_start() {
-    //(a)-[pr1:A]->(b)-[pr2:B]->(c)-[pr3:B]->(d)
+    val pr3 = step(2, Seq(A), OUTGOING, None)
+    val pr2 = step(1, Seq(B), OUTGOING, Some(pr3))
+    val pr1 = step(0, Seq(C), OUTGOING, Some(pr2))
 
     val boundPoint = BoundPoint("a")
     val third = SingleStepTrail(boundPoint, Direction.OUTGOING, "pr1", Seq("A"), "b", Seq.empty, AtoB)
     val second = SingleStepTrail(third, Direction.OUTGOING, "pr2", Seq("B"), "c", Seq.empty, BtoC)
     val first = SingleStepTrail(second, Direction.OUTGOING, "pr3", Seq("C"), "d", Seq.empty, CtoD)
-    val expectedTrail = Some(LongestTrail("a", None, first))
 
-    val foundTrail = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a"))
-    assert(foundTrail === expectedTrail)
+    assert(first.toSteps(0).get === pr1)
   }
+
+  private def step(id: Int,
+                   typ: Seq[RelationshipType],
+                   direction: Direction,
+                   next: Option[ExpanderStep],
+                   nodePredicate: Predicate = True(),
+                   relPredicate: Predicate = True()) =
+    SingleStep(id, typ, direction, next, relPredicate = relPredicate, nodePredicate = nodePredicate)
 }
