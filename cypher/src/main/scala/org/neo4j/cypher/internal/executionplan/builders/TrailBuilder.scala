@@ -19,10 +19,11 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.neo4j.cypher.internal.commands.{Predicate, RelatedTo}
+import org.neo4j.cypher.internal.commands.{VarLengthRelatedTo, Pattern, Predicate, RelatedTo}
+import org.neo4j.graphdb.Direction
 
 object TrailBuilder {
-  def findLongestTrail(patterns: Seq[RelatedTo], boundPoints: Seq[String], predicates: Seq[Predicate] = Seq.empty) = {
+  def findLongestTrail(patterns: Seq[Pattern], boundPoints: Seq[String], predicates: Seq[Predicate] = Seq.empty) = {
 
 
     def createFinder(elem: String): (Predicate => Boolean) = {
@@ -31,11 +32,12 @@ object TrailBuilder {
     }
 
 
-    def internalFindLongestPath(doneSeq: Seq[(Trail, Seq[RelatedTo])]): Seq[(Trail, Seq[RelatedTo])] = {
-      val result: Seq[(Trail, Seq[RelatedTo])] = doneSeq.flatMap {
-        case (done: Trail, patterns: Seq[RelatedTo]) =>
+    def internalFindLongestPath(doneSeq: Seq[(Trail, Seq[Pattern])]): Seq[(Trail, Seq[Pattern])] = {
+      val result: Seq[(Trail, Seq[Pattern])] = doneSeq.flatMap {
+        case (done: Trail, patterns: Seq[Pattern]) =>
           val relatedToes = patterns.filter {
-            rel => done.end == rel.left || done.end == rel.right
+            case rel: RelatedTo          => done.end == rel.left || done.end == rel.right
+            case rel: VarLengthRelatedTo => done.end == rel.start || done.end == rel.end
           }
 
           if (relatedToes.isEmpty)
@@ -43,11 +45,15 @@ object TrailBuilder {
           else {
             def relPred(k: String) = predicates.find(createFinder(k))
             def nodePred(k: String) = predicates.find(createFinder(k))
+            def singleStep(rel: RelatedTo, end: String, dir: Direction) = (SingleStepTrail(done, dir, rel.relName, rel.relTypes, end, relPred(rel.relName), nodePred(end), rel), patterns.filterNot(_ == rel))
+            def multiStep(rel: VarLengthRelatedTo, end: String, dir: Direction) = (VariableLengthStepTrail(done, dir, rel.relTypes, rel.pathName, rel.relIterator, end, rel), patterns.filterNot(_ == rel))
 
             Seq((done, patterns)) ++
               relatedToes.map {
-                case rel if rel.left == done.end => (SingleStepTrail(done, rel.direction, rel.relName, rel.relTypes, rel.right, relPred(rel.relName), nodePred(rel.right), rel), patterns.filterNot(_ == rel))
-                case rel                         => (SingleStepTrail(done, rel.direction.reverse(), rel.relName, rel.relTypes, rel.left, relPred(rel.relName), nodePred(rel.left), rel), patterns.filterNot(_ == rel))
+                case rel: RelatedTo if rel.left == done.end           => singleStep(rel, rel.right, rel.direction)
+                case rel: RelatedTo                                   => singleStep(rel, rel.left, rel.direction.reverse())
+                case rel: VarLengthRelatedTo if rel.start == done.end => multiStep(rel, rel.end, rel.direction)
+                case rel: VarLengthRelatedTo                          => multiStep(rel, rel.start, rel.direction.reverse())
               }
           }
       }
@@ -57,7 +63,7 @@ object TrailBuilder {
       else
         internalFindLongestPath(result)
     }
-    def findLongestTrail(pathsBetweenBoundPoints: scala.Seq[(Trail, scala.Seq[RelatedTo])]): LongestTrail = {
+    def findLongestTrail(pathsBetweenBoundPoints: Seq[(Trail, Seq[Pattern])]): LongestTrail = {
       val almost = pathsBetweenBoundPoints.sortBy(_._1.size)
       val (longestPath, _) = almost.last
 
@@ -66,9 +72,10 @@ object TrailBuilder {
       val trail = LongestTrail(start, end, longestPath)
       trail
     }
-    val allPaths: Seq[(Trail, scala.Seq[RelatedTo])] = {
+    val allPaths: Seq[(Trail, Seq[Pattern])] = {
       val startPoints = boundPoints.map(point => (BoundPoint(point), patterns))
-      val foundPaths = internalFindLongestPath(startPoints).
+      val paths = internalFindLongestPath(startPoints)
+      val foundPaths = paths.
         filter {
         case (trail, toes) => trail.size > 0 && trail.start != trail.end
       }
@@ -77,7 +84,7 @@ object TrailBuilder {
     def hasBoundPointsInMiddleOfPath(trail: Trail): Boolean = {
       trail.pathDescription.slice(1, trail.pathDescription.size - 1).exists(boundPoints.contains)
     }
-    def findCompatiblePaths(incomingPaths: Seq[(Trail, Seq[RelatedTo])]): Seq[(Trail, Seq[RelatedTo])] = {
+    def findCompatiblePaths(incomingPaths: Seq[(Trail, Seq[Pattern])]): Seq[(Trail, Seq[Pattern])] = {
       val foundPaths = incomingPaths.filterNot {
         case (trail, _) => hasBoundPointsInMiddleOfPath(trail)
       }
@@ -101,7 +108,7 @@ object TrailBuilder {
       None
     }
     else {
-      val pathsBetweenBoundPoints: Seq[(Trail, Seq[RelatedTo])] = findCompatiblePaths(allPaths)
+      val pathsBetweenBoundPoints: Seq[(Trail, Seq[Pattern])] = findCompatiblePaths(allPaths)
 
       if (pathsBetweenBoundPoints.isEmpty) {
         None

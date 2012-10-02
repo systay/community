@@ -99,24 +99,24 @@ final case class SingleStepTrail(s: Trail,
 
 final case class VariableLengthStepTrail(s: Trail,
                                          dir: Direction,
-                                         rel: String,
                                          typ: Seq[String],
+                                         path: String,
+                                         relIterator: Option[String],
                                          end: String,
-                                         candPredicates: Seq[Predicate],
                                          pattern: Pattern) extends Trail {
   def contains(target: String) = false
 
   protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) = null
 
-  def pathDescription = null
+  def pathDescription = s.pathDescription ++ Seq(path, end) ++ relIterator
 
   def patterns = null
 
   def predicates = null
 
-  def size = 0
+  def size = s.size + 1
 
-  def start = null
+  def start = s.start
 
   def symbols(table: SymbolTable) = null
 
