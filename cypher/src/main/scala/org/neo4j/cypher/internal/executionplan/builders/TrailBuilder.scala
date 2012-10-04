@@ -46,7 +46,7 @@ object TrailBuilder {
             def relPred(k: String) = predicates.find(createFinder(k))
             def nodePred(k: String) = predicates.find(createFinder(k))
             def singleStep(rel: RelatedTo, end: String, dir: Direction) = (SingleStepTrail(done, dir, rel.relName, rel.relTypes, end, relPred(rel.relName), nodePred(end), rel), patterns.filterNot(_ == rel))
-            def multiStep(rel: VarLengthRelatedTo, end: String, dir: Direction) = (VariableLengthStepTrail(done, dir, rel.relTypes, rel.pathName, rel.relIterator, end, rel), patterns.filterNot(_ == rel))
+            def multiStep(rel: VarLengthRelatedTo, end: String, dir: Direction) = (VariableLengthStepTrail(done, dir, rel.relTypes, rel.minHops.getOrElse(1), rel.minHops, rel.pathName, rel.relIterator, end, rel), patterns.filterNot(_ == rel))
 
             Seq((done, patterns)) ++
               relatedToes.map {

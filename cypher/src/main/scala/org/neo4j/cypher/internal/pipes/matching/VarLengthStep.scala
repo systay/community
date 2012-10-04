@@ -86,7 +86,8 @@ case class VarLengthStep(id: Int,
     }
 
     if (foundRelationships.isEmpty) {
-      if (min == 0) {  //If min is zero, it's ok to continue with the next step
+      if (min == 0) {
+        //If min is zero, it's ok to continue with the next step
         forceNextStep()
       } else {
         (foundRelationships, decreaseAndReturnNewNextStep())
@@ -128,4 +129,20 @@ case class VarLengthStep(id: Int,
       case Some(x) => shape + x.toString
     }
   }
+
+  override def equals(p1: Any) = p1 match {
+    case null                 => false
+    case other: VarLengthStep =>
+      val a = id == other.id
+      val b = direction == other.direction
+      val c = typ.map(_.name()) == other.typ.map(_.name())
+      val d = min == other.min
+      val e = max == other.max
+      val f = next == other.next
+      val g = relPredicate == other.relPredicate
+      val h = nodePredicate == other.nodePredicate
+      a && b && c && d && e && f && g && h
+    case _                    => false
+  }
+
 }

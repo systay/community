@@ -23,38 +23,58 @@ import org.neo4j.graphdb.{Direction, PropertyContainer}
 import org.neo4j.cypher.internal.symbols.{RelationshipType, NodeType, SymbolTable}
 import org.neo4j.cypher.internal.commands.{Pattern, True, Predicate}
 import org.neo4j.graphdb.DynamicRelationshipType._
-import org.neo4j.cypher.internal.pipes.matching.{SingleStep, ExpanderStep}
+import org.neo4j.cypher.internal.pipes.matching.{VarLengthStep, SingleStep, ExpanderStep}
 import scala.Some
 
 
 sealed abstract class Trail {
   def pathDescription: Seq[String]
+
   def start: String
+
   def end: String
+
   def size: Int
+
   def toSteps(id: Int): Option[ExpanderStep]
+
   override def toString: String = pathDescription.toString()
+
   def decompose(p: Seq[PropertyContainer]): Map[String, Any] = decompose(p, Map.empty)._2
+
   protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]): (Seq[PropertyContainer], Map[String, Any])
+
   def symbols(table: SymbolTable): SymbolTable
+
   def contains(target: String): Boolean
+
   def predicates: Seq[Predicate]
+
   def patterns: Seq[Pattern]
 }
 
 final case class BoundPoint(name: String) extends Trail {
   def end = name
+
   def pathDescription = Seq(name)
+
   def start = name
+
   def size = 0
+
   def toSteps(id: Int) = None
+
   protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) = {
     assert(p.size == 1, "Expected a path with a single node in it")
     (p.tail, r ++ Map(name -> p.head))
   }
+
   def symbols(table: SymbolTable): SymbolTable = table.add(name, NodeType())
+
   def contains(target: String): Boolean = target == name
+
   def predicates = Seq.empty
+
   def patterns = Seq.empty
 }
 
@@ -100,6 +120,8 @@ final case class SingleStepTrail(s: Trail,
 final case class VariableLengthStepTrail(s: Trail,
                                          dir: Direction,
                                          typ: Seq[String],
+                                         min: Int,
+                                         max: Option[Int],
                                          path: String,
                                          relIterator: Option[String],
                                          end: String,
@@ -120,5 +142,13 @@ final case class VariableLengthStepTrail(s: Trail,
 
   def symbols(table: SymbolTable) = null
 
-  def toSteps(id: Int) = null
+  def toSteps(id: Int): Option[ExpanderStep] = {
+    val types = typ.map(withName(_))
+    val steps = s.toSteps(id + 1)
+    //    val relPredicate = relPred.getOrElse(True())
+    //    val nodePredicate = nodePred.getOrElse(True())
+
+    Some(VarLengthStep(id, types, dir, min, max, steps, True(), True()))
+  }
+
 }

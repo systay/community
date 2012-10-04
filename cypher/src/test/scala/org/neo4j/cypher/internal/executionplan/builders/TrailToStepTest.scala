@@ -27,7 +27,7 @@ import org.scalatest.Assertions
 import org.neo4j.graphdb.Direction._
 import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.cypher.GraphDatabaseTestBase
-import org.neo4j.cypher.internal.pipes.matching.{SingleStep, ExpanderStep}
+import org.neo4j.cypher.internal.pipes.matching.{VarLengthStep, SingleStep, ExpanderStep}
 import org.neo4j.cypher.internal.commands.True
 
 class TrailToStepTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
@@ -68,7 +68,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
   val BtoB2 = RelatedTo("b", "b2", "pr4", Seq("D"), Direction.OUTGOING, optional = false, predicate = True())
   val BtoE = VarLengthRelatedTo("p", "b", "e", None, None, Seq("A"), Direction.OUTGOING, None, optional = false, predicate = True())
 
-  @Test def find_longest_path_for_single_pattern() {
+  @Test def single_step() {
     val expected = step(0, Seq(A), Direction.INCOMING, None)
 
     val steps = SingleStepTrail(BoundPoint("b"), Direction.INCOMING, "pr1", Seq("A"), "a", None, None, AtoB).toSteps(0).get
@@ -76,7 +76,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     assert(steps === expected)
   }
 
-  @Test def find_longest_path_between_two_points() {
+  @Test def two_steps() {
     val boundPoint = BoundPoint("c")
     val second = SingleStepTrail(boundPoint, Direction.INCOMING, "pr2", Seq("B"), "b", None, None, BtoC)
     val first = SingleStepTrail(second, Direction.INCOMING, "pr1", Seq("A"), "a", None, None, AtoB)
@@ -87,7 +87,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     assert(first.toSteps(0).get === backward1)
   }
 
-  @Test def find_longest_path_between_two_points_with_a_predicate() {
+  @Test def two_steps_with_rel_predicates() {
 
     //()<-[r1:A]-(a)<-[r2:B]-()
     //WHERE r1.prop = 42 AND r2.prop = "FOO"
@@ -105,7 +105,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     assert(first.toSteps(0).get === backward1)
   }
 
-  @Test def find_longest_path_between_two_points_with_a_node_predicate() {
+  @Test def two_steps_away_with_nodePredicate() {
     //()-[pr1:A]->(a)-[pr2:B]->()
     //WHERE r1.prop = 42 AND r2.prop = "FOO"
 
@@ -113,8 +113,6 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
 
     val forward2 = step(1, Seq(B), Direction.INCOMING, None, nodePredicate = nodePred)
     val forward1 = step(0, Seq(A), Direction.INCOMING, Some(forward2))
-
-    val predicates = Seq(nodePred)
 
     val boundPoint = BoundPoint("c")
     val second = SingleStepTrail(boundPoint, Direction.INCOMING, "pr2", Seq("B"), "b", None, Some(nodePred), BtoC)
@@ -124,16 +122,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     assert(first.toSteps(0).get === forward1)
   }
 
-  @Test def should_not_accept_trails_with_bound_points_in_the_middle() {
-    //()-[pr1:A]->(a)-[pr2:B]->()
-    //WHERE r1.prop = 42 AND r2.prop = "FOO"
-
-    val LongestTrail(_, _, trail) = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC), Seq("a", "b", "c"), Seq()).get
-
-    assert(trail.size === 1)
-  }
-
-  @Test def find_longest_path_with_single_start() {
+  @Test def three_steps() {
     val pr3 = step(2, Seq(A), OUTGOING, None)
     val pr2 = step(1, Seq(B), OUTGOING, Some(pr3))
     val pr1 = step(0, Seq(C), OUTGOING, Some(pr2))
@@ -146,6 +135,16 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     assert(first.toSteps(0).get === pr1)
   }
 
+  @Test def single_varlength_step() {
+    val expected = varlengthStep(0, Seq(A), OUTGOING, 1, None, None)
+
+    val boundPoint = BoundPoint("e")
+    val trail = VariableLengthStepTrail(boundPoint, Direction.OUTGOING, Seq("A"), 1, None, "p", None, "b", BtoE)
+
+    val result = trail.toSteps(0).get
+    assert(result.equals(expected))
+  }
+
   private def step(id: Int,
                    typ: Seq[RelationshipType],
                    direction: Direction,
@@ -153,4 +152,14 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
                    nodePredicate: Predicate = True(),
                    relPredicate: Predicate = True()) =
     SingleStep(id, typ, direction, next, relPredicate = relPredicate, nodePredicate = nodePredicate)
+
+  private def varlengthStep(id: Int,
+                   typ: Seq[RelationshipType],
+                   direction: Direction,
+                   min: Int,
+                   max: Option[Int],
+                   next: Option[ExpanderStep],
+                   nodePredicate: Predicate = True(),
+                   relPredicate: Predicate = True()) =
+    VarLengthStep(id, typ, direction, min, max, next, relPredicate = relPredicate, nodePredicate = nodePredicate)
 }

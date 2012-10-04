@@ -146,7 +146,7 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     //(b)-[:A*]->(e)
 
     val boundPoint = BoundPoint("b")
-    val first = VariableLengthStepTrail(boundPoint, Direction.OUTGOING, Seq("A"), "p", None, "e", BtoE)
+    val first = VariableLengthStepTrail(boundPoint, Direction.OUTGOING, Seq("A"), 1, None, "p", None, "e", BtoE)
     val expectedTrail = Some(LongestTrail("b", None, first))
 
     val foundTrail = TrailBuilder.findLongestTrail(Seq(BtoE), Seq("b"))
@@ -157,8 +157,8 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     //(b)-[:A*]->(e)-[:C*]-(f)
 
     val boundPoint = BoundPoint("f")
-    val first      = VariableLengthStepTrail(boundPoint, Direction.BOTH, Seq("C"), "p2", None, "e", EtoF)
-    val second     = VariableLengthStepTrail(first, Direction.INCOMING, Seq("A"), "p", None, "b", BtoE)
+    val first      = VariableLengthStepTrail(boundPoint, Direction.BOTH, Seq("C"), 1, None, "p2", None, "e", EtoF)
+    val second     = VariableLengthStepTrail(first, Direction.INCOMING, Seq("A"), 1, None, "p", None, "b", BtoE)
     val expected   = Some(LongestTrail("f", Some("b"), second))
 
     val foundTrail = TrailBuilder.findLongestTrail(Seq(BtoE, EtoF), Seq("b", "f"))
