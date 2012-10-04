@@ -139,7 +139,9 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     val expected = varlengthStep(0, Seq(A), OUTGOING, 1, None, None)
 
     val boundPoint = BoundPoint("e")
-    val trail = VariableLengthStepTrail(boundPoint, Direction.OUTGOING, Seq("A"), 1, None, "p", None, "b", BtoE)
+    val trail = VariableLengthStepTrail(s = boundPoint, dir = Direction.OUTGOING, typ = Seq("A"), min = 1, max = None,
+                                        path = "p", relIterator = None, end = "b", nodePredicate = True(),
+                                        pathPredicate = True(), forEveryRelPredicate = True(), pattern = BtoE)
 
     val result = trail.toSteps(0).get
     assert(result.equals(expected))

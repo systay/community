@@ -29,7 +29,6 @@ trait ExpanderStep {
   def typ: Seq[RelationshipType]
   def direction: Direction
   def id: Int
-  def relPredicate: Predicate
   def nodePredicate: Predicate
   def createCopy(next:Option[ExpanderStep], direction:Direction, nodePredicate:Predicate):ExpanderStep
   def size:Int

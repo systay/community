@@ -125,6 +125,9 @@ final case class VariableLengthStepTrail(s: Trail,
                                          path: String,
                                          relIterator: Option[String],
                                          end: String,
+                                         nodePredicate: Predicate,
+                                         pathPredicate: Predicate,
+                                         forEveryRelPredicate: Predicate,
                                          pattern: Pattern) extends Trail {
   def contains(target: String) = false
 

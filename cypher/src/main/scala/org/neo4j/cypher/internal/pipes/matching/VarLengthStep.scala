@@ -42,8 +42,9 @@ case class VarLengthStep(id: Int,
                          min: Int,
                          max: Option[Int],
                          next: Option[ExpanderStep],
-                         relPredicate: Predicate,
-                         nodePredicate: Predicate) extends ExpanderStep {
+                         nodePredicate: Predicate,
+                         pathPredicate: Predicate,
+                         forEveryRelPredicate: Predicate) extends ExpanderStep {
   def createCopy(next: Option[ExpanderStep], direction: Direction, nodePredicate: Predicate): ExpanderStep =
     copy(next = next, direction = direction, nodePredicate = nodePredicate)
 
@@ -139,8 +140,9 @@ case class VarLengthStep(id: Int,
       val d = min == other.min
       val e = max == other.max
       val f = next == other.next
-      val g = relPredicate == other.relPredicate
+      val g = pathPredicate == other.pathPredicate
       val h = nodePredicate == other.nodePredicate
+      val i = forEveryRelPredicate== other.forEveryRelPredicate
       a && b && c && d && e && f && g && h
     case _                    => false
   }
