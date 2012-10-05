@@ -47,25 +47,17 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
             |
             v
            (e)
-
- case class VarLengthRelatedTo(pathName: String,
-                              start: String,
-                              end: String,
-                              minHops: Option[Int],
-                              maxHops: Option[Int],
-                              relTypes: Seq[String],
-                              direction: Direction,
-                              relIterator: Option[String],
-                              optional: Boolean,
-                              predicate: Predicate) extends PathPattern {
-
-
+            |
+          [:C*]
+            |
+           (f)
   */
   val AtoB = RelatedTo("a", "b", "pr1", Seq("A"), Direction.OUTGOING, optional = false, predicate = True())
   val BtoC = RelatedTo("b", "c", "pr2", Seq("B"), Direction.OUTGOING, optional = false, predicate = True())
   val CtoD = RelatedTo("c", "d", "pr3", Seq("C"), Direction.OUTGOING, optional = false, predicate = True())
   val BtoB2 = RelatedTo("b", "b2", "pr4", Seq("D"), Direction.OUTGOING, optional = false, predicate = True())
   val BtoE = VarLengthRelatedTo("p", "b", "e", None, None, Seq("A"), Direction.OUTGOING, None, optional = false, predicate = True())
+  val EtoF = VarLengthRelatedTo("p2", "e", "f", None, None, Seq("C"), Direction.BOTH, None, optional = false, predicate = True())
 
   @Test def find_longest_path_for_single_pattern() {
     val expectedTrail = Some(LongestTrail("b", Some("a"), SingleStepTrail(BoundPoint("b"), Direction.OUTGOING, "pr1", Seq("A"), "a", None, None, AtoB)))
@@ -146,5 +138,17 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
 
     val foundTrail = TrailBuilder.findLongestTrail(Seq(BtoE), Seq("b"))
     assert(foundTrail === expectedTrail)
+  }
+
+  @Test def double_varlength_path() {
+    //(b)-[:A*]->(e)-[:C*]-(f)
+
+    val boundPoint = BoundPoint("f")
+    val first      = VariableLengthStepTrail(boundPoint, Direction.BOTH, Seq("C"), "p2", None, "e", EtoF)
+    val second     = VariableLengthStepTrail(first, Direction.OUTGOING, Seq("A"), "p", None, "b", BtoE)
+    val expected   = Some(LongestTrail("f", Some("b"), second))
+
+    val foundTrail = TrailBuilder.findLongestTrail(Seq(BtoE, EtoF), Seq("b", "f"))
+    assert(foundTrail === expected)
   }
 }
