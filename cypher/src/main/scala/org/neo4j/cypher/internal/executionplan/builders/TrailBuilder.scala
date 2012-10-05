@@ -19,12 +19,7 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.neo4j.graphdb.{Direction, PropertyContainer}
-import org.neo4j.cypher.internal.symbols.{RelationshipType, NodeType, SymbolTable}
-import org.neo4j.cypher.internal.pipes.matching.ExpanderStep
-import org.neo4j.graphdb.DynamicRelationshipType.withName
-import org.neo4j.cypher.internal.commands.{Predicate, RelatedTo, True}
-
+import org.neo4j.cypher.internal.commands.{Predicate, RelatedTo}
 
 object TrailBuilder {
   def findLongestTrail(patterns: Seq[RelatedTo], boundPoints: Seq[String], predicates: Seq[Predicate] = Seq.empty) =
