@@ -23,7 +23,7 @@ import org.neo4j.graphdb.{Direction, PropertyContainer}
 import org.neo4j.cypher.internal.symbols.{RelationshipType, NodeType, SymbolTable}
 import org.neo4j.cypher.internal.commands.{Pattern, True, Predicate}
 import org.neo4j.graphdb.DynamicRelationshipType._
-import org.neo4j.cypher.internal.pipes.matching.{SingleStep, ExpanderStep}
+import org.neo4j.cypher.internal.pipes.matching.{VarLengthStep, SingleStep, ExpanderStep}
 import scala.Some
 
 
@@ -100,6 +100,8 @@ final case class SingleStepTrail(s: Trail,
 final case class VariableLengthStepTrail(s: Trail,
                                          dir: Direction,
                                          typ: Seq[String],
+                                         min: Int,
+                                         max: Option[Int],
                                          path: String,
                                          relIterator: Option[String],
                                          end: String,
@@ -120,5 +122,12 @@ final case class VariableLengthStepTrail(s: Trail,
 
   def symbols(table: SymbolTable) = null
 
-  def toSteps(id: Int) = null
+  def toSteps(id: Int): Option[ExpanderStep] = {
+    val types = typ.map(withName(_))
+    val steps = s.toSteps(id + 1)
+    //    val relPredicate = relPred.getOrElse(True())
+    //    val nodePredicate = nodePred.getOrElse(True())
+
+    Some(VarLengthStep(id, types, dir, min, max, steps, True(), True()))
+  }
 }
