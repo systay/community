@@ -63,17 +63,9 @@ final case class SingleStepTrail(s: Trail,
                                  rel: String,
                                  typ: Seq[String],
                                  end: String,
-                                 candPredicates: Seq[Predicate],
+                                 relPred: Option[Predicate],
+                                 nodePred: Option[Predicate],
                                  pattern: Pattern) extends Trail {
-
-  val relPred = candPredicates.find(createFinder(rel))
-  val nodePred = candPredicates.find(createFinder(end))
-
-  private def createFinder(elem: String): (Predicate => Boolean) = {
-    def containsSingle(set: Set[String]) = set.size == 1 && set.head == elem
-    (pred: Predicate) => containsSingle(pred.symbolTableDependencies)
-  }
-
   def start = s.start
 
   def pathDescription = s.pathDescription ++ Seq(rel, end)

@@ -20,6 +20,7 @@
 package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.commands.{Predicate, RelatedTo}
+import org.neo4j.graphdb.Direction
 
 object TrailBuilder {
   def findLongestTrail(patterns: Seq[RelatedTo], boundPoints: Seq[String], predicates: Seq[Predicate] = Seq.empty) =
@@ -32,6 +33,16 @@ final case class LongestTrail(start: String, end: Option[String], longestTrail: 
 
 final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], predicates: Seq[Predicate]) {
   private def internalFindLongestPath(doneSeq: Seq[(Trail, Seq[RelatedTo])]): Seq[(Trail, Seq[RelatedTo])] = {
+
+    def createFinder(elem: String): (Predicate => Boolean) = {
+      def containsSingle(set: Set[String]) = set.size == 1 && set.head == elem
+      (pred: Predicate) => containsSingle(pred.symbolTableDependencies)
+    }
+
+    def singleStep(done: Trail, rel: RelatedTo, dir: Direction, other: String, relPred: Option[Predicate], nodePred: Option[Predicate]) =
+      SingleStepTrail(done, dir, rel.relName, rel.relTypes, other, relPred, nodePred, rel)
+
+
     val result: Seq[(Trail, Seq[RelatedTo])] = doneSeq.flatMap {
       case (done: Trail, patterns: Seq[RelatedTo]) =>
         val relatedToes = patterns.filter {
@@ -41,10 +52,13 @@ final class TrailBuilder(patterns: Seq[RelatedTo], boundPoints: Seq[String], pre
         if (relatedToes.isEmpty)
           Seq((done, patterns))
         else {
+          def relPred(k: String) = predicates.find(createFinder(k))
+          def nodePred(k: String) = predicates.find(createFinder(k))
+
           Seq((done, patterns)) ++
           relatedToes.map {
-            case rel if rel.left == done.end => (SingleStepTrail(done, rel.direction.reverse(), rel.relName, rel.relTypes, rel.right, predicates, rel), patterns.filterNot(_ == rel))
-            case rel                         => (SingleStepTrail(done, rel.direction, rel.relName, rel.relTypes, rel.left, predicates, rel), patterns.filterNot(_ == rel))
+            case rel if rel.left == done.end => (singleStep(done, rel, rel.direction.reverse(), rel.right, relPred(rel.relName), nodePred(rel.right)), patterns.filterNot(_ == rel))
+            case rel                         => (singleStep(done, rel, rel.direction, rel.left, relPred(rel.relName), nodePred(rel.left)), patterns.filterNot(_ == rel))
           }
         }
     }
