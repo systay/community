@@ -136,4 +136,15 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     val foundTrail = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, BtoB2, CtoD), Seq("a"))
     assert(foundTrail === expectedTrail)
   }
+
+  @Test def single_varlength_path() {
+    //(b)-[:A*]->(e)
+
+    val boundPoint = BoundPoint("b")
+    val first = VariableLengthStepTrail(boundPoint, Direction.INCOMING, Seq("A"), "p", None, "e", BtoE)
+    val expectedTrail = Some(LongestTrail("b", None, first))
+
+    val foundTrail = TrailBuilder.findLongestTrail(Seq(BtoE), Seq("b"))
+    assert(foundTrail === expectedTrail)
+  }
 }
