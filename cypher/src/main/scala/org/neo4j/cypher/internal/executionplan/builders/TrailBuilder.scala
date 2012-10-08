@@ -21,6 +21,7 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.neo4j.cypher.internal.commands.{VarLengthRelatedTo, RelatedTo, Pattern, Predicate}
 import org.neo4j.graphdb.Direction
+import org.neo4j.cypher.internal.commands.expressions.{Identifier, Property}
 
 object TrailBuilder {
   def findLongestTrail(patterns: Seq[Pattern], boundPoints: Seq[String], predicates: Seq[Predicate] = Seq.empty) =
@@ -49,8 +50,15 @@ final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predi
         if (relatedToes.isEmpty)
           Seq((done, patterns))
         else {
-          def relPred(k: String) = predicates.find(createFinder(k))
-          def nodePred(k: String) = predicates.find(createFinder(k))
+
+          def predicateRewriter(from: String, to: String)(pred: Predicate) = pred.rewrite {
+            case Identifier(name) if name == from     => Identifier(to)
+            case Property(name, prop) if name == from => Property(to, prop)
+            case e                                    => e
+          }
+
+          def relPred(k: String) = predicates.find(createFinder(k)).map(predicateRewriter(k, "r"))
+          def nodePred(k: String) = predicates.find(createFinder(k)).map(predicateRewriter(k, "n"))
           def singleStep(rel: RelatedTo, end: String, dir: Direction) = (SingleStepTrail(done, dir, rel.relName, rel.relTypes, end, relPred(rel.relName), nodePred(end), rel), patterns.filterNot(_ == rel))
           def multiStep(rel: VarLengthRelatedTo, end: String, dir: Direction) = (VariableLengthStepTrail(done, dir, rel.relTypes, rel.minHops.getOrElse(1), rel.maxHops, rel.pathName, rel.relIterator, end, rel), patterns.filterNot(_ == rel))
 

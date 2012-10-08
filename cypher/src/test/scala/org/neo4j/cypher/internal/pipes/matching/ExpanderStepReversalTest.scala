@@ -25,18 +25,9 @@ import org.scalatest.Assertions
 import org.neo4j.cypher.internal.commands.{True, Predicate}
 import org.neo4j.cypher.internal.commands.expressions.Expression
 import org.neo4j.cypher.internal.symbols.SymbolTable
-import collection.Map
-import org.neo4j.kernel.impl.core.NodeManager
-import org.neo4j.kernel.impl.transaction.LockType
 import org.neo4j.cypher.internal.pipes.ExecutionContext
 
-class ExpanderStepTest extends Assertions {
-
-  private def step(id: Int,
-                   typ: Seq[RelationshipType],
-                   direction: Direction,
-                   next: Option[ExpanderStep]) = SingleStep(id, typ, direction, next, True(), True())
-
+class ExpanderStepReversalTest extends Assertions {
   val A = DynamicRelationshipType.withName("A")
   val B = DynamicRelationshipType.withName("B")
   val C = DynamicRelationshipType.withName("C")
@@ -48,7 +39,6 @@ class ExpanderStepTest extends Assertions {
   val aR = step(0, Seq(A), Direction.INCOMING, None)
   val bR = step(1, Seq(B), Direction.BOTH, Some(aR))
   val cR = step(2, Seq(C), Direction.OUTGOING, Some(bR))
-
 
   @Test def reverse() {
     assert(a.reverse() === cR)
@@ -113,24 +103,16 @@ class ExpanderStepTest extends Assertions {
     assert(step3R.reverse() === step1)
   }
 
+  private def step(id: Int,
+                   typ: Seq[RelationshipType],
+                   direction: Direction,
+                   next: Option[ExpanderStep]) = SingleStep(id, typ, direction, next, True(), True())
 
   def step(id: Int, t: RelationshipType, dir: Direction, next: Option[ExpanderStep], relName: String, nodeName: String): ExpanderStep =
     SingleStep(id, Seq(t), dir, next, relPredicate = Pred(relName), nodePredicate = Pred(nodeName))
 
   def step(id: Int, t: RelationshipType, dir: Direction, next: Option[ExpanderStep], relName: String): ExpanderStep =
     SingleStep(id, Seq(t), dir, next, relPredicate = Pred(relName), nodePredicate = True())
-
-
-
-  trait MyNodeManager extends NodeManager {
-    var count = 0
-
-    override def getRelationshipForProxy(relId: Long, lock: LockType) = {
-      count = count + 1
-      super.getRelationshipForProxy(relId, lock)
-    }
-  }
-
 }
 
 case class Pred(identifier: String) extends Predicate {
