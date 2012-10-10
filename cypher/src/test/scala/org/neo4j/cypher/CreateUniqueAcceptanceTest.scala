@@ -25,7 +25,7 @@ import collection.JavaConverters._
 import org.scalatest.Assertions
 import org.neo4j.graphdb.{Node, Relationship}
 
-class CreateUniqueAcceptanceTests extends ExecutionEngineHelper with Assertions with StatisticsChecker {
+class CreateUniqueAcceptanceTest extends ExecutionEngineHelper with Assertions with StatisticsChecker {
 
   val stats = QueryStatistics.empty
 
