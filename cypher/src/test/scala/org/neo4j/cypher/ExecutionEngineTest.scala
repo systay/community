@@ -2257,5 +2257,4 @@ RETURN x0.name?
 
     assert(result.toList === List(Map("n" -> refNode, "collect(x)" -> List())))
   }
-
 }
