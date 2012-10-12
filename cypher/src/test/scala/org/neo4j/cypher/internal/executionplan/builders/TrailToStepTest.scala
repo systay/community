@@ -48,19 +48,6 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
             |
             v
            (e)
-
- case class VarLengthRelatedTo(pathName: String,
-                              start: String,
-                              end: String,
-                              minHops: Option[Int],
-                              maxHops: Option[Int],
-                              relTypes: Seq[String],
-                              direction: Direction,
-                              relIterator: Option[String],
-                              optional: Boolean,
-                              predicate: Predicate) extends PathPattern {
-
-
   */
   val AtoB = RelatedTo("a", "b", "pr1", Seq("A"), Direction.OUTGOING, optional = false, predicate = True())
   val BtoC = RelatedTo("b", "c", "pr2", Seq("B"), Direction.OUTGOING, optional = false, predicate = True())

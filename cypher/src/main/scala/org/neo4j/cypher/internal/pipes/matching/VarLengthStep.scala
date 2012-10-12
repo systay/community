@@ -63,7 +63,7 @@ case class VarLengthStep(id: Int,
       case Some(step) => step.expand(node, parameters)
     }
 
-    def expandeRecursively(rels: Iterable[Relationship]): Iterable[Relationship] = {
+    def expandRecursively(rels: Iterable[Relationship]): Iterable[Relationship] = {
       if (min == 0) {
         rels ++ next.map(s => s.expand(node, parameters)._1).flatten
       } else {
@@ -80,19 +80,23 @@ case class VarLengthStep(id: Int,
       }
     }
 
-    val foundRelationships = typ match {
+    val matchingRelationships = typ match {
       case Seq() => node.getRelationships(direction).asScala.filter(r => filter(r, r.getOtherNode(node)))
       case x     => node.getRelationships(direction, x: _*).asScala.filter(r => filter(r, r.getOtherNode(node)))
     }
 
-    if (foundRelationships.isEmpty) {
-      if (min == 0) {  //If min is zero, it's ok to continue with the next step
-        forceNextStep()
-      } else {
-        (foundRelationships, decreaseAndReturnNewNextStep())
-      }
+
+    if (matchingRelationships.isEmpty && min == 0) {
+      /*
+      If we didn't find any matching relationships, and min is zero, we'll strip away the current step, and keep
+      the next step
+       */
+      forceNextStep()
     } else {
-      (expandeRecursively(foundRelationships), decreaseAndReturnNewNextStep())
+      /*
+      If min is not zero, we'll return whatever we found, decrease and return this step
+      */
+      (expandRecursively(matchingRelationships), decreaseAndReturnNewNextStep())
     }
   }
 

@@ -88,7 +88,7 @@ class ExpanderStepReversalTest extends Assertions {
   }
 
   @Test def reverse_predicates_with_mixed_directions() {
-    //()-[pr1:A]->(a)-[pr2:B]->(b)-[pr3:C]->()
+    //(a)-[pr1:A]->(b)-[pr2:B]->(c)-[pr3:C]->(d)
     //WHERE r1.prop = 42 AND r2.prop = "FOO"
 
     val step3 = step(0, A, Direction.BOTH, None, "pr1", "b")

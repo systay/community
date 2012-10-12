@@ -114,7 +114,7 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
   }
 
   @Test def should_not_accept_trails_with_bound_points_in_the_middle() {
-    //()-[pr1:A]->(a)-[pr2:B]->()
+    //(a)-[pr1:A]->(b)-[pr2:B]->(c)
 
     val LongestTrail(_, _, trail) = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC), Seq("a", "b", "c"), Seq()).get
 
