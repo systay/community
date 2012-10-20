@@ -19,43 +19,63 @@
  */
 package org.neo4j.cypher.internal.executionplan.builders
 
-import org.neo4j.graphdb.{Direction, PropertyContainer}
-import org.neo4j.cypher.internal.symbols.{RelationshipType, NodeType, SymbolTable}
+import org.neo4j.graphdb.{Relationship, Node, Direction, PropertyContainer}
+import org.neo4j.cypher.internal.symbols.{PathType, RelationshipType, NodeType, SymbolTable}
 import org.neo4j.cypher.internal.commands.{Pattern, True, Predicate}
 import org.neo4j.graphdb.DynamicRelationshipType._
 import org.neo4j.cypher.internal.pipes.matching.{VarLengthStep, SingleStep, ExpanderStep}
+import org.neo4j.cypher.internal.pipes.MutableMaps
 
 sealed abstract class Trail {
   def pathDescription: Seq[String]
-  def start: String
-  def end: String
-  def size: Int
-  def toSteps(id: Int): Option[ExpanderStep]
-  override def toString: String = pathDescription.toString()
-  def decompose(p: Seq[PropertyContainer]): Seq[Map[String, Any]] = decompose(p, Map.empty).map(_._2)
 
-  protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]): Seq[(Seq[PropertyContainer], Map[String, Any])]
+  def start: String
+
+  def end: String
+
+  def size: Int
+
+  def toSteps(id: Int): Option[ExpanderStep]
+
+  override def toString: String = pathDescription.toString()
+
+  def decompose(p: Seq[PropertyContainer]): Traversable[Map[String, Any]] = decompose(p, Map.empty).map(_._2)
+
+  protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]): Traversable[(Seq[PropertyContainer], Map[String, Any])]
 
   def symbols(table: SymbolTable): SymbolTable
+
   def contains(target: String): Boolean
+
   def predicates: Seq[Predicate]
+
   def patterns: Seq[Pattern]
 }
 
 final case class BoundPoint(name: String) extends Trail {
   def end = name
+
   def pathDescription = Seq(name)
+
   def start = name
+
   def size = 0
+
   def toSteps(id: Int) = None
-  protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) = {
-    assert(p.size == 1, "Expected a path with a single node in it")
-    Seq((p.tail, r ++ Map(name -> p.head)))
-  }
+
+  protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) =
+    if (p.size == 1) {
+      Seq((p.tail, r ++ Map(name -> p.head)))
+    } else {
+      Seq()
+    }
 
   def symbols(table: SymbolTable): SymbolTable = table.add(name, NodeType())
+
   def contains(target: String): Boolean = target == name
+
   def predicates = Seq.empty
+
   def patterns = Seq.empty
 }
 
@@ -109,19 +129,71 @@ final case class VariableLengthStepTrail(s: Trail,
                                          pattern: Pattern) extends Trail {
   def contains(target: String) = false
 
-  protected[builders] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) = null
+  protected[builders] def decompose(p: Seq[PropertyContainer], m: Map[String, Any]) = {
+    var idx = min
+    var curr: Seq[PropertyContainer] = null
+    var left: Seq[PropertyContainer] = null
+
+    def checkRel(last: Node, r: Relationship) = (typ.contains(r.getType.name()) || typ.isEmpty) && (dir match {
+      case Direction.OUTGOING => r.getStartNode == last
+      case Direction.INCOMING => r.getEndNode == last
+      case _                  => true
+    })
+
+    def checkPath(in: Seq[PropertyContainer]) = {
+      var last: Node = in.head.asInstanceOf[Node]
+
+      in.forall {
+        case n: Node         => last = n; true
+        case r: Relationship => checkRel(last, r)
+      }
+    }
+
+    val x = p.splitAt(idx * 2)
+    curr = x._1
+    left = x._2
+
+    var result: Seq[(Seq[PropertyContainer], Map[String, Any])] = Seq.empty
+    val map = MutableMaps.create(m)
+    map += (end -> p.head)
+
+    var validRelationship = checkPath(curr)
+
+    while (validRelationship &&
+           idx <= max.getOrElse(idx) &&
+           left.nonEmpty) {
+
+      map += (path -> (curr :+ left.head))
+
+      //Add this result to the stack
+      //if our downstreams trail doesn't return anything,
+      //we'll also not return anything
+      result = result ++ s.decompose(left, map.toMap)
+
+      //Get more stuff from the remaining path
+      idx += 1
+
+      val x = p.splitAt(idx * 2)
+      curr = x._1
+      left = x._2
+
+      validRelationship = checkPath(curr)
+    }
+
+    result
+  }
 
   def pathDescription = s.pathDescription ++ Seq(path, end) ++ relIterator
 
-  def patterns = null
+  def patterns = s.patterns :+ pattern
 
-  def predicates = null
+  def predicates = s.predicates
 
   def size = s.size + 1
 
   def start = s.start
 
-  def symbols(table: SymbolTable) = null
+  def symbols(table: SymbolTable) = table.add(end, NodeType()).add(path, PathType())
 
   def toSteps(id: Int): Option[ExpanderStep] = {
     val types = typ.map(withName(_))
