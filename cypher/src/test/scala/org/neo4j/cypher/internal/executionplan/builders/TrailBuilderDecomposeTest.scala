@@ -149,4 +149,27 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     //Then
     assert(resultMap === List(Map("a" -> node0, "b" -> node2, "p" -> expectedPath)))
   }
+
+  @Test def zero_length_trail_can_be_ignored() {
+    //Given:
+    //Pattern: a-[:A*0..1]->b<-[r1:B]-c
+    //   Path: 0<-[:B]-1
+
+    val node0 = createNode()
+    val node1 = createNode()
+    val rel0 = relate(node0, node1, "B")
+
+    val input = Seq(node0, rel0, node1)
+    val expectedPath = Seq(node0)
+
+    val bound = BoundPoint("c")
+    val single = SingleStepTrail(bound, Direction.INCOMING, "r", Seq("B"), "b", None, None, null)
+    val path = VariableLengthStepTrail(single, Direction.OUTGOING, Seq("A"), 0, Some(1), "p", None, "a", null)
+
+    //When
+    val resultMap = path.decompose(input)
+
+    //Then
+    assert(resultMap === List(Map("a" -> node0, "b" -> node0, "c" -> node1, "p" -> expectedPath, "r" -> rel0)))
+  }
 }

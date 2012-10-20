@@ -140,7 +140,7 @@ final case class VariableLengthStepTrail(s: Trail,
       case _                  => true
     })
 
-    def checkPath(in: Seq[PropertyContainer]) = {
+    def checkPath(in: Seq[PropertyContainer]) = in.isEmpty || {
       var last: Node = in.head.asInstanceOf[Node]
 
       in.forall {
