@@ -163,7 +163,12 @@ final case class VariableLengthStepTrail(s: Trail,
            idx <= max.getOrElse(idx) &&
            left.nonEmpty) {
 
-      map += (path -> (curr :+ left.head))
+      val currentPath = curr :+ left.head
+      map += (path -> currentPath)
+
+      relIterator.foreach {
+        key => map += (key -> currentPath.filter(_.isInstanceOf[Relationship]))
+      }
 
       //Add this result to the stack
       //if our downstreams trail doesn't return anything,

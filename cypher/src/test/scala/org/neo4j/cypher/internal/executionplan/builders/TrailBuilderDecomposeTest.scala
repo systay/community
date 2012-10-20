@@ -77,6 +77,26 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "p" -> kernPath)))
   }
 
+  @Test def decompose_single_varlength_step_introducing_reliterator() {
+    //Given:
+    //Pattern: a-[r:A*1..2]->b
+    //   Path: 0-[:A]->1
+
+    val nodeA = createNode()
+    val nodeB = createNode()
+    val rel0 = relate(nodeA, nodeB, "A")
+
+    val kernPath = Seq(nodeA, rel0, nodeB)
+    val path =
+      VariableLengthStepTrail(BoundPoint("b"), Direction.OUTGOING, Seq("A"), 1, Some(2), "p", Some("r"), "a", null)
+
+    //When
+    val resultMap = path.decompose(kernPath)
+
+    //Then
+    assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "p" -> kernPath, "r"->Seq(rel0))))
+  }
+
   @Test def decompose_single_step_follow_with_varlength() {
     //Given:
     //Pattern: x-[r1:B]->a-[:A*1..2]->b
@@ -171,5 +191,40 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
 
     //Then
     assert(resultMap === List(Map("a" -> node0, "b" -> node0, "c" -> node1, "p" -> expectedPath, "r" -> rel0)))
+  }
+
+  @Test def linked_list_using_two_vartrails() {
+    //Given:
+    //Pattern: a-[:A*0..]->x-[:A*0..]->b
+    //   Path: 0-[:A]->1-[:A]->2-[:A]->3-[:A]->4
+
+    val node0 = createNode()
+    val node1 = createNode()
+    val node2 = createNode()
+    val node3 = createNode()
+    val node4 = createNode()
+
+    val rel0 = relate(node0, node1, "A")
+    val rel1 = relate(node1, node2, "A")
+    val rel2 = relate(node2, node3, "A")
+    val rel3 = relate(node3, node4, "A")
+
+    val input = Seq(node0, rel0, node1, rel1, node2, rel2, node3, rel3, node4)
+
+    val bound = BoundPoint("b")
+    val first = VariableLengthStepTrail(bound, Direction.OUTGOING, Seq("A"), 0, None, "p2", None, "x", null)
+    val second = VariableLengthStepTrail(first, Direction.OUTGOING, Seq("A"), 0, None, "p1", None, "a", null)
+
+    //When
+    val resultMap = second.decompose(input)
+
+    //Then
+    assert(resultMap === List(
+      Map("a" -> node0, "x" -> node0, "b" -> node4, "p1" -> Seq(node0), "p2" -> Seq(node0, rel0, node1, rel1, node2, rel2, node3, rel3, node4)),
+      Map("a" -> node0, "x" -> node1, "b" -> node4, "p1" -> Seq(node0, rel0, node1), "p2" -> Seq(node1, rel1, node2, rel2, node3, rel3, node4)),
+      Map("a" -> node0, "x" -> node2, "b" -> node4, "p1" -> Seq(node0, rel0, node1, rel1, node2), "p2" -> Seq(node2, rel2, node3, rel3, node4)),
+      Map("a" -> node0, "x" -> node3, "b" -> node4, "p1" -> Seq(node0, rel0, node1, rel1, node2, rel2, node3), "p2" -> Seq(node3, rel3, node4)),
+      Map("a" -> node0, "x" -> node4, "b" -> node4, "p1" -> Seq(node0, rel0, node1, rel1, node2, rel2, node3, rel3, node4), "p2" -> Seq(node4))
+    ))
   }
 }

@@ -82,8 +82,13 @@ class TraversalMatcherBuilder(graph: GraphDatabaseService) extends PlanBuilder {
     }
 
     val pattern = plan.query.patterns.flatMap {
-      case Unsolved(r: RelatedTo) if !r.optional && r.left != r.right => Some(r)
-      case _                                                          => None
+      case Unsolved(r: RelatedTo) if !r.optional && r.left != r.right         => Some(r)
+      case Unsolved(r: VarLengthRelatedTo) if !r.optional && r.start != r.end => Some(r)
+      case _                                                                  => None
+    }
+
+    if (pattern.exists(_.isInstanceOf[VarLengthRelatedTo])) {
+      println("wut")
     }
 
     val preds = plan.query.where.filter(_.unsolved).map(_.token)
