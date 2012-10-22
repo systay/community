@@ -21,13 +21,21 @@ package org.neo4j.cypher.internal.executionplan.builders
 
 import org.junit.Test
 import org.neo4j.cypher.internal.commands._
+import expressions.Literal
+import expressions.Property
 import expressions.{Literal, Property}
 import org.neo4j.graphdb.{RelationshipType, Direction}
 import org.scalatest.Assertions
 import org.neo4j.graphdb.Direction._
 import org.neo4j.graphdb.DynamicRelationshipType.withName
 import org.neo4j.cypher.GraphDatabaseTestBase
-import org.neo4j.cypher.internal.pipes.matching.{VarLengthStep, SingleStep, ExpanderStep}
+import org.neo4j.cypher.internal.pipes.matching._
+import org.neo4j.cypher.internal.commands.True
+import org.neo4j.cypher.internal.pipes.matching.VarLengthStep
+import scala.Some
+import org.neo4j.cypher.internal.pipes.matching.SingleStep
+import org.neo4j.cypher.internal.commands.Equals
+import org.neo4j.cypher.internal.pipes.matching.SingleStepTrail
 import org.neo4j.cypher.internal.commands.True
 
 class TrailToStepTest extends GraphDatabaseTestBase with Assertions with BuilderTest {

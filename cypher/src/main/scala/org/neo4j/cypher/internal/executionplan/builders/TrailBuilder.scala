@@ -22,6 +22,9 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.neo4j.cypher.internal.commands.{VarLengthRelatedTo, RelatedTo, Pattern, Predicate}
 import org.neo4j.graphdb.Direction
 import org.neo4j.cypher.internal.commands.expressions.{Identifier, Property}
+import org.neo4j.cypher.internal.pipes.matching.{BoundPoint, VariableLengthStepTrail, SingleStepTrail, Trail}
+import org.neo4j.helpers.ThisShouldNotHappenError
+import annotation.tailrec
 
 object TrailBuilder {
   def findLongestTrail(patterns: Seq[Pattern], boundPoints: Seq[String], predicates: Seq[Predicate] = Seq.empty) =
@@ -29,10 +32,11 @@ object TrailBuilder {
 }
 
 final case class LongestTrail(start: String, end: Option[String], longestTrail: Trail) {
-  lazy val step = longestTrail.toSteps(0).get.reverse()
+  lazy val step = longestTrail.toSteps(0).get
 }
 
 final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predicates: Seq[Predicate]) {
+  @tailrec
   private def internalFindLongestPath(doneSeq: Seq[(Trail, Seq[Pattern])]): Seq[(Trail, Seq[Pattern])] = {
 
     def createFinder(elem: String): (Predicate => Boolean) = {
@@ -40,36 +44,39 @@ final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predi
       (pred: Predicate) => containsSingle(pred.symbolTableDependencies)
     }
 
+    def transformToTrail(p: Pattern, done: Trail): (Trail, Seq[Pattern]) = {
+      def predicateRewriter(from: String, to: String)(pred: Predicate) = pred.rewrite {
+        case Identifier(name) if name == from     => Identifier(to)
+        case Property(name, prop) if name == from => Property(to, prop)
+        case e                                    => e
+      }
+      def relPred(k: String) = predicates.find(createFinder(k)).map(predicateRewriter(k, "r"))
+      def nodePred(k: String) = predicates.find(createFinder(k)).map(predicateRewriter(k, "n"))
+      def singleStep(rel: RelatedTo, end: String, dir: Direction) = done.add(start => SingleStepTrail(BoundPoint(end), dir, rel.relName, rel.relTypes, start, relPred(rel.relName), nodePred(start), rel))
+      def multiStep(rel: VarLengthRelatedTo, end: String, dir: Direction) = done.add(start => VariableLengthStepTrail(BoundPoint(end), dir, rel.relTypes, rel.minHops.getOrElse(1), rel.maxHops, rel.pathName, rel.relIterator, start, rel))
+
+      val patternsLeft = patterns.filterNot(_ == p)
+
+      val result: Trail = p match {
+        case rel: RelatedTo if rel.left == done.end           => singleStep(rel, rel.right, rel.direction)
+        case rel: RelatedTo if rel.right == done.end          => singleStep(rel, rel.left, rel.direction.reverse())
+        case rel: VarLengthRelatedTo if rel.end == done.end   => multiStep(rel, rel.start, rel.direction.reverse())
+        case rel: VarLengthRelatedTo if rel.start == done.end => multiStep(rel, rel.end, rel.direction)
+        case _                                                => throw new ThisShouldNotHappenError("Andres", "Wut?")
+      }
+
+      (result, patternsLeft)
+    }
+
     val result: Seq[(Trail, Seq[Pattern])] = doneSeq.flatMap {
       case (done: Trail, patterns: Seq[Pattern]) =>
-        val relatedToes = patterns.filter {
+        val relatedToes: Seq[Pattern] = patterns.filter {
           case rel: RelatedTo          => done.end == rel.left || done.end == rel.right
-          case rel: VarLengthRelatedTo => done.end == rel.start || done.end == rel.end
+          case rel: VarLengthRelatedTo => done.end == rel.end || done.end == rel.start
         }
 
-        if (relatedToes.isEmpty)
-          Seq((done, patterns))
-        else {
-
-          def predicateRewriter(from: String, to: String)(pred: Predicate) = pred.rewrite {
-            case Identifier(name) if name == from     => Identifier(to)
-            case Property(name, prop) if name == from => Property(to, prop)
-            case e                                    => e
-          }
-
-          def relPred(k: String) = predicates.find(createFinder(k)).map(predicateRewriter(k, "r"))
-          def nodePred(k: String) = predicates.find(createFinder(k)).map(predicateRewriter(k, "n"))
-          def singleStep(rel: RelatedTo, end: String, dir: Direction) = (SingleStepTrail(done, dir, rel.relName, rel.relTypes, end, relPred(rel.relName), nodePred(end), rel), patterns.filterNot(_ == rel))
-          def multiStep(rel: VarLengthRelatedTo, end: String, dir: Direction) = (VariableLengthStepTrail(done, dir, rel.relTypes, rel.minHops.getOrElse(1), rel.maxHops, rel.pathName, rel.relIterator, end, rel), patterns.filterNot(_ == rel))
-
-          Seq((done, patterns)) ++
-          relatedToes.map {
-            case rel: RelatedTo if rel.left == done.end           => singleStep(rel, rel.right, rel.direction.reverse())
-            case rel: RelatedTo                                   => singleStep(rel, rel.left, rel.direction)
-            case rel: VarLengthRelatedTo if rel.start == done.end => multiStep(rel, rel.end, rel.direction.reverse())
-            case rel: VarLengthRelatedTo                          => multiStep(rel, rel.start, rel.direction)
-          }
-        }
+        val newValues = relatedToes.map(transformToTrail(_, done))
+        Seq((done, patterns)) ++ newValues
     }
 
     if (result.distinct == doneSeq.distinct)
@@ -78,7 +85,17 @@ final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predi
       internalFindLongestPath(result)
   }
 
-  private def findLongestTrail(): Option[LongestTrail] =
+  private def findLongestTrail(): Option[LongestTrail] = {
+    def findAllPaths(): Seq[(Trail, scala.Seq[Pattern])] = {
+      val startPoints = boundPoints.map(point => (BoundPoint(point), patterns))
+      val foundPaths = internalFindLongestPath(startPoints)
+      val filteredPaths = foundPaths.filter {
+        case (trail, toes) => trail.size > 0 && trail.start != trail.end
+      }
+      filteredPaths
+    }
+
+
     if (patterns.isEmpty) {
       None
     }
@@ -94,48 +111,44 @@ final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predi
         Some(trail)
       }
     }
-
+  }
 
   private def findLongestTrail(pathsBetweenBoundPoints: scala.Seq[(Trail, scala.Seq[Pattern])]): LongestTrail = {
-    val almost = pathsBetweenBoundPoints.sortBy(_._1.size)
+    val almost = pathsBetweenBoundPoints.sortWith {
+      case ((t1,_), (t2,_)) => t1.size<t2.size || t1.start>t2.start //Sort first by length, and then by start point
+    }
+
     val (longestPath, _) = almost.last
 
     val start = longestPath.start
     val end = if (boundPoints.contains(longestPath.end)) Some(longestPath.end) else None
-    val trail = LongestTrail(start, end, longestPath)
-    trail
+    LongestTrail(start, end, longestPath)
   }
 
-  private def findAllPaths(): Seq[(Trail, scala.Seq[Pattern])] = {
-    val startPoints = boundPoints.map(point => (BoundPoint(point), patterns))
-    val foundPaths = internalFindLongestPath(startPoints).
-      filter {
-      case (trail, toes) => trail.size > 0 && trail.start != trail.end
-    }
-    foundPaths
-  }
 
   private def findCompatiblePaths(incomingPaths: Seq[(Trail, Seq[Pattern])]): Seq[(Trail, Seq[Pattern])] = {
-    val foundPaths = incomingPaths.filterNot {
+    val pathsWithoutBoundPointsInMiddle = incomingPaths.filterNot {
       case (trail, _) => hasBoundPointsInMiddleOfPath(trail)
     }
 
 
-    val boundInTwoPoints = foundPaths.filter {
+    val boundInBothEnds = pathsWithoutBoundPointsInMiddle.filter {
       case (p, left) => boundPoints.contains(p.start) && boundPoints.contains(p.end)
     }
 
-    val boundInAtLeastOnePoints = foundPaths.filter {
+    val boundInOneEnd = pathsWithoutBoundPointsInMiddle.filter {
       case (p, left) => boundPoints.contains(p.start) || boundPoints.contains(p.end)
     }
 
-    if (boundInTwoPoints.nonEmpty)
-      boundInTwoPoints
+    if (boundInBothEnds.nonEmpty)
+      boundInBothEnds
     else
-      boundInAtLeastOnePoints
+      boundInOneEnd
   }
 
   def hasBoundPointsInMiddleOfPath(trail: Trail): Boolean = {
-    trail.pathDescription.slice(1, trail.pathDescription.size - 1).exists(boundPoints.contains)
+    val nodesInBetween = trail.nodeNames.toSet -- Set(trail.start, trail.end)
+
+    nodesInBetween exists(boundPoints.contains)
   }
 }

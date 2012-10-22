@@ -19,10 +19,9 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import matching.TraversalMatcher
+import matching.{Trail, TraversalMatcher}
 import org.neo4j.cypher.internal.symbols.SymbolTable
 import collection.JavaConverters._
-import org.neo4j.cypher.internal.executionplan.builders.Trail
 import org.neo4j.graphdb.Path
 
 class TraversalMatchPipe(source: Pipe, matcher: TraversalMatcher, trail: Trail) extends PipeWithSource(source) {
@@ -32,7 +31,7 @@ class TraversalMatchPipe(source: Pipe, matcher: TraversalMatcher, trail: Trail) 
     input.flatMap {
       context =>
         // Find the matching paths
-        val paths: Iterable[Path] = matcher.findMatchingPaths(state, context)
+        val paths: Iterable[Path] = matcher.findMatchingPaths(state, context).toList
 
 
         //Transform paths to maps

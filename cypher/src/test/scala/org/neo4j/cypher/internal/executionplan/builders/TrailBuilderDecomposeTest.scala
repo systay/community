@@ -22,7 +22,8 @@ package org.neo4j.cypher.internal.executionplan.builders
 import org.junit.Test
 import org.neo4j.graphdb.Direction
 import org.scalatest.Assertions
-import org.neo4j.cypher.GraphDatabaseTestBase
+import org.neo4j.cypher.{PathImpl, GraphDatabaseTestBase}
+import org.neo4j.cypher.internal.pipes.matching.{VariableLengthStepTrail, SingleStepTrail, BoundPoint}
 
 class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
   @Test def decompose_simple_path() {
@@ -74,7 +75,7 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val resultMap = path.decompose(kernPath)
 
     //Then
-    assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "p" -> kernPath)))
+    assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "p" -> PathImpl(kernPath:_*))))
   }
 
   @Test def decompose_single_varlength_step_introducing_reliterator() {
@@ -94,7 +95,7 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val resultMap = path.decompose(kernPath)
 
     //Then
-    assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "p" -> kernPath, "r"->Seq(rel0))))
+    assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "p" -> PathImpl(kernPath:_*), "r"->Seq(rel0))))
   }
 
   @Test def decompose_single_step_follow_with_varlength() {
@@ -109,7 +110,7 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val rel2 = relate(node1, node2, "A")
 
     val kernPath = Seq(node0, rel1, node1, rel2, node2)
-    val expectedPath = Seq(node1, rel2, node2)
+    val expectedPath = PathImpl(node1, rel2, node2)
     val path =
       SingleStepTrail(
         VariableLengthStepTrail(BoundPoint("b"), Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null),
@@ -134,7 +135,7 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val rel1 = relate(node2, node1, "B")
 
     val kernPath = Seq(node0, rel0, node1, rel1, node2)
-    val expectedPath = Seq(node0, rel0, node1)
+    val expectedPath = PathImpl(node0, rel0, node1)
     val bound = BoundPoint("x")
     val single = SingleStepTrail(bound, Direction.INCOMING, "r1", Seq("B"), "b", None, None, null)
     val path = VariableLengthStepTrail(single, Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null)
@@ -167,7 +168,7 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val resultMap = path.decompose(input)
 
     //Then
-    assert(resultMap === List(Map("a" -> node0, "b" -> node2, "p" -> expectedPath)))
+    assert(resultMap === List(Map("a" -> node0, "b" -> node2, "p" -> PathImpl(expectedPath:_*))))
   }
 
   @Test def zero_length_trail_can_be_ignored() {
@@ -180,7 +181,7 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val rel0 = relate(node0, node1, "B")
 
     val input = Seq(node0, rel0, node1)
-    val expectedPath = Seq(node0)
+    val expectedPath = PathImpl(node0)
 
     val bound = BoundPoint("c")
     val single = SingleStepTrail(bound, Direction.INCOMING, "r", Seq("B"), "b", None, None, null)
@@ -220,11 +221,11 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
 
     //Then
     assert(resultMap === List(
-      Map("a" -> node0, "x" -> node0, "b" -> node4, "p1" -> Seq(node0), "p2" -> Seq(node0, rel0, node1, rel1, node2, rel2, node3, rel3, node4)),
-      Map("a" -> node0, "x" -> node1, "b" -> node4, "p1" -> Seq(node0, rel0, node1), "p2" -> Seq(node1, rel1, node2, rel2, node3, rel3, node4)),
-      Map("a" -> node0, "x" -> node2, "b" -> node4, "p1" -> Seq(node0, rel0, node1, rel1, node2), "p2" -> Seq(node2, rel2, node3, rel3, node4)),
-      Map("a" -> node0, "x" -> node3, "b" -> node4, "p1" -> Seq(node0, rel0, node1, rel1, node2, rel2, node3), "p2" -> Seq(node3, rel3, node4)),
-      Map("a" -> node0, "x" -> node4, "b" -> node4, "p1" -> Seq(node0, rel0, node1, rel1, node2, rel2, node3, rel3, node4), "p2" -> Seq(node4))
+      Map("a" -> node0, "x" -> node0, "b" -> node4, "p1" -> PathImpl(node0), "p2" -> PathImpl(node0, rel0, node1, rel1, node2, rel2, node3, rel3, node4)),
+      Map("a" -> node0, "x" -> node1, "b" -> node4, "p1" -> PathImpl(node0, rel0, node1), "p2" -> PathImpl(node1, rel1, node2, rel2, node3, rel3, node4)),
+      Map("a" -> node0, "x" -> node2, "b" -> node4, "p1" -> PathImpl(node0, rel0, node1, rel1, node2), "p2" -> PathImpl(node2, rel2, node3, rel3, node4)),
+      Map("a" -> node0, "x" -> node3, "b" -> node4, "p1" -> PathImpl(node0, rel0, node1, rel1, node2, rel2, node3), "p2" -> PathImpl(node3, rel3, node4)),
+      Map("a" -> node0, "x" -> node4, "b" -> node4, "p1" -> PathImpl(node0, rel0, node1, rel1, node2, rel2, node3, rel3, node4), "p2" -> PathImpl(node4))
     ))
   }
 }

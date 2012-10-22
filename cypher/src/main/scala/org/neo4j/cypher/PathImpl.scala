@@ -34,7 +34,7 @@ case class PathImpl(pathEntities: PropertyContainer*)
 
   def isProperPath: Boolean = {
     var x = true
-    val (nodes, rels) = pathEntities.partition(e => {
+    val (nodes, rels) = pathEntities.toList.partition(e => {
       x = !x
       !x
     })

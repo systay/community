@@ -80,6 +80,8 @@ case class VarLengthStep(id: Int,
       }
     }
 
+    val name = node.getProperty("name")
+    println(name)
     val matchingRelationships = typ match {
       case Seq() => node.getRelationships(direction).asScala.filter(r => filter(r, r.getOtherNode(node)))
       case x     => node.getRelationships(direction, x: _*).asScala.filter(r => filter(r, r.getOtherNode(node)))

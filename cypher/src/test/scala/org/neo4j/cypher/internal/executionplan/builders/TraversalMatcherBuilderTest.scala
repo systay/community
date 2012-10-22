@@ -44,12 +44,12 @@ class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions 
     assertFalse("This query should not be accepted", builder.canWorkWith(plan(new ParameterPipe(), q)))
   }
 
-  @Test def should_not_crash() {
+  @Test def should_accept_variable_length_paths() {
     val q = query("START me=node:node_auto_index(name = 'Jane') " +
                   "MATCH me-[:jane_knows*]->friend-[:has]->status " +
                   "RETURN me")
 
-    assertFalse("This query should not be accepted", builder.canWorkWith(plan(new ParameterPipe(), q)))
+    assertTrue("This query should not be accepted", builder.canWorkWith(plan(new ParameterPipe(), q)))
   }
 
   @Test def should_not_accept_queries_with_varlength_paths() {
@@ -57,7 +57,7 @@ class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions 
                   "MATCH me-[:LOVES*]->banana-[:LIKES*]->you " +
                   "RETURN me")
 
-    assertFalse("This query should not be accepted", builder.canWorkWith(plan(new ParameterPipe(), q)))
+    assertTrue("This query should be accepted", builder.canWorkWith(plan(new ParameterPipe(), q)))
   }
 
   @Test def should_handle_loops() {

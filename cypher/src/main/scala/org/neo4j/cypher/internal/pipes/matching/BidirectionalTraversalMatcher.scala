@@ -30,8 +30,8 @@ import collection.Map
 
 
 class BidirectionalTraversalMatcher(steps: ExpanderStep,
-                                    start: (ExecutionContext) => Iterable[Node],
-                                    end: (ExecutionContext) => Iterable[Node]) extends TraversalMatcher  {
+                                    start: ExecutionContext => Iterable[Node],
+                                    end: ExecutionContext => Iterable[Node]) extends TraversalMatcher  {
 
   lazy val reversedSteps = steps.reverse()
 
