@@ -37,7 +37,7 @@ class TraversalMatchPipe(source: Pipe, matcher: TraversalMatcher, trail: Trail) 
         //Transform paths to maps
         paths.flatMap {
           path =>
-            val seq = path.iterator().asScala.toSeq.reverse
+            val seq = path.iterator().asScala.toSeq
             val maps = trail.decompose(seq)
             maps.map(context.newWith)
         }

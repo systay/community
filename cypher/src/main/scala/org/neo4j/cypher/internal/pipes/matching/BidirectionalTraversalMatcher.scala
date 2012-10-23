@@ -68,7 +68,7 @@ class BidirectionalTraversalMatcher(steps: ExpanderStep,
       val e = endPath.state().asInstanceOf[Option[ExpanderStep]]
 
       val result = (s, e) match {
-        case (Some(startStep), Some(endStep)) => endStep.id == startStep.id + 1
+        case (Some(startStep), Some(endStep)) => endStep.id + 1 == startStep.id
         case (Some(x), None)                  => startPath.length() == 0
         case (None, Some(x))                  => endPath.length() == 0
         case _                                => false

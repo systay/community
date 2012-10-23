@@ -54,7 +54,8 @@ final case class SingleStepTrail(next: Trail,
     next.decompose(p.tail.tail, newMap)
   }
 
-  def symbols(table: SymbolTable): SymbolTable = next.symbols(table).add(end, NodeType()).add(rel, RelationshipType())
+  def symbols(table: SymbolTable): SymbolTable =
+    next.symbols(table).add(start, NodeType()).add(rel, RelationshipType())
 
   def contains(target: String): Boolean = next.contains(target) || target == end
 

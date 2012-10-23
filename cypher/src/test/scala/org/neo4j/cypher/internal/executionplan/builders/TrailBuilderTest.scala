@@ -165,7 +165,20 @@ class TrailBuilderTest extends GraphDatabaseTestBase with Assertions with Builde
     assert(foundTrail === expected)
   }
 
-  @Test def rewrites_predicate() {
+  @Test def should_handle_loops() {
 
+    // (a)-[pr1:A]->b-[pr2:B]->c
+    //  \                      ^
+    //   --[pr5:A]->x-[pr6:B]-/
+
+    val AtoX = RelatedTo("a", "x", "pr5", Seq("A"), Direction.OUTGOING, optional = false, predicate = True())
+    val XtoC = RelatedTo("b", "x", "pr6", Seq("B"), Direction.OUTGOING, optional = false, predicate = True())
+
+    val endPoint = BoundPoint("c")
+    val second = SingleStepTrail(endPoint, Direction.OUTGOING, "pr5", Seq("A"), "a", None, None, AtoX)
+
+
+    val trail = TrailBuilder.findLongestTrail(Seq(AtoB, BtoC, AtoX, XtoC), Seq("a", "c"), Seq.empty)
+    println(trail)
   }
 }

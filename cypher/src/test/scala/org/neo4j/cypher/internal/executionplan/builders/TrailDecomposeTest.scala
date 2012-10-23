@@ -25,21 +25,21 @@ import org.scalatest.Assertions
 import org.neo4j.cypher.{PathImpl, GraphDatabaseTestBase}
 import org.neo4j.cypher.internal.pipes.matching.{VariableLengthStepTrail, SingleStepTrail, BoundPoint}
 
-class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
+class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
   @Test def decompose_simple_path() {
     val nodeA = createNode("A")
     val nodeB = createNode("B")
     val rel = relate(nodeA, nodeB, "LINK_T")
 
-    val kernPath = Seq(nodeA, rel, nodeB).reverse
-    val path = SingleStepTrail(BoundPoint("a"), Direction.OUTGOING, "link", Seq("LINK_T"), "b", None, None, null)
+    val kernPath = Seq(nodeA, rel, nodeB)
+    val path = SingleStepTrail(BoundPoint("b"), Direction.OUTGOING, "link", Seq("LINK_T"), "a", None, None, null)
 
     val resultMap = path.decompose(kernPath)
     assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "link" -> rel)))
   }
 
   @Test def decompose_little_longer_path() {
-    //c-[link2]->b-[link1]->a
+    //a-[link2]->b-[link1]->c
 
     val nodeA = createNode("A")
     val nodeB = createNode("B")
@@ -47,15 +47,15 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
     val rel1 = relate(nodeA, nodeB, "LINK_T")
     val rel2 = relate(nodeB, nodeC, "LINK_T")
 
-    val kernPath = Seq(nodeA, rel1, nodeB, rel2, nodeC).reverse
-    val path =
-      SingleStepTrail(
-        SingleStepTrail(BoundPoint("a"), Direction.OUTGOING, "link1", Seq("LINK_T"), "b", None, None, null),
-        Direction.OUTGOING, "link2", Seq("LINK_T"), "c", None, None, null)
+    val kernPath = Seq(nodeA, rel1, nodeB, rel2, nodeC)
 
-    val resultMap = path.decompose(kernPath)
-    assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "c" -> nodeC,
-      "link1" -> rel1, "link2" -> rel2)))
+    val aPoint = BoundPoint("c")
+    val bToA = SingleStepTrail(aPoint, Direction.OUTGOING, "link2", Seq("LINK_T"), "b", None, None, null)
+    val cToB = SingleStepTrail(bToA, Direction.OUTGOING, "link1", Seq("LINK_T"), "a", None, None, null)
+
+    val resultMap = cToB.decompose(kernPath)
+
+    assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "c" -> nodeC, "link1" -> rel1, "link2" -> rel2)))
   }
 
   @Test def decompose_single_varlength_step() {
@@ -111,13 +111,13 @@ class TrailBuilderDecomposeTest extends GraphDatabaseTestBase with Assertions wi
 
     val kernPath = Seq(node0, rel1, node1, rel2, node2)
     val expectedPath = PathImpl(node1, rel2, node2)
-    val path =
-      SingleStepTrail(
-        VariableLengthStepTrail(BoundPoint("b"), Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null),
-        dir = Direction.OUTGOING, rel = "r1", typ = Seq("B"), end = "x", relPred = None, nodePred = None, pattern = null)
+
+    val point = BoundPoint("b")
+    val lastStep = VariableLengthStepTrail(point, Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null)
+    val firstStep = SingleStepTrail(lastStep, Direction.OUTGOING, "r1", Seq("B"), "x", None, None, null)
 
     //When
-    val resultMap = path.decompose(kernPath)
+    val resultMap = firstStep.decompose(kernPath)
 
     //Then
     assert(resultMap === List(Map("x" -> node0, "a" -> node1, "b" -> node2, "r1" -> rel1, "p" -> expectedPath)))

@@ -44,7 +44,7 @@ final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predi
       (pred: Predicate) => containsSingle(pred.symbolTableDependencies)
     }
 
-    def transformToTrail(p: Pattern, done: Trail): (Trail, Seq[Pattern]) = {
+    def transformToTrail(p: Pattern, done: Trail, patternsToDo:Seq[Pattern]): (Trail, Seq[Pattern]) = {
       def predicateRewriter(from: String, to: String)(pred: Predicate) = pred.rewrite {
         case Identifier(name) if name == from     => Identifier(to)
         case Property(name, prop) if name == from => Property(to, prop)
@@ -55,7 +55,7 @@ final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predi
       def singleStep(rel: RelatedTo, end: String, dir: Direction) = done.add(start => SingleStepTrail(BoundPoint(end), dir, rel.relName, rel.relTypes, start, relPred(rel.relName), nodePred(start), rel))
       def multiStep(rel: VarLengthRelatedTo, end: String, dir: Direction) = done.add(start => VariableLengthStepTrail(BoundPoint(end), dir, rel.relTypes, rel.minHops.getOrElse(1), rel.maxHops, rel.pathName, rel.relIterator, start, rel))
 
-      val patternsLeft = patterns.filterNot(_ == p)
+      val patternsLeft = patternsToDo.filterNot(_ == p)
 
       val result: Trail = p match {
         case rel: RelatedTo if rel.left == done.end           => singleStep(rel, rel.right, rel.direction)
@@ -69,20 +69,36 @@ final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predi
     }
 
     val result: Seq[(Trail, Seq[Pattern])] = doneSeq.flatMap {
-      case (done: Trail, patterns: Seq[Pattern]) =>
-        val relatedToes: Seq[Pattern] = patterns.filter {
+      case (done: Trail, patternsToDo: Seq[Pattern]) =>
+        val relatedToes: Seq[Pattern] = patternsToDo.filter {
           case rel: RelatedTo          => done.end == rel.left || done.end == rel.right
           case rel: VarLengthRelatedTo => done.end == rel.end || done.end == rel.start
         }
 
-        val newValues = relatedToes.map(transformToTrail(_, done))
-        Seq((done, patterns)) ++ newValues
+        val newValues = relatedToes.map(transformToTrail(_, done, patternsToDo))
+        Seq((done, patternsToDo)) ++ newValues
     }
 
-    if (result.distinct == doneSeq.distinct)
+    val a = result.distinct
+    val b = doneSeq.distinct
+
+//    def debug(x:Seq[(Trail, Seq[Pattern])]) {
+//      x.foreach {
+//        case (t,ps) => println("Done: " + t.toString + " **** Todo: " + ps.mkString(","))
+//      }
+//    }
+//    println("\nInput")
+//    debug(b)
+//
+//    println("\nResult")
+//    debug(a)
+//
+//    println("*******************************************************************")
+
+    if (a == b)
       result
     else
-      internalFindLongestPath(result)
+      internalFindLongestPath(a)
   }
 
   private def findLongestTrail(): Option[LongestTrail] = {

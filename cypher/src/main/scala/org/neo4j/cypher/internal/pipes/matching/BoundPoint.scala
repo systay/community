@@ -35,7 +35,7 @@ final case class BoundPoint(name: String) extends Trail {
 
   protected[matching] def decompose(p: Seq[PropertyContainer], r: Map[String, Any]) =
     if (p.size == 1) {
-      Seq((p.tail, r ++ Map(name -> p.head)))
+      Seq((Seq.empty, r ++ Map(name -> p.head)))
     } else {
       Seq()
     }
