@@ -25,11 +25,11 @@ import collection.JavaConverters._
 import org.neo4j.cypher.internal.pipes.ExecutionContext
 
 case class SingleStep(id: Int,
-                       typ: Seq[RelationshipType],
-                       direction: Direction,
-                       next: Option[ExpanderStep],
-                       relPredicate: Predicate,
-                       nodePredicate: Predicate) extends ExpanderStep {
+                      typ: Seq[RelationshipType],
+                      direction: Direction,
+                      next: Option[ExpanderStep],
+                      relPredicate: Predicate,
+                      nodePredicate: Predicate) extends ExpanderStep {
 
   def createCopy(next: Option[ExpanderStep], direction: Direction, nodePredicate: Predicate): ExpanderStep =
     copy(next = next, direction = direction, nodePredicate = nodePredicate)
@@ -40,7 +40,7 @@ case class SingleStep(id: Int,
     relPredicate.isMatch(m) && nodePredicate.isMatch(m)
   }
 
-  def expand(node: Node, parameters: ExecutionContext):  (Iterable[Relationship], Option[ExpanderStep]) = {
+  def expand(node: Node, parameters: ExecutionContext): (Iterable[Relationship], Option[ExpanderStep]) = {
     val rels = typ match {
       case Seq() => node.getRelationships(direction).asScala.filter(r => filter(r, r.getOtherNode(node), parameters))
       case x     => node.getRelationships(direction, x: _*).asScala.filter(r => filter(r, r.getOtherNode(node), parameters))
@@ -50,16 +50,16 @@ case class SingleStep(id: Int,
 
   override def toString = {
     val left =
-    if (direction == Direction.OUTGOING)
-      ""
-    else
-      "<"
+      if (direction == Direction.OUTGOING)
+        ""
+      else
+        "<"
 
     val right =
-    if (direction == Direction.INCOMING)
-      ""
-    else
-      ">"
+      if (direction == Direction.INCOMING)
+        ""
+      else
+        ">"
 
     val relInfo = typ.toList match {
       case List() => ""
@@ -67,16 +67,16 @@ case class SingleStep(id: Int,
     }
 
     val shape = "(%s)%s-%s-%s".format(id, left, relInfo, right)
-
+    1
     next match {
       case None    => "%s()".format(shape)
       case Some(x) => shape + x.toString
     }
   }
 
-  def size: Int = next match {
-    case Some(s) => 1 + s.size
-    case None    => 1
+  def size: Option[Int] = next match {
+    case None    => Some(1)
+    case Some(n) => n.size.map(_ + 1)
   }
 
   override def equals(p1: Any) = p1 match {

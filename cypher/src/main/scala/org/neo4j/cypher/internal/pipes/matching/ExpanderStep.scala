@@ -33,7 +33,7 @@ trait ExpanderStep {
   def relPredicate: Predicate
   def nodePredicate: Predicate
   def createCopy(next:Option[ExpanderStep], direction:Direction, nodePredicate:Predicate):ExpanderStep
-  def size:Int
+  def size:Option[Int]
   def expand(node: Node, parameters: ExecutionContext): (Iterable[Relationship], Option[ExpanderStep])
   def shouldInclude():Boolean
 

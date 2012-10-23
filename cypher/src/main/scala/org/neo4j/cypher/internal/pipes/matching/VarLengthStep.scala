@@ -47,7 +47,7 @@ case class VarLengthStep(id: Int,
   def createCopy(next: Option[ExpanderStep], direction: Direction, nodePredicate: Predicate): ExpanderStep =
     copy(next = next, direction = direction, nodePredicate = nodePredicate)
 
-  def expand(node: Node, parameters: ExecutionContext):  (Iterable[Relationship], Option[ExpanderStep]) = {
+  def expand(node: Node, parameters: ExecutionContext): (Iterable[Relationship], Option[ExpanderStep]) = {
     def filter(r: Relationship, n: Node): Boolean = {
       val m = new MiniMap(r, n, parameters)
       relPredicate.isMatch(m) && nodePredicate.isMatch(m)
@@ -85,7 +85,7 @@ case class VarLengthStep(id: Int,
       case x     => node.getRelationships(direction, x: _*).asScala.filter(r => filter(r, r.getOtherNode(node)))
     }
 
-    if (matchingRelationships.isEmpty && min == 0) {
+    val result = if (matchingRelationships.isEmpty && min == 0) {
       /*
       If we didn't find any matching relationships, and min is zero, we'll strip away the current step, and keep
       the next step
@@ -97,9 +97,20 @@ case class VarLengthStep(id: Int,
       */
       (expandRecursively(matchingRelationships), decreaseAndReturnNewNextStep())
     }
+    result
   }
 
-  def size: Int = 0
+  def size: Option[Int] = next match {
+    case None                    => max
+    case Some(n) if max.nonEmpty => n.size.map(_ + max.get)
+    case _                       => None
+  }
+
+
+  //  def size: Option[Int] = next.map(_.size) match {
+  //    case Some(Some(t)) => max.map(_ + t)
+  //    case _             => None
+  //  }
 
   override def toString = {
     val predicateString = "r: %s, n: %s".format(relPredicate, nodePredicate)
@@ -147,5 +158,5 @@ case class VarLengthStep(id: Int,
     case _                    => false
   }
 
-  def shouldInclude() = min == 0
+  def shouldInclude() = min == 0 && next.forall(_.shouldInclude())
 }
