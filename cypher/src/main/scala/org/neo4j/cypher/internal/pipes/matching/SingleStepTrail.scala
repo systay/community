@@ -47,12 +47,15 @@ final case class SingleStepTrail(next: Trail,
 
   def size = next.size + 1
 
-  protected[matching] def decompose(p: Seq[PropertyContainer], m: Map[String, Any]) = {
-    val r = p.tail.head
-    val n = p.head
-    val newMap = m + (rel -> r) + (start -> n)
-    next.decompose(p.tail.tail, newMap)
-  }
+  protected[matching] def decompose(p: Seq[PropertyContainer], m: Map[String, Any]): Traversable[(Seq[PropertyContainer], Map[String, Any])] =
+    if (p.size < 2) {
+      Seq()
+    } else {
+      val r = p.tail.head
+      val n = p.head
+      val newMap = m + (rel -> r) + (start -> n)
+      next.decompose(p.tail.tail, newMap)
+    }
 
   def symbols(table: SymbolTable): SymbolTable =
     next.symbols(table).add(start, NodeType()).add(rel, RelationshipType())

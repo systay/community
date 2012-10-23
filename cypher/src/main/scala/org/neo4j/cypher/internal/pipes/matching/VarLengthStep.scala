@@ -146,4 +146,6 @@ case class VarLengthStep(id: Int,
       a && b && c && d && e && f && g && h
     case _                    => false
   }
+
+  def shouldInclude() = min == 0
 }

@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal.pipes.matching
 
 import org.neo4j.graphdb.{Node, Relationship, Direction, RelationshipType}
 import org.neo4j.cypher.internal.commands.{True, Predicate}
-import collection.{mutable, Map}
+import collection.mutable
 import org.neo4j.cypher.internal.pipes.ExecutionContext
 
 
@@ -35,6 +35,7 @@ trait ExpanderStep {
   def createCopy(next:Option[ExpanderStep], direction:Direction, nodePredicate:Predicate):ExpanderStep
   def size:Int
   def expand(node: Node, parameters: ExecutionContext): (Iterable[Relationship], Option[ExpanderStep])
+  def shouldInclude():Boolean
 
   /*
   The way we reverse the steps is by first creating a Seq out of the steps. In this Seq, the first element points to

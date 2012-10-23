@@ -184,4 +184,31 @@ class VariableLengthExpanderStepExpandTest extends GraphDatabaseTestBase {
     assert(relationships.toSeq === Seq())
     assert(next === Some(expectedNext))
   }
+
+  @Test def zero_step_should_return_the_start_node() {
+    /*
+    Given the pattern:
+     ()-[:A*0..1]->()
+     */
+    val step2 = step(1, Seq(B), Direction.OUTGOING, None)
+    val step1 = varStep(0, Seq(A), Direction.OUTGOING, 1, Some(2), Some(step2))
+
+    /*
+    And the graph:
+     (a)-[r1:B]->(b)
+    */
+    val a = createNode()
+    val b = createNode()
+
+    relate(a, b, "B")
+
+    /*When given the start node a*/
+    val (relationships, next) = step1.expand(a, ExecutionContext.empty)
+
+    /*should return no relationships, and step 0, but with one less min step as the next step*/
+    val expectedNext = varStep(0, Seq(A), Direction.OUTGOING, 0, Some(1), Some(step2))
+
+    assert(relationships.toSeq === Seq())
+    assert(next === Some(expectedNext))
+  }
 }

@@ -91,4 +91,6 @@ case class SingleStep(id: Int,
       a && b && c && d && e && f
     case _                   => false
   }
+
+  def shouldInclude() = false
 }
