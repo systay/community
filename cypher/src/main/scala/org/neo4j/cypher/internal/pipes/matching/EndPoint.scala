@@ -22,7 +22,7 @@ package org.neo4j.cypher.internal.pipes.matching
 import org.neo4j.graphdb.PropertyContainer
 import org.neo4j.cypher.internal.symbols.{NodeType, SymbolTable}
 
-final case class BoundPoint(name: String) extends Trail {
+final case class EndPoint(name: String) extends Trail {
   def end = name
 
   def pathDescription = Seq(name)
@@ -53,4 +53,6 @@ final case class BoundPoint(name: String) extends Trail {
   def nodeNames = Seq(name)
 
   def add(f: (String) => Trail) = f(name)
+
+  def filter(f: (Trail) => Boolean):Iterable[Trail] = Some(this).filter(f)
 }

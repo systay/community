@@ -56,10 +56,10 @@ class MonoDirectionalTraversalMatcher(steps: ExpanderStep, start: (ExecutionCont
 
 class MyEvaluator extends PathEvaluator[Option[ExpanderStep]] {
   def evaluate(path: Path, state: BranchState[Option[ExpanderStep]]) = state.getState match {
-    case Some(step: ExpanderStep) if step.shouldInclude() => Evaluation.INCLUDE_AND_CONTINUE
-    case None                                             => Evaluation.INCLUDE_AND_PRUNE
-    case _                                                => Evaluation.EXCLUDE_AND_CONTINUE
-  }
+      case Some(step: ExpanderStep) if step.shouldInclude() => Evaluation.INCLUDE_AND_CONTINUE
+      case None                                             => Evaluation.INCLUDE_AND_PRUNE
+      case _                                                => Evaluation.EXCLUDE_AND_CONTINUE
+    }
 
   def evaluate(path: Path) = throw new RuntimeException
 }

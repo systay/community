@@ -48,9 +48,9 @@ abstract class Trail {
 
   def nodeNames:Seq[String]
 
-  /*
-  To add a new tail, you provide a function that given the old end name should return a trail.
-  This trail will replace the old bound point end
-   */
   def add(f: String=>Trail):Trail
+
+  def filter(f:Trail=>Boolean):Iterable[Trail]
+
+  def asSeq: Seq[Trail] = filter(x=>true).toSeq
 }

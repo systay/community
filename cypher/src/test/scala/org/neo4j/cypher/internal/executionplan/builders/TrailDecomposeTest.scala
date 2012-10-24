@@ -23,7 +23,7 @@ import org.junit.Test
 import org.neo4j.graphdb.Direction
 import org.scalatest.Assertions
 import org.neo4j.cypher.{PathImpl, GraphDatabaseTestBase}
-import org.neo4j.cypher.internal.pipes.matching.{VariableLengthStepTrail, SingleStepTrail, BoundPoint}
+import org.neo4j.cypher.internal.pipes.matching.{VariableLengthStepTrail, SingleStepTrail, EndPoint}
 
 class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
   @Test def decompose_simple_path() {
@@ -32,7 +32,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
     val rel = relate(nodeA, nodeB, "LINK_T")
 
     val kernPath = Seq(nodeA, rel, nodeB)
-    val path = SingleStepTrail(BoundPoint("b"), Direction.OUTGOING, "link", Seq("LINK_T"), "a", None, None, null)
+    val path = SingleStepTrail(EndPoint("b"), Direction.OUTGOING, "link", Seq("LINK_T"), "a", None, None, null)
 
     val resultMap = path.decompose(kernPath)
     assert(resultMap === List(Map("a" -> nodeA, "b" -> nodeB, "link" -> rel)))
@@ -49,7 +49,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
 
     val kernPath = Seq(nodeA, rel1, nodeB, rel2, nodeC)
 
-    val aPoint = BoundPoint("c")
+    val aPoint = EndPoint("c")
     val bToA = SingleStepTrail(aPoint, Direction.OUTGOING, "link2", Seq("LINK_T"), "b", None, None, null)
     val cToB = SingleStepTrail(bToA, Direction.OUTGOING, "link1", Seq("LINK_T"), "a", None, None, null)
 
@@ -69,7 +69,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
 
     val kernPath = Seq(nodeA, rel1, nodeB)
     val path =
-      VariableLengthStepTrail(BoundPoint("b"), Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null)
+      VariableLengthStepTrail(EndPoint("b"), Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null)
 
     //When
     val resultMap = path.decompose(kernPath)
@@ -89,7 +89,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
 
     val kernPath = Seq(nodeA, rel0, nodeB)
     val path =
-      VariableLengthStepTrail(BoundPoint("b"), Direction.OUTGOING, Seq("A"), 1, Some(2), "p", Some("r"), "a", null)
+      VariableLengthStepTrail(EndPoint("b"), Direction.OUTGOING, Seq("A"), 1, Some(2), "p", Some("r"), "a", null)
 
     //When
     val resultMap = path.decompose(kernPath)
@@ -112,7 +112,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
     val kernPath = Seq(node0, rel1, node1, rel2, node2)
     val expectedPath = PathImpl(node1, rel2, node2)
 
-    val point = BoundPoint("b")
+    val point = EndPoint("b")
     val lastStep = VariableLengthStepTrail(point, Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null)
     val firstStep = SingleStepTrail(lastStep, Direction.OUTGOING, "r1", Seq("B"), "x", None, None, null)
 
@@ -136,7 +136,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
 
     val kernPath = Seq(node0, rel0, node1, rel1, node2)
     val expectedPath = PathImpl(node0, rel0, node1)
-    val bound = BoundPoint("x")
+    val bound = EndPoint("x")
     val single = SingleStepTrail(bound, Direction.INCOMING, "r1", Seq("B"), "b", None, None, null)
     val path = VariableLengthStepTrail(single, Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null)
 
@@ -161,7 +161,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
     val input = Seq(node0, rel0, node1, rel1, node2)
     val expectedPath = input
 
-    val bound = BoundPoint("b")
+    val bound = EndPoint("b")
     val path = VariableLengthStepTrail(bound, Direction.OUTGOING, Seq("A"), 1, Some(2), "p", None, "a", null)
 
     //When
@@ -183,7 +183,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
     val input = Seq(node0, rel0, node1)
     val expectedPath = PathImpl(node0)
 
-    val bound = BoundPoint("c")
+    val bound = EndPoint("c")
     val single = SingleStepTrail(bound, Direction.INCOMING, "r", Seq("B"), "b", None, None, null)
     val path = VariableLengthStepTrail(single, Direction.OUTGOING, Seq("A"), 0, Some(1), "p", None, "a", null)
 
@@ -212,7 +212,7 @@ class TrailDecomposeTest extends GraphDatabaseTestBase with Assertions with Buil
 
     val input = Seq(node0, rel0, node1, rel1, node2, rel2, node3, rel3, node4)
 
-    val bound = BoundPoint("b")
+    val bound = EndPoint("b")
     val first = VariableLengthStepTrail(bound, Direction.OUTGOING, Seq("A"), 0, None, "p2", None, "x", null)
     val second = VariableLengthStepTrail(first, Direction.OUTGOING, Seq("A"), 0, None, "p1", None, "a", null)
 

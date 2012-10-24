@@ -81,4 +81,6 @@ final case class SingleStepTrail(next: Trail,
   def nodeNames = Seq(start) ++ next.nodeNames
 
   def add(f: (String) => Trail) = copy(next = next.add(f))
+
+  def filter(f: (Trail) => Boolean):Iterable[Trail] = Some(this).filter(f) ++ next.filter(f)
 }

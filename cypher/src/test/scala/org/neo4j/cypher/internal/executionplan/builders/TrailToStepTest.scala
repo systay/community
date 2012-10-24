@@ -66,13 +66,13 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
   @Test def single_step() {
     val expected = step(0, Seq(A), Direction.INCOMING, None)
 
-    val steps = SingleStepTrail(BoundPoint("b"), Direction.INCOMING, "pr1", Seq("A"), "a", None, None, AtoB).toSteps(0).get
+    val steps = SingleStepTrail(EndPoint("b"), Direction.INCOMING, "pr1", Seq("A"), "a", None, None, AtoB).toSteps(0).get
 
     assert(steps === expected)
   }
 
   @Test def two_steps() {
-    val boundPoint = BoundPoint("c")
+    val boundPoint = EndPoint("c")
     val second = SingleStepTrail(boundPoint, Direction.INCOMING, "pr2", Seq("B"), "b", None, None, BtoC)
     val first = SingleStepTrail(second, Direction.INCOMING, "pr1", Seq("A"), "a", None, None, AtoB)
 
@@ -90,7 +90,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     val r1Pred = Equals(Property("pr1", "prop"), Literal(42))
     val r2Pred = Equals(Property("pr2", "prop"), Literal("FOO"))
 
-    val boundPoint = BoundPoint("c")
+    val boundPoint = EndPoint("c")
     val second = SingleStepTrail(boundPoint, Direction.INCOMING, "pr2", Seq("B"), "b", Some(r2Pred), None, BtoC)
     val first = SingleStepTrail(second, Direction.INCOMING, "pr1", Seq("A"), "a", Some(r1Pred), None, AtoB)
 
@@ -109,7 +109,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     val forward2 = step(1, Seq(B), Direction.INCOMING, None, nodePredicate = nodePred)
     val forward1 = step(0, Seq(A), Direction.INCOMING, Some(forward2))
 
-    val boundPoint = BoundPoint("c")
+    val boundPoint = EndPoint("c")
     val second = SingleStepTrail(boundPoint, Direction.INCOMING, "pr2", Seq("B"), "b", None, Some(nodePred), BtoC)
     val first = SingleStepTrail(second, Direction.INCOMING, "pr1", Seq("A"), "a", None, None, AtoB)
 
@@ -122,7 +122,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
     val pr2 = step(1, Seq(B), OUTGOING, Some(pr3))
     val pr1 = step(0, Seq(C), OUTGOING, Some(pr2))
 
-    val boundPoint = BoundPoint("a")
+    val boundPoint = EndPoint("a")
     val third = SingleStepTrail(boundPoint, Direction.OUTGOING, "pr1", Seq("A"), "b", None, None, AtoB)
     val second = SingleStepTrail(third, Direction.OUTGOING, "pr2", Seq("B"), "c", None, None, BtoC)
     val first = SingleStepTrail(second, Direction.OUTGOING, "pr3", Seq("C"), "d", None, None, CtoD)
@@ -133,7 +133,7 @@ class TrailToStepTest extends GraphDatabaseTestBase with Assertions with Builder
   @Test def single_varlength_step() {
     val expected = varlengthStep(0, Seq(A), OUTGOING, 1, None, None)
 
-    val boundPoint = BoundPoint("e")
+    val boundPoint = EndPoint("e")
     val trail = VariableLengthStepTrail(boundPoint, Direction.OUTGOING, Seq("A"), 1, None, "p", None, "b", BtoE)
 
     val result = trail.toSteps(0).get
