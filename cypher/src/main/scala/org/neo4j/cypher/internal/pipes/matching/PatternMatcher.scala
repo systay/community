@@ -23,6 +23,7 @@ import org.neo4j.graphdb.Node
 import org.neo4j.cypher.internal.commands.{True, Predicate}
 import collection.Map
 import org.neo4j.cypher.internal.pipes.ExecutionContext
+import org.neo4j.cypher.EntityNotFoundException
 
 class PatternMatcher(bindings: Map[String, MatchingPair], predicates: Seq[Predicate], includeOptionals: Boolean, source:ExecutionContext)
   extends Traversable[ExecutionContext] {
@@ -164,7 +165,12 @@ class PatternMatcher(bindings: Map[String, MatchingPair], predicates: Seq[Predic
   private def isMatchSoFar(history: History): Boolean = {
     val m = history.toMap
     val predicate = predicates.filter(predicate=> !predicate.containsIsNull && predicate.symbolTableDependencies.forall(m contains))
-    predicate.forall(_.isMatch(m))
+    predicate.forall(predicate1 => try {
+      predicate1.isMatch(m)
+    } catch {
+      case e: EntityNotFoundException => println(e)
+      throw e
+    })
   }
 
   private def traverseNextNodeOrYield[U](remaining: Set[MatchingPair], history: History, yielder: ExecutionContext => U): Boolean = {

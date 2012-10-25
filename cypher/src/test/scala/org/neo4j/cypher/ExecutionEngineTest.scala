@@ -2243,4 +2243,51 @@ RETURN x0.name?
     assert(result.toList === List(Map("coll" -> List(refNode))))
   }
 
+  @Test
+  def linked_list_retrieval() {
+    /*
+    (1) {"name":"A","value":10}
+(2) {"name":"B","value":20}
+(3) {"name":"C","value":30}
+(4) {"name":"ROOT"}
+(1)-[:LINK]->(2) {}
+(2)-[:LINK]->(3) {}
+(3)-[:LINK]->(4) {}
+(4)-[:LINK]->(1) {}
+    */
+
+    val root = createNode()
+    val a = createNode("value"->10)
+    val b = createNode("value"->20)
+    val c = createNode("value"->30)
+
+    relate(root,a)
+    relate(a,b)
+    relate(b,c)
+    relate(c,root)
+
+    val result = parseAndExecute(
+      """
+START root = node(1)
+MATCH root-[*0..]->x-[*0..]->root
+WHERE has(x.value)
+RETURN x.value
+ORDER BY x.value
+""")
+
+    println(parseAndExecute("""
+START root = node(1)
+MATCH
+  root-[*0..]->before,// before could be same as root
+  after-[*0..]->root, // after could be same as root
+  before-[old]->after
+WHERE before.value? < 25  // This is the value, which would normally
+  AND 25 < after.value?   // be supplied through a parameter.
+CREATE before-[:X]->({value:25})-[:X]->after
+DELETE old""").dumpToString())
+
+
+    assert(result.toList === List(Map("x.value" -> 10),Map("x.value" -> 20),Map("x.value" -> 30)))
+  }
+
 }

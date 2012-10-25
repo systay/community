@@ -167,8 +167,8 @@ final class TrailBuilder(patterns: Seq[Pattern], boundPoints: Seq[String], predi
         val seq = p.asSeq
         val idxOfVar = seq.indexWhere(_.isInstanceOf[VariableLengthStepTrail])
 
-        val apa = p.asSeq.size - 2
-        val result = startBound && !endBound && numberOfVarlength <= 1 && (numberOfVarlength == 0 || idxOfVar == apa)
+        val numberOfTrails = p.asSeq.size - 2
+        val result = startBound && !endBound && numberOfVarlength <= 1 && (numberOfVarlength == 0 || idxOfVar == numberOfTrails)
         result
     }
 
