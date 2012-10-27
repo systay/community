@@ -31,7 +31,7 @@ case class DeletePropertyAction(element: Expression, property: String)
     val entity = element(context).asInstanceOf[PropertyContainer]
     if (entity.hasProperty(property)) {
       entity.removeProperty(property)
-      state.propertySet.increase()
+      state.updateCounter.setProperty()
     }
 
     Stream(context)

@@ -25,7 +25,7 @@ import org.neo4j.test.ImpermanentGraphDatabase
 import java.lang.Iterable
 import org.neo4j.graphdb.Traverser.Order
 import org.neo4j.graphdb._
-import org.neo4j.cypher.internal.pipes.{ExecutionContext, QueryState}
+import org.neo4j.cypher.internal.pipes.{NullMonitor, ExecutionContext, QueryState}
 import collection.JavaConverters._
 
 /*
@@ -68,7 +68,7 @@ class DoubleCheckCreateUniqueTest extends Assertions {
   }
 
   private def createQueryState(tx: Transaction): QueryState = {
-    new QueryState(db, Map.empty, Some(tx))
+    new QueryState(db, Map.empty, Some(tx), new NullMonitor)
   }
 
   private def createRel(node:Node) {

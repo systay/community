@@ -49,7 +49,7 @@ case class MapPropertySetAction(element: Expression, mapExpression: Expression)
 
     /*Set all map values on the property container*/
     map.foreach(kv => {
-      state.propertySet.increase()
+      state.updateCounter.setProperty()
 
       kv match {
         case (k, v) =>
@@ -65,7 +65,7 @@ case class MapPropertySetAction(element: Expression, mapExpression: Expression)
       case k if map.contains(k) => //Do nothing
       case k                    =>
         pc.removeProperty(k)
-        state.propertySet.increase()
+        state.updateCounter.setProperty()
     }
 
     Stream(context)

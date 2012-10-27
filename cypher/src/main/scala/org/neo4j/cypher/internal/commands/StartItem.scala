@@ -77,13 +77,13 @@ case class CreateNodeStartItem(key: String, props: Map[String, Expression])
           case (k, v) => (k -> Literal(v))
         }
         val node = db.createNode()
-        state.createdNodes.increase()
+        state.updateCounter.createdNode()
         setProperties(node, m, context, state)
         context.newWith(key -> node)
       })
     } else {
       val node = db.createNode()
-      state.createdNodes.increase()
+      state.updateCounter.createdNode()
       setProperties(node, props, context, state)
 
       Stream(context.newWith(key -> node))
@@ -121,7 +121,8 @@ case class CreateRelationshipStartItem(key: String,
     val f = from._1(context).asInstanceOf[Node]
     val t = to._1(context).asInstanceOf[Node]
     val relationship = f.createRelationshipTo(t, relationshipType)
-    state.createdRelationships.increase()
+    state.updateCounter.createdRelationship()
+
     setProperties(relationship, props, context, state)
     context.put(key, relationship)
     Stream(context)

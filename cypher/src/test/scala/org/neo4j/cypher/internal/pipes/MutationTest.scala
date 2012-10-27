@@ -19,21 +19,24 @@
  */
 package org.neo4j.cypher.internal.pipes
 
-import org.scalatest.Assertions
-import org.junit.Test
+import org.junit.{Before, Test}
 import org.neo4j.cypher.internal.mutation.DeleteEntityAction
-import org.neo4j.cypher.{CypherTypeException, ExecutionEngineHelper}
+import org.neo4j.cypher.{StatsAssertions, CypherTypeException, ExecutionEngineHelper}
 import collection.mutable.{Map => MutableMap}
 import org.neo4j.graphdb.{Node, NotFoundException}
 import org.neo4j.cypher.internal.symbols.{SymbolTable, CypherType, NodeType}
-import collection.{Map => CollectionMap}
 import org.neo4j.cypher.internal.commands.{CreateRelationshipStartItem, CreateNodeStartItem}
 import org.neo4j.cypher.internal.commands.expressions.{Expression, Literal}
 
 
-class MutationTest extends ExecutionEngineHelper with Assertions {
+class MutationTest extends ExecutionEngineHelper with StatsAssertions {
 
-  def createQueryState = new QueryState(graph, Map.empty)
+  var state: QueryState = null
+
+  @Before
+  def init() {
+    state = QueryState.forTest(graph)
+  }
 
   @Test
   def create_node() {
@@ -42,13 +45,11 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
     val createNode = new ExecuteUpdateCommandsPipe(txBegin, graph, Seq(CreateNodeStartItem("n", Map("name" -> Literal("Andres")))))
     val commitPipe = new CommitPipe(createNode, graph)
 
-    val queryState = createQueryState
-    commitPipe.createResults(queryState)
+    commitPipe.createResults(state)
 
     val n = graph.getNodeById(1)
     assert(n.getProperty("name") === "Andres")
-    assert(queryState.createdNodes.count === 1)
-    assert(queryState.propertySet.count === 1)
+    assertStats(state, createdNode = 1, setProperty = 1)
   }
 
   @Test
@@ -59,7 +60,7 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
     val createNode = new ExecuteUpdateCommandsPipe(txBegin, graph, Seq(CreateNodeStartItem("n", Map("name" -> Literal("Andres")))))
     val commitPipe = new CommitPipe(createNode, graph)
 
-    commitPipe.createResults(createQueryState)
+    commitPipe.createResults(state)
 
     tx.failure()
     tx.finish()
@@ -75,7 +76,7 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
     val createNode = new ExecuteUpdateCommandsPipe(txBegin, graph, Seq(CreateNodeStartItem("n", Map("name" -> Literal("Andres")))))
     val commitPipe = new CommitPipe(createNode, graph)
 
-    commitPipe.createResults(createQueryState)
+    commitPipe.createResults(state)
 
     tx.success()
     tx.finish()
@@ -84,35 +85,33 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
     assert(n.getProperty("name") === "Andres")
   }
 
-  private def getNode(key:String, n:Node) = InjectValue(n, NodeType())
+  private def getNode(key: String, n: Node) = InjectValue(n, NodeType())
 
   @Test
   def create_rel() {
     val a = createNode()
     val b = createNode()
 
-    val createRel = CreateRelationshipStartItem("r", (getNode("a", a),Map()), (getNode("b", b),Map()), "REL", Map("I" -> Literal("was here")))
+    val createRel = CreateRelationshipStartItem("r", (getNode("a", a), Map()), (getNode("b", b), Map()), "REL", Map("I" -> Literal("was here")))
 
     val startPipe = new NullPipe
     val txBeginPipe = new TransactionStartPipe(startPipe, graph)
     val createNodePipe = new ExecuteUpdateCommandsPipe(txBeginPipe, graph, Seq(createRel))
     val commitPipe = new CommitPipe(createNodePipe, graph)
 
-    val state = createQueryState
     val results: List[MutableMap[String, Any]] = commitPipe.createResults(state).map(ctx => ctx.m).toList
 
     val r = graph.getRelationshipById(0)
     assert(r.getProperty("I") === "was here")
     assert(results === List(Map("r" -> r)))
-    assert(state.createdRelationships.count === 1)
-    assert(state.propertySet.count === 1)
+    assertStats(state, createdRelationship = 1, setProperty = 1)
   }
 
   @Test
   def throw_exception_if_wrong_stuff_to_delete() {
     val createRel = DeleteEntityAction(Literal("some text"))
 
-    intercept[CypherTypeException](createRel.exec(ExecutionContext.empty, createQueryState))
+    intercept[CypherTypeException](createRel.exec(ExecutionContext.empty, state))
   }
 
   @Test
@@ -126,13 +125,13 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
     val createNodePipe = new ExecuteUpdateCommandsPipe(txBeginPipe, graph, Seq(deleteCommand))
     val commitPipe = new CommitPipe(createNodePipe, graph)
 
-    commitPipe.createResults(createQueryState).toList
+    commitPipe.createResults(state).toList
 
     intercept[NotFoundException](graph.getNodeById(node_id))
   }
 }
 
-case class InjectValue(value:Any, typ:CypherType) extends Expression {
+case class InjectValue(value: Any, typ: CypherType) extends Expression {
   def apply(v1: ExecutionContext) = value
 
   def filter(f: (Expression) => Boolean) = Seq(this)

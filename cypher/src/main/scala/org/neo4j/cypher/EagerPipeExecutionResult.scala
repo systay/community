@@ -29,12 +29,7 @@ class EagerPipeExecutionResult(r: => Traversable[Map[String, Any]],
                                db: GraphDatabaseService)
   extends PipeExecutionResult(r, columns) {
 
-  override lazy val queryStatistics = QueryStatistics(
-    nodesCreated = state.createdNodes.count,
-    relationshipsCreated = state.createdRelationships.count,
-    propertiesSet = state.propertySet.count,
-    deletedNodes = state.deletedNodes.count,
-    deletedRelationships = state.deletedRelationships.count)
+  override lazy val queryStatistics = state.updateCounter.toStats
 
   override val createTimedResults = {
     val start = System.currentTimeMillis()

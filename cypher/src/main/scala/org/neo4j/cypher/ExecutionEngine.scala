@@ -62,7 +62,7 @@ class ExecutionEngine(graph: GraphDatabaseService) {
 
   @throws(classOf[SyntaxException])
   def prepare(query: String): ExecutionPlan =
-    executionPlanCache.getOrElseUpdate(query, new ExecutionPlanImpl(parser.parse(query), graph))
+    executionPlanCache.getOrElseUpdate(query, new ExecutionPlanImpl(parser.parse(query), graph, monitors))
 
   @throws(classOf[SyntaxException])
   @deprecated(message = "You should not parse queries manually any more. Use the execute(String) instead")
@@ -74,7 +74,7 @@ class ExecutionEngine(graph: GraphDatabaseService) {
 
   @throws(classOf[SyntaxException])
   @deprecated(message = "You should not parse queries manually any more. Use the execute(String) instead")
-  def execute(query: Query, params: Map[String, Any]): ExecutionResult = new ExecutionPlanImpl(query, graph).execute(params)
+  def execute(query: Query, params: Map[String, Any]): ExecutionResult = new ExecutionPlanImpl(query, graph, monitors).execute(params)
 
   private def checkScalaVersion() {
     if (util.Properties.versionString.matches("^version 2.9.0")) {

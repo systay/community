@@ -28,6 +28,7 @@ import org.scalatest.Assertions
 import org.neo4j.cypher.InternalException
 import actors.threadpool.{ExecutionException, TimeUnit, Executors}
 import org.neo4j.cypher.internal.commands.expressions.Identifier
+import org.neo4j.cypher.internal.statistics.Monitors
 
 class ExecutionPlanImplTest extends Assertions with Timed {
   @Test def should_not_go_into_never_ending_loop() {
@@ -42,7 +43,7 @@ class ExecutionPlanImplTest extends Assertions with Timed {
   }
 }
 
-class FakeEPI(q: Query, gds: GraphDatabaseService) extends ExecutionPlanImpl(q, gds) {
+class FakeEPI(q: Query, gds: GraphDatabaseService) extends ExecutionPlanImpl(q, gds, new Monitors()) {
   override lazy val builders = Seq(new BadBuilder)
 }
 

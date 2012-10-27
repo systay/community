@@ -28,8 +28,9 @@ import collection.mutable.{Queue, Map => MutableMap}
 import scala.collection.JavaConverters._
 import java.util.HashMap
 import org.neo4j.kernel.GraphDatabaseAPI
-import org.neo4j.cypher.ParameterNotFoundException
+import org.neo4j.cypher.{QueryStatistics, ParameterNotFoundException}
 import java.util.concurrent.atomic.AtomicInteger
+import org.neo4j.cypher.internal.commands.Query
 
 /**
  * Pipe is a central part of Cypher. Most pipes are decorators - they
@@ -69,24 +70,101 @@ object MutableMaps {
   }
 }
 
-object QueryState {
-  def apply() = new QueryState(null, Map.empty)
+
+trait UpdatingMonitor {
+  def createdNode(q: Query)
+
+  def deletedNode(q: Query)
+
+  def createdRelationship(q: Query)
+
+  def deletedRelationship(q: Query)
+
+  def setProperty(q: Query)
 }
 
-class QueryState(val db: GraphDatabaseService,
-                 val params: Map[String, Any],
-                 var transaction: Option[Transaction] = None) {
+class UpdatingCounter(inner: UpdatingMonitor, q: Query) {
   val createdNodes = new Counter
   val createdRelationships = new Counter
   val propertySet = new Counter
   val deletedNodes = new Counter
   val deletedRelationships = new Counter
 
+  def createdNode() {
+    createdNodes.increase()
+    inner.createdNode(q)
+  }
+
+  def createdRelationship() {
+    createdRelationships.increase()
+    inner.createdRelationship(q)
+  }
+
+  def deletedNode() {
+    deletedNodes.increase()
+    inner.deletedNode(q)
+  }
+
+  def deletedRelationship() {
+    deletedRelationships.increase()
+    inner.deletedRelationship(q)
+  }
+
+  def setProperty() {
+    propertySet.increase()
+    inner.setProperty(q)
+  }
+
+  def toStats = QueryStatistics(
+    nodesCreated = createdNodes.count,
+    relationshipsCreated = createdRelationships.count,
+    propertiesSet = propertySet.count,
+    deletedNodes = deletedNodes.count,
+    deletedRelationships = deletedRelationships.count)
+
+}
+
+class NullMonitor extends UpdatingMonitor {
+  def createdNode(q: Query) {}
+
+  def createdRelationship(q: Query) {}
+
+  def deletedNode(q: Query) {}
+
+  def deletedRelationship(q: Query) {}
+
+  def setProperty(q: Query) {}
+}
+
+object QueryState {
+  def forTest(db: GraphDatabaseService = null) = new QueryState(db, Map.empty, None, new NullMonitor)
+}
+
+class QueryState(val db: GraphDatabaseService,
+                 val params: Map[String, Any],
+                 var transaction: Option[Transaction] = None,
+                 val monitor: UpdatingMonitor) {
+
+  val updateCounter = new UpdatingCounter(monitor, null)
+
   def graphDatabaseAPI: GraphDatabaseAPI = if (db.isInstanceOf[GraphDatabaseAPI])
     db.asInstanceOf[GraphDatabaseAPI]
   else
     throw new IllegalStateException("Graph database does not implement GraphDatabaseAPI")
 }
+
+trait QueryUpdatesMonitor {
+  def createdNode(queryId: Int)
+
+  def createdRelationship(queryId: Int)
+
+  def setProperty(queryId: Int)
+
+  def deletedNode(queryId: Int)
+
+  def deletedRelationship(queryId: Int)
+}
+
 
 class Counter {
   private val counter: AtomicInteger = new AtomicInteger()

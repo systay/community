@@ -25,9 +25,12 @@ import collection.Seq
 import org.neo4j.cypher.internal.pipes._
 import org.neo4j.cypher._
 import internal.commands._
+import internal.statistics.Monitors
 import internal.symbols.{NodeType, RelationshipType, SymbolTable}
 
-class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends ExecutionPlan with PatternGraphBuilder {
+class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService, monitors: Monitors)
+  extends ExecutionPlan with PatternGraphBuilder {
+
   val (executionPlan, executionPlanText) = prepareExecutionPlan()
 
   def execute(params: Map[String, Any]): ExecutionResult = executionPlan(params)
@@ -123,7 +126,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
 
   private def getLazyReadonlyQuery(pipe: Pipe, columns: List[String]): Map[String, Any] => ExecutionResult = {
     val func = (params: Map[String, Any]) => {
-      val state = new QueryState(graph, params)
+      val state = new QueryState(graph, params, None, monitors.newMonitor(classOf[UpdatingMonitor]))
       new PipeExecutionResult(pipe.createResults(state), columns)
     }
 
@@ -132,7 +135,7 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
 
   private def getEagerReadWriteQuery(pipe: Pipe, columns: List[String]): Map[String, Any] => ExecutionResult = {
     val func = (params: Map[String, Any]) => {
-      val state = new QueryState(graph, params)
+      val state = new QueryState(graph, params, None, monitors.newMonitor(classOf[UpdatingMonitor]))
       new EagerPipeExecutionResult(pipe.createResults(state), columns, state, graph)
     }
 
@@ -140,8 +143,6 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
   }
 
   private def produceAndThrowException(plan: ExecutionPlanInProgress) {
-    val s = plan.pipe.symbols
-
     val errors = builders.flatMap(builder => builder.missingDependencies(plan).map(builder -> _)).toList.
       sortBy {
       case (builder, _) => builder.priority

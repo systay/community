@@ -20,7 +20,9 @@
 package org.neo4j.cypher
 
 import internal.commands.Query
+import internal.pipes.QueryState
 import org.junit.Before
+import org.scalatest.Assertions
 
 
 trait ExecutionEngineHelper extends GraphDatabaseTestBase {
@@ -51,4 +53,22 @@ trait ExecutionEngineHelper extends GraphDatabaseTestBase {
     case x => fail(x.toString())
   }
 
+
+
+}
+
+trait StatsAssertions extends Assertions {
+  protected def assertStats(state:QueryState,
+                            createdNode: Int = 0,
+                            deletedNode: Int = 0,
+                            createdRelationship: Int = 0,
+                            deletedRelationship: Int = 0,
+                            setProperty: Int = 0) {
+    val stats = state.updateCounter.toStats
+    assert(stats.nodesCreated === createdNode, "Nodes created didn't match")
+    assert(stats.deletedNodes === deletedNode, "Nodes deleted didn't match")
+    assert(stats.relationshipsCreated === createdRelationship, "Relationships created didn't match")
+    assert(stats.deletedRelationships === deletedRelationship, "Relationship deleted didn't match")
+    assert(stats.propertiesSet === setProperty, "Properties set didn't match")
+  }
 }

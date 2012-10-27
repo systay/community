@@ -66,7 +66,7 @@ trait GraphElementPropertyFunctions extends CollectionSupport {
     map.foreach {
       case (key, value) => {
         pc.setProperty(key, value)
-        state.propertySet.increase()
+        state.updateCounter.setProperty()
       }
     }
   }
@@ -74,7 +74,7 @@ trait GraphElementPropertyFunctions extends CollectionSupport {
   private def setSingleValue(expression: Expression, context: ExecutionContext, pc: PropertyContainer, key: String, state: QueryState) {
     val value = makeValueNeoSafe(expression(context))
     pc.setProperty(key, value)
-    state.propertySet.increase()
+    state.updateCounter.setProperty()
   }
 
   def makeValueNeoSafe(a: Any): Any = if (isCollection(a)) {

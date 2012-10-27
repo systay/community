@@ -37,7 +37,7 @@ case class PropertySetAction(prop: Property, e: Expression)
       case _    => entity.setProperty(propertyKey, value)
     }
 
-    state.propertySet.increase()
+    state.updateCounter.setProperty()
 
     Stream(context)
   }

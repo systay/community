@@ -37,7 +37,7 @@ class SingleShortestPathPipeTest extends GraphDatabaseTestBase with Assertions {
 
 
     val pipe = new ShortestPathPipe(source, path)
-    pipe.createResults(QueryState()).head("p").asInstanceOf[Path]
+    pipe.createResults(QueryState.forTest()).head("p").asInstanceOf[Path]
   }
 
   @Test def shouldReturnTheShortestPathBetweenTwoNodes() {
