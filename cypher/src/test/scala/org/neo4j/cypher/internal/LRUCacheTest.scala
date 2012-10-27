@@ -25,7 +25,7 @@ import org.junit.Assert._
 
 class LRUCacheTest extends Assertions {
   @Test def shouldStoreSingleValue() {
-    val cache = new LRUCache[String, String](5)
+    val cache = new LRUCache[String, String](5, NullMonitor())
     cache.getOrElseUpdate("hello", "world")
 
     assert(cache.get("hello") === Some("world"))
@@ -40,7 +40,7 @@ class LRUCacheTest extends Assertions {
   }
 
   @Test def shouldLooseTheFirstOne() {
-    val cache = new LRUCache[String, String](5)
+    val cache = new LRUCache[String, String](5, NullMonitor())
     fillWithOneToFive(cache)
 
     cache.getOrElseUpdate("6", "6")
@@ -49,7 +49,7 @@ class LRUCacheTest extends Assertions {
   }
 
   @Test def shouldLooseTheLeastUsedItem() {
-    val cache = new LRUCache[String, String](5)
+    val cache = new LRUCache[String, String](5, NullMonitor())
     fillWithOneToFive(cache)
 
     cache.get("1")
@@ -62,4 +62,9 @@ class LRUCacheTest extends Assertions {
     assertFalse(cache.containsKey("2"));
   }
 
+  case class NullMonitor() extends CacheMonitor{
+    def parsedQuery() {}
+
+    def usedCachedPlan() {}
+  }
 }

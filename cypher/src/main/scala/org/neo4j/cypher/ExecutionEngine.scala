@@ -21,7 +21,8 @@ package org.neo4j.cypher
 
 import internal.commands._
 import internal.executionplan.ExecutionPlanImpl
-import internal.LRUCache
+import internal.{CacheMonitor, LRUCache}
+import internal.statistics.Monitors
 import scala.collection.JavaConverters._
 import java.lang.Error
 import java.util.{Map => JavaMap}
@@ -31,6 +32,8 @@ import org.neo4j.graphdb.GraphDatabaseService
 
 class ExecutionEngine(graph: GraphDatabaseService) {
   checkScalaVersion()
+
+  val monitors = new Monitors
 
   require(graph != null, "Can't work with a null graph database")
 
@@ -81,6 +84,6 @@ class ExecutionEngine(graph: GraphDatabaseService) {
   }
 
   private val cacheSize: Int = 100
-  private val executionPlanCache = new LRUCache[String, ExecutionPlan](cacheSize) {}
+  private val executionPlanCache = new LRUCache[String, ExecutionPlan](cacheSize, monitors.newMonitor(classOf[CacheMonitor])) {}
 }
 

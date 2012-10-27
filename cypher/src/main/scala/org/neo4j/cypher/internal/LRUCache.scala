@@ -21,7 +21,7 @@ package org.neo4j.cypher.internal
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
 
-class LRUCache[K, V](cacheSize: Int) {
+class LRUCache[K, V](cacheSize: Int, monitor: CacheMonitor) {
 
   class LazyValue(f: => V) {
     lazy val value = f
@@ -31,11 +31,13 @@ class LRUCache[K, V](cacheSize: Int) {
     .maximumWeightedCapacity(cacheSize)
     .build()
 
-  def getOrElseUpdate(key: K, f: => V): V = {
-    val oldValue = inner.putIfAbsent(key, new LazyValue(f))
+  def getOrElseUpdate(key: K, parseQuery: => V): V = {
+    val oldValue = inner.putIfAbsent(key, new LazyValue(parseQuery))
     if (oldValue == null) {
-      f
+      monitor.parsedQuery()
+      parseQuery
     } else {
+      monitor.usedCachedPlan()
       oldValue.value
     }
   }
@@ -47,3 +49,8 @@ class LRUCache[K, V](cacheSize: Int) {
   def containsKey(key: K) = inner.containsKey(key)
 }
 
+trait CacheMonitor {
+  def parsedQuery()
+
+  def usedCachedPlan()
+}
