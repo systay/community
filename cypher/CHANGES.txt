@@ -2,6 +2,7 @@
 -------------------
 o The traversal pattern matcher now supports variable length relationship patterns
 o Fixes #946 - HAS(...) fails with ThisShouldNotHappenException for some patterns
+o Made it possible to delete collections of nodes and relationships
 
 1.9.M01 (2012-10-23)
 --------------------

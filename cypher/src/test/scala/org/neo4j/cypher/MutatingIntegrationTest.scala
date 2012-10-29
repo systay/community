@@ -507,6 +507,11 @@ return distinct center""")
   def cant_set_properties_after_node_is_already_created2() {
     intercept[SyntaxException](parseAndExecute("create a-[:test]->b create unique (a {name:'a'})-[:test2]->c"))
   }
+
+  @Test
+  def should_be_able_to_delete_a_collection() {
+    parseAndExecute("start n=node(0) with collect(n) as collection delete collection")
+  }
 }
 trait StatisticsChecker extends Assertions {
   def assertStats(result: ExecutionResult,
