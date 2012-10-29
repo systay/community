@@ -512,6 +512,14 @@ return distinct center""")
   def should_be_able_to_delete_a_collection() {
     parseAndExecute("start n=node(0) with collect(n) as collection delete collection")
   }
+
+  @Test
+  def should_be_able_to_delete_a_node_that_has_relationships() {
+    val a = createNode()
+    relate(refNode, a)
+
+    parseAndExecute("start n=node(0) force delete n")
+  }
 }
 trait StatisticsChecker extends Assertions {
   def assertStats(result: ExecutionResult,

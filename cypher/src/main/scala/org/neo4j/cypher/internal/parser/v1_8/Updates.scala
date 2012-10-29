@@ -41,7 +41,7 @@ trait Updates extends Base with Expressions with StartClause {
   def delete: Parser[(Seq[UpdateAction], Seq[NamedPath])] = ignoreCase("delete") ~> commaList(expression) ^^ {
     case expressions => val updateActions: List[UpdateAction with Product] = expressions.map {
       case Property(entity, property) => DeletePropertyAction(Identifier(entity), property)
-      case x => DeleteEntityAction(x)
+      case x => DeleteEntityAction(x, false)
     }
       (updateActions, Seq())
   }

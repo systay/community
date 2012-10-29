@@ -3,6 +3,8 @@
 o The traversal pattern matcher now supports variable length relationship patterns
 o Fixes #946 - HAS(...) fails with ThisShouldNotHappenException for some patterns
 o Made it possible to delete collections of nodes and relationships
+o Added the FORCE clause to DELETE, to delete all relationships connected to a node
+
 
 1.9.M01 (2012-10-23)
 --------------------

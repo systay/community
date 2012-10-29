@@ -1,12 +1,14 @@
 [[query-delete]]
 Delete
 ======
-Removing graph elements -- nodes, relationships and properties, is done with +DELETE+.
+Removing graph elements -- nodes, relationships and properties, is done with +DELETE+. It takes a list of expressions,
+separated by commas. The expressions must either be return either a node, a relationship, a path, or a collection of these;
+or it can be a property expression, which leads to that property being deleted.
+
 
 :leveloffset: 2
 
 include::delete-single-node.asciidoc[]
-
 include::remove-a-node-and-connected-relationships.asciidoc[]
-
+include::remove_collections.asciidoc[]
 include::remove-a-property.asciidoc[]

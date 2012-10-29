@@ -29,7 +29,7 @@ import org.neo4j.cypher.internal.symbols.AnyType
 import org.neo4j.graphdb.{PropertyContainer, Path, Relationship, Node}
 import org.neo4j.cypher.internal.helpers.{IsCollection, CollectionSupport}
 
-case class DeleteEntityAction(elementToDelete: Expression)
+case class DeleteEntityAction(elementToDelete: Expression, force:Boolean)
   extends UpdateAction with CollectionSupport {
   def exec(context: ExecutionContext, state: QueryState) = {
     elementToDelete(context) match {
@@ -48,6 +48,9 @@ case class DeleteEntityAction(elementToDelete: Expression)
 
     x match {
       case n: Node if (!nodeManager.isDeleted(n)) =>
+        if (force) {
+          n.getRelationships.asScala.foreach(r => delete(r, state))
+        }
         state.deletedNodes.increase()
         n.delete()
 
@@ -65,7 +68,7 @@ case class DeleteEntityAction(elementToDelete: Expression)
 
   def identifiers: Seq[(String, CypherType)] = Seq.empty
 
-  def rewrite(f: (Expression) => Expression) = DeleteEntityAction(elementToDelete.rewrite(f))
+  def rewrite(f: (Expression) => Expression) = DeleteEntityAction(elementToDelete.rewrite(f), force)
 
   def filter(f: (Expression) => Boolean) = elementToDelete.filter(f)
 

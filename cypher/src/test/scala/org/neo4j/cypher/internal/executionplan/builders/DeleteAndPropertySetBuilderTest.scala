@@ -31,7 +31,7 @@ class DeleteAndPropertySetBuilderTest extends BuilderTest {
   @Test
   def does_not_offer_to_solve_done_queries() {
     val q = PartiallySolvedQuery().
-      copy(updates = Seq(Solved(DeleteEntityAction(Identifier("x")))))
+      copy(updates = Seq(Solved(DeleteEntityAction(Identifier("x"), false))))
 
     assertFalse("Should not be able to build on this", builder.canWorkWith(plan(q)))
   }
@@ -39,7 +39,7 @@ class DeleteAndPropertySetBuilderTest extends BuilderTest {
   @Test
   def offers_to_solve_queries() {
     val q = PartiallySolvedQuery().
-      copy(updates = Seq(Unsolved(DeleteEntityAction(Identifier("x")))))
+      copy(updates = Seq(Unsolved(DeleteEntityAction(Identifier("x"), false))))
 
     val pipe = createPipe(nodes = Seq("x"))
 
@@ -56,7 +56,7 @@ class DeleteAndPropertySetBuilderTest extends BuilderTest {
   @Test
   def does_not_offer_to_delete_something_not_yet_there() {
     val q = PartiallySolvedQuery().
-      copy(updates = Seq(Unsolved(DeleteEntityAction(Identifier("x")))))
+      copy(updates = Seq(Unsolved(DeleteEntityAction(Identifier("x"), false))))
 
     val executionPlan = plan(q)
     assertFalse("Should not accept this", builder.canWorkWith(executionPlan))

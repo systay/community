@@ -110,7 +110,7 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
 
   @Test
   def throw_exception_if_wrong_stuff_to_delete() {
-    val createRel = DeleteEntityAction(Literal("some text"))
+    val createRel = DeleteEntityAction(Literal("some text"), false)
 
     intercept[CypherTypeException](createRel.exec(ExecutionContext.empty, createQueryState))
   }
@@ -119,7 +119,7 @@ class MutationTest extends ExecutionEngineHelper with Assertions {
   def delete_node() {
     val a: Node = createNode()
     val node_id: Long = a.getId
-    val deleteCommand = DeleteEntityAction(getNode("a", a))
+    val deleteCommand = DeleteEntityAction(getNode("a", a), false)
 
     val startPipe = new NullPipe
     val txBeginPipe = new TransactionStartPipe(startPipe, graph)

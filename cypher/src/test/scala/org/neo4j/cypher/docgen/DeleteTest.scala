@@ -46,20 +46,26 @@ class DeleteTest extends DocumentingTestBase {
       text = "To remove a node from the graph, you can delete it with the +DELETE+ clause.",
       queryText = "start n = node("+id+") delete n",
       returns = "Nothing is returned from this query, except the count of affected nodes.",
-      assertions = (p) => {
-        intercept[NotFoundException](db.getNodeById(id))
-      })
+      assertions = (p) => intercept[NotFoundException](db.getNodeById(id)))
   }
 
   @Test def delete_single_node_with_all_relationships() {
     testQuery(
       title = "Remove a node and connected relationships",
-      text = "If you are trying to remove a node with relationships on it, you have to remove these as well.",
-      queryText = "start n = node(%Andres%) match n-[r]-() delete n, r",
+      text = "If you are trying to remove a node with relationships on it, you have tell Cypher it is OK to remove " +
+             "these as well. You do that with the FORCE keyword.",
+      queryText = "start n = node(%Andres%) force delete n",
       returns = "Nothing is returned from this query, except the count of affected nodes.",
-      assertions = (p) => {
-        intercept[NotFoundException](node("Andres"))
-      })
+      assertions = (p) => intercept[NotFoundException](node("Andres")))
+  }
+
+  @Test def delete_items_from_collection() {
+    testQuery(
+      title = "Remove collections",
+      text = "You can use delete on any expression that returns a node, a relationship, or a collection of these",
+      queryText = "start n = node(*) match n-[r]-() WITH collect(n) as nodes, collect(distinct r) as relationships DELETE nodes, relationships",
+      returns = "Nothing is returned from this query, except the count of affected nodes.",
+      assertions = (p) => intercept[NotFoundException](node("Andres")))
   }
 
   @Test def delete_property() {
@@ -69,8 +75,6 @@ class DeleteTest extends DocumentingTestBase {
         "just not there. So, to remove a property value on a node or a relationship, is also done with +DELETE+.",
       queryText = "start andres = node(%Andres%) delete andres.age return andres",
       returns = "The node is returned, and no property `age` exists on it.",
-      assertions = (p) => {
-        assertFalse("Property was not removed as expected.", node("Andres").hasProperty("age"))
-      })
+      assertions = (p) => assertFalse("Property was not removed as expected.", node("Andres").hasProperty("age")))
   }
 }

@@ -1487,7 +1487,7 @@ create a-[r:REL]->b
 
   @Test def delete_node() {
     val secondQ = Query.
-      updates(DeleteEntityAction(Identifier("a"))).
+      updates(DeleteEntityAction(Identifier("a"), false)).
       returns()
 
     val q = Query.
@@ -1585,7 +1585,7 @@ create a-[r:REL]->b
 
   @Test def simple_delete_node() {
     val secondQ = Query.
-      updates(DeleteEntityAction(Identifier("a"))).
+      updates(DeleteEntityAction(Identifier("a"), false)).
       returns()
 
     val q = Query.
@@ -1594,6 +1594,19 @@ create a-[r:REL]->b
       returns(AllIdentifiers())
 
     testFrom_1_8("start a=node(0) delete a", q)
+  }
+
+  @Test def force_delete_node() {
+    val secondQ = Query.
+      updates(DeleteEntityAction(Identifier("a"), true)).
+      returns()
+
+    val q = Query.
+      start(NodeById("a", 0)).
+      tail(secondQ).
+      returns(AllIdentifiers())
+
+    testFrom_1_9("start a=node(0) force delete a", q)
   }
 
   @Test def simple_set_property_on_node() {
