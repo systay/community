@@ -19,18 +19,10 @@
  */
 package org.neo4j.server.scripting;
 
+import static java.util.Arrays.asList;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.Lock;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.NotFoundException;
-import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.traversal.Evaluation;
 
 /**
  * A set of classes that we trust unknown entities to work with. These will be accessible to users that have remote access
@@ -52,46 +44,38 @@ public class UserScriptClassWhiteList
 
     public static Set<String> getWhiteList()
     {
-        HashSet<String> safe = new HashSet<String>();
+        String[] whites = {
+                // START SNIPPET: sandBoxingWhiteList
+                // Core API concepts
+                "org.neo4j.graphdb.Path",
+                "org.neo4j.graphdb.Node",
+                "org.neo4j.graphdb.Relationship",
+                "org.neo4j.graphdb.RelationshipType",
+                "org.neo4j.graphdb.DynamicRelationshipType",
+                "org.neo4j.graphdb.Lock",
+                "org.neo4j.graphdb.NotFoundException",
 
-        // Core API concepts
+                // Traversal concepts
+                "org.neo4j.graphdb.Direction",
+                "org.neo4j.graphdb.traversal.Evaluation",
 
-        safe.add( Path.class.getName() );
-        safe.add( Node.class.getName() );
-        safe.add( Relationship.class.getName() );
-        safe.add( RelationshipType.class.getName() );
-        safe.add( DynamicRelationshipType.class.getName() );
-        safe.add( Lock.class.getName() );
+                // Java Core API
+                "java.lang.Object",
+                "java.lang.String",
+                "java.lang.Integer",
+                "java.lang.Long",
+                "java.lang.Float",
+                "java.lang.Double",
+                "java.lang.Boolean",
 
-        safe.add( NotFoundException.class.getName() );
+                // Internals needed
+                "org.neo4j.kernel.impl.traversal.TraversalBranchImpl",
+                "org.neo4j.kernel.impl.core.NodeProxy",
+                "org.neo4j.kernel.impl.traversal.StartNodeTraversalBranch"
+                // END SNIPPET: sandBoxingWhiteList
+        };
 
-        // Traversal concepts
-
-        safe.add( Direction.class.getName() );
-        safe.add( Evaluation.class.getName() );
-
-        // Java Core API
-
-        safe.add( Object.class.getName() );
-        safe.add( String.class.getName() );
-        safe.add( Integer.class.getName() );
-        safe.add( Long.class.getName() );
-        safe.add( Float.class.getName() );
-        safe.add( Double.class.getName() );
-        safe.add( Boolean.class.getName() );
-
-
-        // This is a work-around, since these are not supposed to be publicly available.
-        // The reason we need to add it here is, most likely, that some methods in the API
-        // returns these rather than the corresponding interfaces, which means our white list
-        // checker doesn't know which interface to cast to (since there could be several). Instead
-        // we allow users direct access to these classes for now.
-        safe.add( "org.neo4j.kernel.impl.traversal.StartNodeTraversalBranch" );
-        safe.add( "org.neo4j.kernel.impl.traversal.TraversalBranchImpl" );
-        safe.add( "org.neo4j.kernel.impl.core.NodeProxy" );
-
-
-        return safe;
+        return new HashSet<String>(asList(whites));
     }
 
 }

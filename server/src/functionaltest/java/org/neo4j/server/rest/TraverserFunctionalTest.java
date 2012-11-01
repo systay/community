@@ -160,6 +160,36 @@ public class TraverserFunctionalTest extends AbstractRestFunctionalTestBase
                 getTraverseUriNodes( start ) ).entity();
         expectNodes( entity, getNodes( "Root", "Mattias", "Peter", "Tobias" ) );
     }
+
+    /**
+     * Sand boxed traversals.
+     *
+     * In this example, we make an attempt to get to the class loader, to wreck havoc. The server responds with a
+     * HTTP 400 status code, and tells you that you are not allowed to touch some classes.
+     */
+    @Documented
+    @Graph( {"Root knows Mattias"} )
+    @Test
+    public void shouldGetStatus400ForTryingToBreakTheSandBox()
+            throws PropertyValueException
+    {
+        Node start = getNode( "Root" );
+        List<Map<String, Object>> rels = new ArrayList<Map<String, Object>>();
+        rels.add( MapUtil.map( "type", "knows", "direction", "all" ) );
+        String description = JsonHelper.createJsonFrom( MapUtil.map(
+                "order",
+                "breadth_first",
+                "uniqueness",
+                "node_global",
+                "prune_evaluator",
+                MapUtil.map( "language", "javascript", "body", "position.length() > 10" ),
+                "return_filter",
+                MapUtil.map( "language", "javascript", "body",
+                        "position.getClass().getClassLoader() != null" ),
+                "relationships", rels, "max_depth", 3 ) );
+
+        gen().expectedStatus( 400 ).payload( description ).post( getTraverseUriNodes( start ) ).entity();
+    }
     /**
      * Traversal returning nodes below a certain depth.
      * 

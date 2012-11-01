@@ -153,6 +153,14 @@ rotation and +http://en.wikipedia.org/wiki/Common_Log_Format[Common Log Format]+
 If logging is set up to use log files then the server will check that the log file directory exists and is writable. If
 this check fails, then the server will not startup and wil report the failure another available channel like standard out.
 
+== Sand boxed script execution configuration ==
+Sand boxing of traversal descriptions can be turned off in the 'conf/neo4j-server.properties'. The default value is
+that sand boxing is turned on.
+
+[source]
+----
+org.neo4j.server.script.sandboxing.enabled=true
+----
 
 == Other configuration options ==
 

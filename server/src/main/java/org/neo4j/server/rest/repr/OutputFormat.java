@@ -33,6 +33,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.neo4j.server.rest.domain.EvaluationException;
 import org.neo4j.server.rest.web.NodeNotFoundException;
 
 public class OutputFormat
@@ -149,7 +150,7 @@ public class OutputFormat
                             {
                                 new WebApplicationException(notFound(e));
                             }
-                            if (e instanceof BadInputException)
+                            if (e instanceof BadInputException || e instanceof EvaluationException )
                             {
                                 throw new WebApplicationException(badRequest(e));
                             }

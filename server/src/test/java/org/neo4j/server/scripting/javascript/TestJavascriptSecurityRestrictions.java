@@ -46,10 +46,7 @@ public class TestJavascriptSecurityRestrictions
     public void shouldBeAbleToAccessWhiteListedThings() throws Exception
     {
         // Given
-        String classThatShouldBeInaccessible = TestJavascriptSecurityRestrictions.class.getName();
-
-        ScriptExecutor executor = new JavascriptExecutor(
-                Evaluation.class.getName() + ".INCLUDE_AND_CONTINUE;" );
+        ScriptExecutor executor = new JavascriptExecutor( Evaluation.class.getName() + ".INCLUDE_AND_CONTINUE;" );
 
         // When
         Object result = executor.execute( null );
@@ -76,8 +73,7 @@ public class TestJavascriptSecurityRestrictions
     public void shouldNotBeAbleToUseReflectionToInstantiateThings() throws Exception
     {
         // Given
-        ScriptExecutor executor = new JavascriptExecutor(
-                Evaluation.class.getName() + ".getClass().getClassLoader();" );
+        ScriptExecutor executor = new JavascriptExecutor( Evaluation.class.getName() + ".getClass().getClassLoader();" );
 
         // When
         executor.execute( null );
