@@ -22,9 +22,9 @@ package org.neo4j.server.rrd;
 import static java.lang.Double.NaN;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -33,6 +33,7 @@ import org.apache.commons.configuration.MapConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.server.configuration.Configurator;
 import org.neo4j.server.database.Database;
 import org.neo4j.server.database.WrappingDatabase;
@@ -86,32 +87,79 @@ public class RrdFactoryTest
     }
 
     @Test
-    public void shouldCreateRrdInAGoodDefaultPlace() throws IOException
+    public void shouldMoveAwayInvalidRrdFile() throws IOException
     {
-        TestableRrdFactory factory = createRrdFactory();
+        //Given
+        String expected = "target/rrd-test";
+        config.addProperty( Configurator.RRDB_LOCATION_PROPERTY_KEY, expected );
 
+        TestableRrdFactory factory = createRrdFactory();
+        createInvalidRrdFile( expected );
+
+
+        //When
+        RrdDb rrdDbAndSampler = factory.createRrdDbAndSampler( db, new NullJobScheduler() );
+
+
+        //Then
+        assertSubdirectoryExists( "rrd-test-invalid", factory.directoryUsed );
+
+        rrdDbAndSampler.close();
+    }
+
+    private void createInvalidRrdFile( String expected ) throws IOException
+    {
         // create invalid rrd
-        File rrd = new File( db.getLocation(), "rrd" );
+        File rrd = new File( expected );
         RrdDef rrdDef = new RrdDef( rrd.getAbsolutePath(), 3000 );
         rrdDef.addDatasource( "test", DsType.GAUGE, 1, NaN, NaN );
         rrdDef.addArchive( ConsolFun.AVERAGE, 0.2, 1, 1600 );
         RrdDb r = new RrdDb( rrdDef );
         r.close();
+    }
 
-        RrdDb rrdDbAndSampler = factory.createRrdDbAndSampler( db, new NullJobScheduler() );
+    private void assertSubdirectoryExists( final String directoryThatShouldExist, String directoryUsed )
+    {
+        File parentFile = new File( directoryUsed ).getParentFile();
+        String[] list = parentFile.list();
 
-        assertThat( new File( factory.directoryUsed ).getParentFile()
-                .list( new FilenameFilter()
-                {
-                    @Override
-                    public boolean accept( File file, String s )
-                    {
-                        return s.startsWith( "rrd-invalid" );
+        for ( String aList : list )
+        {
+            if (aList.startsWith( directoryThatShouldExist ))
+                return;
+        }
 
-                    }
-                } ).length, is( 1 ) );
+        fail( String.format( "Didn't find [%s] in [%s]", directoryThatShouldExist, directoryUsed ) );
+    }
 
-        rrdDbAndSampler.close();
+    @Test
+    public void shouldCreateRrdDirInTempLocationForImpermanentDatabases() throws IOException
+    {
+        // Given
+        TestableRrdFactory factory = createRrdFactory();
+
+        // When
+        factory.createRrdDbAndSampler( db, new NullJobScheduler() );
+
+        // Then
+        assertThat( factory.directoryUsed, is( "tmp" ) );
+    }
+
+    @Test
+    public void shouldCreateRrdFileInDbSubdirectory() throws Exception
+    {
+        String storeDir = new File( "target/test-dir" ).getAbsolutePath();
+        db = new WrappingDatabase( new EmbeddedGraphDatabase( storeDir ) );
+        TestableRrdFactory factory = createRrdFactory();
+
+        // When
+        factory.createRrdDbAndSampler( db, new NullJobScheduler() );
+
+        //Then
+
+        String rrdParent = new File( factory.directoryUsed ).getParent();
+
+        assertThat( rrdParent, is( storeDir ));
     }
 
     private TestableRrdFactory createRrdFactory()

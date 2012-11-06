@@ -19,23 +19,6 @@
  */
 package org.neo4j.server.rrd;
 
-import static java.lang.Double.NaN;
-import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.DAYS;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.neo4j.server.configuration.Configurator.RRDB_LOCATION_PROPERTY_KEY;
-import static org.rrd4j.ConsolFun.AVERAGE;
-import static org.rrd4j.ConsolFun.MAX;
-import static org.rrd4j.ConsolFun.MIN;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.commons.configuration.Configuration;
 import org.neo4j.kernel.GraphDatabaseAPI;
 import org.neo4j.server.database.Database;
@@ -48,6 +31,19 @@ import org.rrd4j.core.DsDef;
 import org.rrd4j.core.RrdDb;
 import org.rrd4j.core.RrdDef;
 import org.rrd4j.core.RrdToolkit;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static java.lang.Double.NaN;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.*;
+import static org.neo4j.server.configuration.Configurator.RRDB_LOCATION_PROPERTY_KEY;
+import static org.rrd4j.ConsolFun.*;
+import static org.rrd4j.ConsolFun.MAX;
 
 public class RrdFactory
 {
@@ -66,23 +62,15 @@ public class RrdFactory
     public RrdDb createRrdDbAndSampler( final Database db, JobScheduler scheduler )
     {
         Sampleable[] primitives = {
-//                new MemoryUsedSampleable(),
                 new NodeIdsInUseSampleable( db.getGraph() ),
                 new PropertyCountSampleable( db.getGraph() ),
                 new RelationshipCountSampleable( db.getGraph() )
         };
 
-        Sampleable[] usage = {
-//                new RequestBytesSampleable( db ),
-//                new RequestMeanTimeSampleable( db ),
-//                new RequestMedianTimeSampleable( db ),
-//                new RequestMaxTimeSampleable( db ),
-//                new RequestMinTimeSampleable( db ),
-//                new RequestCountSampleable( db )
-        };
+        Sampleable[] usage = {};
 
         final String basePath = config.getString( RRDB_LOCATION_PROPERTY_KEY,
-                getDefaultDirectory( (GraphDatabaseAPI) db.getGraph() ) );
+                getDefaultDirectory(db.getGraph()) );
         final RrdDb rrdb = createRrdb( basePath, join( primitives, usage ) );
 
         scheduler.scheduleAtFixedRate(
@@ -92,20 +80,6 @@ public class RrdFactory
                 SECONDS.toMillis( 3 )
         );
 
-//        scheduler.scheduleAtFixedRate(
-//                new RrdJob( new RrdSamplerImpl( rrdb, usage )
-//                {
-//                    @Override
-//                    public void updateSample()
-//                    {
-//                        db.statisticCollector().createSnapshot();
-//                        super.updateSample();
-//                    }
-//                } ),
-//                RRD_THREAD_NAME + "[usage]",
-//                SECONDS.toMillis( 1 ),
-//                SECONDS.toMillis( 60 )
-//        );
         return rrdb;
     }
 
@@ -121,7 +95,18 @@ public class RrdFactory
 
     private String getDefaultDirectory( GraphDatabaseAPI db )
     {
-        return new File( db.getStoreDir(), "rrd" ).getAbsolutePath();
+        if ( isEphemereal( db ) )
+        {
+            return tempDir();
+        } else
+        {
+            return new File( db.getStoreDir(), "rrd" ).getAbsolutePath();
+        }
+    }
+
+    private boolean isEphemereal( GraphDatabaseAPI db )
+    {
+        db.
     }
 
     protected RrdDb createRrdb( String rrdPathx, Sampleable... sampleables )
