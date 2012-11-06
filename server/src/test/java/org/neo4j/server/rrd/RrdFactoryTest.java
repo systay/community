@@ -62,7 +62,7 @@ public class RrdFactoryTest
     }
 
     @Test
-    public void shouldTakeDirectoryLocationFromConfig()
+    public void shouldTakeDirectoryLocationFromConfig() throws Exception
     {
         String expected = "target/rrd-test";
         config.addProperty( Configurator.RRDB_LOCATION_PROPERTY_KEY, expected );
@@ -74,7 +74,7 @@ public class RrdFactoryTest
     }
 
     @Test
-    public void recreateDatabaseIfWrongStepsize()
+    public void recreateDatabaseIfWrongStepsize() throws Exception
     {
         String expected = "target/rrd-test";
 
@@ -118,6 +118,37 @@ public class RrdFactoryTest
         r.close();
     }
 
+    @Test
+    public void shouldCreateRrdDirInTempLocationForImpermanentDatabases() throws IOException
+    {
+        // Given
+        String expected = "nice-temp-dir";
+        TestableRrdFactory factory = createRrdFactory( expected );
+
+        // When
+        factory.createRrdDbAndSampler( db, new NullJobScheduler() );
+
+        // Then
+        assertThat( factory.directoryUsed, is( expected ) );
+    }
+
+    @Test
+    public void shouldCreateRrdFileInDbSubdirectory() throws Exception
+    {
+        String storeDir = new File( "target/test-dir" ).getAbsolutePath();
+        db = new WrappingDatabase( new EmbeddedGraphDatabase( storeDir ) );
+        TestableRrdFactory factory = createRrdFactory();
+
+        // When
+        factory.createRrdDbAndSampler( db, new NullJobScheduler() );
+
+        //Then
+        String rrdParent = new File( factory.directoryUsed ).getParent();
+
+        assertThat( rrdParent, is( storeDir ) );
+    }
+
+
     private void assertSubdirectoryExists( final String directoryThatShouldExist, String directoryUsed )
     {
         File parentFile = new File( directoryUsed ).getParentFile();
@@ -132,48 +163,32 @@ public class RrdFactoryTest
         fail( String.format( "Didn't find [%s] in [%s]", directoryThatShouldExist, directoryUsed ) );
     }
 
-    @Test
-    public void shouldCreateRrdDirInTempLocationForImpermanentDatabases() throws IOException
-    {
-        // Given
-        TestableRrdFactory factory = createRrdFactory();
-
-        // When
-        factory.createRrdDbAndSampler( db, new NullJobScheduler() );
-
-        // Then
-        assertThat( factory.directoryUsed, is( "tmp" ) );
-    }
-
-    @Test
-    public void shouldCreateRrdFileInDbSubdirectory() throws Exception
-    {
-        String storeDir = new File( "target/test-dir" ).getAbsolutePath();
-        db = new WrappingDatabase( new EmbeddedGraphDatabase( storeDir ) );
-        TestableRrdFactory factory = createRrdFactory();
-
-        // When
-        factory.createRrdDbAndSampler( db, new NullJobScheduler() );
-
-        //Then
-
-        String rrdParent = new File( factory.directoryUsed ).getParent();
-
-        assertThat( rrdParent, is( storeDir ));
-    }
 
     private TestableRrdFactory createRrdFactory()
     {
-        return new TestableRrdFactory( config );
+        return new TestableRrdFactory( config, "temp" );
+    }
+
+    private TestableRrdFactory createRrdFactory(String tempDir)
+    {
+        return new TestableRrdFactory( config, tempDir );
     }
 
     private static class TestableRrdFactory extends RrdFactory
     {
         public String directoryUsed;
+        private final String tempDir;
 
-        public TestableRrdFactory( Configuration config )
+        public TestableRrdFactory( Configuration config, String tempDir )
         {
             super( config );
+            this.tempDir = tempDir;
+        }
+
+        @Override
+        protected String tempDir() throws IOException
+        {
+            return tempDir;
         }
 
         @Override

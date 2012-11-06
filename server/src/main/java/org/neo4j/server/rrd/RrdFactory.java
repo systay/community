@@ -19,8 +19,27 @@
  */
 package org.neo4j.server.rrd;
 
+import static java.lang.Double.NaN;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.neo4j.server.configuration.Configurator.RRDB_LOCATION_PROPERTY_KEY;
+import static org.rrd4j.ConsolFun.AVERAGE;
+import static org.rrd4j.ConsolFun.MAX;
+import static org.rrd4j.ConsolFun.MIN;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.commons.configuration.Configuration;
 import org.neo4j.kernel.GraphDatabaseAPI;
+import org.neo4j.kernel.InternalAbstractGraphDatabase;
+import org.neo4j.kernel.configuration.Config;
 import org.neo4j.server.database.Database;
 import org.neo4j.server.logging.Logger;
 import org.neo4j.server.rrd.sampler.NodeIdsInUseSampleable;
@@ -31,19 +50,6 @@ import org.rrd4j.core.DsDef;
 import org.rrd4j.core.RrdDb;
 import org.rrd4j.core.RrdDef;
 import org.rrd4j.core.RrdToolkit;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static java.lang.Double.NaN;
-import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.*;
-import static org.neo4j.server.configuration.Configurator.RRDB_LOCATION_PROPERTY_KEY;
-import static org.rrd4j.ConsolFun.*;
-import static org.rrd4j.ConsolFun.MAX;
 
 public class RrdFactory
 {
@@ -59,7 +65,7 @@ public class RrdFactory
         this.config = config;
     }
 
-    public RrdDb createRrdDbAndSampler( final Database db, JobScheduler scheduler )
+    public RrdDb createRrdDbAndSampler( final Database db, JobScheduler scheduler ) throws IOException
     {
         Sampleable[] primitives = {
                 new NodeIdsInUseSampleable( db.getGraph() ),
@@ -93,7 +99,7 @@ public class RrdFactory
         return result.toArray( new Sampleable[result.size()] );
     }
 
-    private String getDefaultDirectory( GraphDatabaseAPI db )
+    private String getDefaultDirectory( GraphDatabaseAPI db ) throws IOException
     {
         if ( isEphemereal( db ) )
         {
@@ -104,9 +110,27 @@ public class RrdFactory
         }
     }
 
+    protected String tempDir() throws IOException
+    {
+        File tempFile = File.createTempFile( "neo4j", "rrd" );
+        tempFile.delete();
+        tempFile.mkdir();
+
+        return tempFile.getAbsolutePath();
+    }
+
     private boolean isEphemereal( GraphDatabaseAPI db )
     {
-        db.
+        Config config = db.getDependencyResolver().resolveDependency( Config.class );
+
+        if ( config == null )
+        {
+            return false;
+        } else
+        {
+            Boolean aBoolean = config.get( InternalAbstractGraphDatabase.Configuration.ephemeral );
+            return aBoolean != null && aBoolean;
+        }
     }
 
     protected RrdDb createRrdb( String rrdPathx, Sampleable... sampleables )
