@@ -21,6 +21,7 @@ package org.neo4j.cypher.internal.commands.expressions
 
 import org.neo4j.cypher.CypherTypeException
 import scala.collection.JavaConverters._
+import collection.Map
 import org.neo4j.cypher.internal.helpers.{IsCollection, CollectionSupport}
 import org.neo4j.graphdb.{PropertyContainer, Relationship, Node}
 import org.neo4j.cypher.internal.symbols._
@@ -132,8 +133,8 @@ case class SubstringFunction(orig: Expression, start: Expression, length: Expres
   def calculateType(symbols: SymbolTable) = StringType()
 
   def symbolTableDependencies = orig.symbolTableDependencies ++
-                                start.symbolTableDependencies ++
-                                length.symbolTableDependencies
+    start.symbolTableDependencies ++
+    length.symbolTableDependencies
 }
 
 case class ReplaceFunction(orig: Expression, search: Expression, replaceWith: Expression) extends NullInNullOutExpression(orig) with StringHelper {
@@ -164,8 +165,8 @@ case class ReplaceFunction(orig: Expression, search: Expression, replaceWith: Ex
   def calculateType(symbols: SymbolTable) = StringType()
 
   def symbolTableDependencies = orig.symbolTableDependencies ++
-                                search.symbolTableDependencies ++
-                                replaceWith.symbolTableDependencies
+    search.symbolTableDependencies ++
+    replaceWith.symbolTableDependencies
 }
 
 case class LeftFunction(orig: Expression, length: Expression) extends NullInNullOutExpression(orig) with StringHelper with NumericHelper {
@@ -193,7 +194,7 @@ case class LeftFunction(orig: Expression, length: Expression) extends NullInNull
   def calculateType(symbols: SymbolTable) = StringType()
 
   def symbolTableDependencies = orig.symbolTableDependencies ++
-                                length.symbolTableDependencies
+    length.symbolTableDependencies
 }
 
 case class RightFunction(orig: Expression, length: Expression) extends NullInNullOutExpression(orig) with StringHelper with NumericHelper {
@@ -221,5 +222,5 @@ case class RightFunction(orig: Expression, length: Expression) extends NullInNul
   def calculateType(symbols: SymbolTable) = StringType()
 
   def symbolTableDependencies = orig.symbolTableDependencies ++
-                                length.symbolTableDependencies
+    length.symbolTableDependencies
 }

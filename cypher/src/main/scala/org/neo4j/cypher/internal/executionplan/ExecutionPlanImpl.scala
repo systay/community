@@ -22,8 +22,9 @@ package org.neo4j.cypher.internal.executionplan
 import builders._
 import org.neo4j.cypher.internal.pipes._
 import org.neo4j.cypher._
+import internal.ClosingIterator
 import internal.commands._
-import internal.spi.gdsimpl.GDSBackedQueryContext
+import internal.spi.gdsimpl.{GDSBackedLocker, RepeatableReadQueryContext, GDSBackedQueryContext}
 import internal.symbols.{NodeType, RelationshipType, SymbolTable}
 import org.neo4j.kernel.InternalAbstractGraphDatabase
 import org.neo4j.graphdb.GraphDatabaseService
@@ -135,18 +136,28 @@ class ExecutionPlanImpl(inputQuery: Query, graph: GraphDatabaseService) extends 
   }
 
   private def prepareStateAndResult(params: Map[String, Any], pipe: Pipe): (QueryState, Iterator[ExecutionContext]) = {
-    val gdsContext = new GDSBackedQueryContext(graph)
-    val state = new QueryState(graph, gdsContext, params)
+    val tx = graph.beginTx()
+
+    try
+    {val gdsContext = new GDSBackedQueryContext(graph)
+    val lockingContext = new RepeatableReadQueryContext(gdsContext, new GDSBackedLocker(tx))
+    val state = new QueryState(graph, lockingContext, params)
     val results = pipe.createResults(state)
 
-    (state, results)
-  }
+    val closingIterator = new ClosingIterator[ExecutionContext](results, state.query, tx)
 
+    (state, closingIterator)
+    } catch {
+      case e: Throwable =>
+        tx.failure()
+        tx.finish()
+        throw e
+    }
+  }
 
   private def getEagerReadWriteQuery(pipe: Pipe, columns: List[String]): Map[String, Any] => ExecutionResult = {
     val func = (params: Map[String, Any]) => {
-      val commitPipe = new CommitPipe(pipe, graph)
-      val (state, results) = prepareStateAndResult(params, commitPipe)
+      val (state, results) = prepareStateAndResult(params, pipe)
       new EagerPipeExecutionResult(results, columns, state, graph)
     }
 
