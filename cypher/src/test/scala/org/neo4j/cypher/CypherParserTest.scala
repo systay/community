@@ -1443,43 +1443,22 @@ create a-[r:REL]->b
     testFrom_1_8("start a=node(0), b=node(1) with a,b create a-[r:REL {why : 42, foo : 'bar'}]->b", q)
   }
 
-  @Test def create_relationship_without_identifier_1_8() {
-    test_1_8("create ({a})-[:REL]->({a})",
-      Query.
-        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map())).
-        returns())
-  }
-
   @Test def create_relationship_without_identifier() {
-    testFrom_1_9("create ({a})-[:REL]->({a})",
+    testFrom_1_8("create ({a})-[:REL]->({a})",
       Query.
         start(CreateRelationshipStartItem("  UNNAMED3", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map())).
         returns())
   }
 
-  @Test def create_relationship_with_properties_from_map_1_8() {
-    test_1_8("create ({a})-[:REL {param}]->({a})",
-      Query.
-        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map("*" -> ParameterExpression("param")))).
-        returns())
-  }
-
   @Test def create_relationship_with_properties_from_map() {
-    testFrom_1_9("create ({a})-[:REL {param}]->({a})",
+    testFrom_1_8("create ({a})-[:REL {param}]->({a})",
       Query.
         start(CreateRelationshipStartItem("  UNNAMED3", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map("*" -> ParameterExpression("param")))).
         returns())
   }
 
-  @Test def create_relationship_without_identifier2_1_8() {
-    test_1_8("create ({a})-[:REL]->({a})",
-      Query.
-        start(CreateRelationshipStartItem("  UNNAMED1", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map())).
-        returns())
-  }
-
   @Test def create_relationship_without_identifier2() {
-    testFrom_1_9("create ({a})-[:REL]->({a})",
+    testFrom_1_8("create ({a})-[:REL]->({a})",
       Query.
         start(CreateRelationshipStartItem("  UNNAMED3", (ParameterExpression("a"),Map()), (ParameterExpression("a"),Map()), "REL", Map())).
         returns())
@@ -1851,7 +1830,7 @@ foreach(x in [1,2,3] :
   }
 
   @Test def use_predicate_as_expression() {
-    testFrom_1_9("start n=node(0) return id(n) = 0, n is null",
+    testFrom_1_8("start n=node(0) return id(n) = 0, n is null",
       Query.
         start(NodeById("n", 0)).
         returns(
@@ -1869,7 +1848,7 @@ foreach(x in [1,2,3] :
                   unique(UniqueLink(start, end, rel, "foo", Direction.OUTGOING)).
                   returns(AllIdentifiers())
 
-    testFrom_1_9("START n=node(0) CREATE UNIQUE n-[:foo]->({param}) RETURN *",
+    testFrom_1_8("START n=node(0) CREATE UNIQUE n-[:foo]->({param}) RETURN *",
                  Query.
                  start(NodeById("n", 0)).
                  tail(secondQ).
@@ -1877,7 +1856,7 @@ foreach(x in [1,2,3] :
   }
 
   @Test def with_limit() {
-    testFrom_1_9("start n=node(0,1,2) with n limit 2 where ID(n) = 1 return n",
+    testFrom_1_8("start n=node(0,1,2) with n limit 2 where ID(n) = 1 return n",
       Query.
         start(NodeById("n", 0, 1, 2)).
         limit(2).
@@ -1892,7 +1871,7 @@ foreach(x in [1,2,3] :
   }
 
   @Test def with_sort_limit() {
-    testFrom_1_9("start n=node(0,1,2) with n order by ID(n) desc limit 2 where ID(n) = 1 return n",
+    testFrom_1_8("start n=node(0,1,2) with n order by ID(n) desc limit 2 where ID(n) = 1 return n",
       Query.
         start(NodeById("n", 0, 1, 2)).
         orderBy(SortItem(IdFunction(Identifier("n")), false)).
@@ -1913,7 +1892,7 @@ foreach(x in [1,2,3] :
       updates(MapPropertySetAction(Identifier("n"), ParameterExpression("prop"))).
       returns()
 
-    testFrom_1_9("start n=node(0) set n = {prop}",
+    testFrom_1_8("start n=node(0) set n = {prop}",
       Query.
         start(NodeById("n", 0)).
         tail(q2).
@@ -1953,12 +1932,6 @@ foreach(x in [1,2,3] :
       }
     }
 
-
-  def test_1_9(query: String, expectedQuery: Query) {
-    testQuery(None, query, expectedQuery)
-    testQuery(None, query + ";", expectedQuery)
-  }
-
   def test_1_8(query: String, expectedQuery: Query) {
     testQuery(Some("1.8"), query, expectedQuery)
     testQuery(Some("1.8"), query + ";", expectedQuery)
@@ -1970,17 +1943,12 @@ foreach(x in [1,2,3] :
 
   def testFrom_1_8(query: String, expectedQuery: Query) {
     test_1_8(query, expectedQuery)
-    test_1_9(query, expectedQuery)
   }
 
-  def testFrom_1_9(query: String, expectedQuery: Query) {
-    test_1_9(query, expectedQuery)
-  }
 
   def testAll(query: String, expectedQuery: Query) {
     test_1_7(query, expectedQuery)
     test_1_8(query, expectedQuery)
-    test_1_9(query, expectedQuery)
   }
 
   def testOlderParsers(queryText: String, queryAst: Query) {
