@@ -27,7 +27,7 @@ import org.neo4j.cypher.internal.executionplan.PartiallySolvedQuery
 import org.junit.Assert._
 import org.neo4j.cypher.internal.commands.expressions.Literal
 import org.neo4j.cypher.internal.pipes.ParameterPipe
-import org.neo4j.cypher.internal.parser.v1_9.CypherParserImpl
+import org.neo4j.cypher.internal.parser.v1_8.CypherParserImpl
 
 class TraversalMatcherBuilderTest extends GraphDatabaseTestBase with Assertions with BuilderTest {
   var builder: TraversalMatcherBuilder = null
